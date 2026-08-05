@@ -26,7 +26,13 @@ export function PageLoader() {
         animate={{ scale: [1, 1.1, 1] }}
         transition={{ duration: 1, repeat: Infinity, ease: "easeInOut" }}
       >
-        <Image src="/icon.svg" width={72} height={72} alt="Loading" />
+        <Image
+          src="/icon.svg"
+          width={72}
+          height={72}
+          alt="Loading"
+          priority
+        />
       </motion.div>
       <div className="h-1 w-40 overflow-hidden rounded-full bg-noir/10">
         <motion.div

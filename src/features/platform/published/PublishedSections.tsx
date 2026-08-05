@@ -103,6 +103,7 @@ const PublishedSections = ({
   const nameEditor = useEditor({
     content: sidefolio?.name.replaceAll("\n\n", "<p>") || "",
     editable: false,
+    immediatelyRender: false,
 
     extensions: [
       StarterKit,
@@ -124,6 +125,7 @@ const PublishedSections = ({
   const bioEditor = useEditor({
     content: sidefolio?.bio || "No bio",
     editable: false,
+    immediatelyRender: false,
     extensions: [
       StarterKit,
       Placeholder.configure({
@@ -143,6 +145,7 @@ const PublishedSections = ({
   const locationEditor = useEditor({
     content: sidefolio?.location || "No Location",
     editable: false,
+    immediatelyRender: false,
     extensions: [
       StarterKit,
       Placeholder.configure({
@@ -167,20 +170,14 @@ const PublishedSections = ({
           ? `url("${sidefolio.background}") center / cover no-repeat`
           : sidefolio?.color || "white",
       }}
-      className={`flex relative animate-fade  ${
-        currentBreakpoint === "xs"
-          ? "w-96 border-2 h-[800px] px-4 py-14 flex-col border-b-8 !opacity-100  mt-10 overflow-y-auto overflow-x-hidden rounded-3xl shadow-2xl"
-          : `w-full h-full overflow-auto flex-col  px-4 md:px-4 lg:px-36 xl:px-10  py-14 ${
-              sidefolio?.sidebar === "left"
-                ? " xl:flex-row"
-                : " xl:flex-row-reverse"
-            } !opacity-100`
-      }  transition-all`}
+      className={`flex relative animate-fade w-full h-full overflow-auto flex-col px-4 md:px-4 lg:px-36 xl:px-10 py-14 ${
+        sidefolio?.sidebar === "left" ? " xl:flex-row" : " xl:flex-row-reverse"
+      } !opacity-100 transition-all`}
     >
       <div
         className={` relative  ${
           currentBreakpoint === "xs"
-            ? "w-full max-h-[calc(100vh-100px)]"
+            ? "w-full"
             : "top-[0rem] max-w-full min-w-[calc(100vw-1000px)] min-h-fit  max-h-[calc(100vh+50px)] xl:min-h-[calc(100vh-150px)] xl:sticky overflow-y-auto"
         } `}
         style={{ scrollbarWidth: "none" }}
@@ -189,7 +186,9 @@ const PublishedSections = ({
           <div
             className={`flex flex-col  w-full rounded-3xl h-full  ${
               sidefolio?.sidebar === "right" ? "items-end" : "items-start"
-            } justify-start gap-4 2xl:px-12 px-4 py-8`}
+            } justify-start gap-4 py-8 ${
+              currentBreakpoint === "xs" ? "px-0" : "2xl:px-12 px-4"
+            }`}
             style={{
               scrollbarWidth: "none",
             }}

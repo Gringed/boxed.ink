@@ -37,7 +37,13 @@ export function LandingHeader() {
             onClick={() => startNavigation(() => router.push("/"))}
             className="flex cursor-pointer origin-left items-center gap-2 text-xl"
           >
-            <Image src="/icon.svg" width={64} height={64} alt="bentoh.me logo" />{" "}
+            <Image
+              src="/icon.svg"
+              width={64}
+              height={64}
+              alt="bentoh.me logo"
+              priority
+            />{" "}
             <h1 className="md:block hidden font-MontserratAlt font-extrabold text-2xl md:text-3xl">
               bentoh.me
             </h1>

@@ -39,7 +39,7 @@ const ShinyButton = ({ text = "shiny-button" }) => {
             "linear-gradient(-75deg,hsl(var(--primary)) calc(var(--x) + 20%),transparent calc(var(--x) + 30%),hsl(var(--primary)) calc(var(--x) + 100%))",
         }}
       >
-        <Image src={"/icon.svg"} alt="d" width={25} height={25} />
+        <Image src={"/icon.svg"} alt="d" width={25} height={25} priority />
         {text}
       </span>
       <span

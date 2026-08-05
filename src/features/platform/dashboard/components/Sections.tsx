@@ -219,6 +219,7 @@ const Sections = ({
   }, [desktop, mobile]);
 
   const nameEditor = useEditor({
+    immediatelyRender: false,
     content:
       sidefolio?.name?.replaceAll("\n\n", "<p>") ||
       user.name?.replaceAll("\n\n", "<p>") ||
@@ -251,6 +252,7 @@ const Sections = ({
     },
   });
   const bioEditor = useEditor({
+    immediatelyRender: false,
     content: sidefolio?.bio || "",
     extensions: [
       StarterKit,
@@ -288,6 +290,7 @@ const Sections = ({
     },
   });
   const locationEditor = useEditor({
+    immediatelyRender: false,
     content: sidefolio?.location || "",
     extensions: [
       StarterKit,
@@ -882,7 +885,9 @@ const Sections = ({
           <div
             className={`flex flex-col  w-full rounded-3xl h-full  ${
               side === "right" ? "items-end" : "items-start"
-            } justify-start gap-4 2xl:px-12 px-4 py-8`}
+            } justify-start gap-4 py-8 ${
+              currentBreakpoint === "xs" ? "px-0" : "2xl:px-12 px-4"
+            }`}
             style={{
               scrollbarWidth: "none",
             }}
