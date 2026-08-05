@@ -15,13 +15,6 @@ enum Type {
   ME
 }
 
-model Review {
-  id       String @id @default(auto()) @map("_id") @db.ObjectId
-  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  authorId String @db.ObjectId
-  message  String
-}
-
 model Section {
   id           String    @id @default(auto()) @map("_id") @db.ObjectId
   slug         String?   @unique
@@ -109,6 +102,7 @@ enum Plan {
   FREEMIUM
   PREMIUM_ONE
   PREMIUM_LIFE
+  SUPPORTER
 }
 
 model User {
@@ -121,7 +115,6 @@ model User {
   stripeCustomerId String?
   expiresAt        DateTime?
   emailVerified    DateTime?
-  review           Review[]
   sidefolio        Sidefolio[]
   Account          Account[]
   Session          Session[]

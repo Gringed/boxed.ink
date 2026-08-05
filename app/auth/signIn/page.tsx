@@ -1,45 +1,19 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { SignInButton } from "@/features/auth/SignInButton";
 import { LandingHeader } from "@/features/landing/LandingHeader";
 import { Section } from "@/features/landing/Section";
-import { CopyrightIcon, Menu } from "lucide-react";
+import { CopyrightIcon, ImageIcon } from "lucide-react";
 import { signIn } from "next-auth/react";
-import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 
 const page = () => {
-  const router = useRouter();
   return (
     <div className="flex h-full flex-col">
-      <div className="h-[80px]" />
-      <div className="fixed z-20 inset-x-0 flex h-20 shadow bg-white/85 backdrop-blur-md">
-        <div className="mx-auto max-w-screen-2xl flex w-full items-center justify-between sm:px-[100px] px-8">
-          <div
-            onClick={() => router.push("/")}
-            className="flex cursor-pointer origin-left items-center gap-2 text-xl"
-          >
-            <Image src="/icon.svg" width={30} height={30} alt="Linkers logo" />{" "}
-            <h1 className="md:block hidden font-MontserratAlt font-extrabold">
-              Sidepro
-            </h1>
-          </div>
-          <nav className="flex items-center gap-4 text-sm font-medium  ">
-            <div className="hidden items-center gap-5 sm:flex">
-              <SignInButton />
-            </div>
-          </nav>
-        </div>
-      </div>
+      <LandingHeader />
       <Section className="mx-auto flex-wrap mt-auto py-20  max-w-7xl gap-16 sm:gap-y-24 grid lg:grid-cols-2 lg:items-center">
-        <div className="w-full h-full object-cover">
-          <img
-            src="http://res.cloudinary.com/dhgoagdvr/image/upload/v1720096078/Sidepro/e6el4o0kji4zpwjlw8w9.png"
-            alt=""
-          />
+        <div className="w-full h-full min-h-[240px] flex items-center justify-center rounded-md border border-dashed border-noir/20 bg-noir/5">
+          <ImageIcon className="text-noir/30" size={48} />
         </div>
         <div className=" w-full flex flex-col gap-4 items-start">
           <div className="text-3xl font-bold tracking-tight text-gray-900  sm:text-4xl lg:text-5xl">
@@ -51,7 +25,7 @@ const page = () => {
             onClick={() => {
               signIn("google", { redirect: true, callbackUrl: "/dashboard" });
             }}
-            className="flex gap-3  h-full items-center"
+            className="flex w-full gap-3 h-14 items-center justify-center text-base"
           >
             <img
               loading="lazy"
@@ -71,14 +45,14 @@ const page = () => {
               <div className="flex items-center lg:justify-between flex-col lg:flex-row gap-5 my-5 lg:my-1">
                 <div className="flex items-center gap-3 font-medium">
                   <CopyrightIcon />
-                  2024 ♥ SidePro
+                  {new Date().getFullYear()} ♥ bentoh.me
                 </div>
                 <div className="flex gap-5 font-medium flex-col lg:flex-row flex-wrap items-center">
                   <Link href={"/tos"}>Terms</Link>
                   <Link href={"/policy"}>Privacy Policy</Link>
                   <Link
                     href={
-                      "mailto:contact@sidepro.me?subject=Help me with SidePro"
+                      "mailto:alexandre.guillome@yucatech.fr?subject=Help me with bentoh.me"
                     }
                   >
                     Contact

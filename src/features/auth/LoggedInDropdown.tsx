@@ -30,7 +30,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { PropsWithChildren, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { signOutAction } from "./auth.action";
 import {
@@ -58,8 +58,6 @@ import {
 } from "@/lib/actions/sections/section.actions";
 import { updateSidefolioAction } from "@/lib/actions/sidefolio/sidefolio.actions";
 
-export type LoggedInDropdownProps = PropsWithChildren;
-
 export const LoggedInDropdown = (props: any) => {
   const router = useRouter();
   let sidefolio = props?.sidefolio;
@@ -70,17 +68,6 @@ export const LoggedInDropdown = (props: any) => {
     field === sidefolio?.slug ? false : true
   );
   const [open, setOpen] = useState(false);
-  /*  const stripeSettingsMutation = useMutation({
-      mutationFn: () => setupCustomerPortal(""),
-      onSuccess: ({ data, serverError }) => {
-        if (serverError || !data) {
-          toast.error(serverError);
-          return;
-        }
-  
-        router.push(data);
-      },
-    }); */
   const handleVerifySlug = async (e: any) => {
     e.preventDefault();
     const value = e.target.value;
@@ -90,8 +77,7 @@ export const LoggedInDropdown = (props: any) => {
     try {
       const available = await verifySlug({ value });
       setIsAvailable(available.data!);
-    } catch (error) {
-      console.log(error);
+    } catch {
     } finally {
       setIsLoading(false);
     }
@@ -105,10 +91,9 @@ export const LoggedInDropdown = (props: any) => {
         },
       });
       setOpen(false);
-      toast.success("Public sidefolio name updated successfully");
+      toast.success("Public bentoh.me name updated successfully");
       router.refresh();
-    } catch (error) {
-      console.log(error);
+    } catch {
     }
   };
   return (
@@ -122,7 +107,7 @@ export const LoggedInDropdown = (props: any) => {
             <DialogTrigger asChild>
               <DropdownMenuItem className="hover:bg-gray-200/10 focus:bg-gray-200/10 hover:text-primary focus:text-primary cursor-pointer font-medium">
                 <Layers size={16} className="mr-2" />
-                Change my sidefolio name
+                Change my bentoh.me name
               </DropdownMenuItem>
             </DialogTrigger>
 
@@ -142,13 +127,13 @@ export const LoggedInDropdown = (props: any) => {
       <DialogPortal>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Edit your public sidefolio name</DialogTitle>
+            <DialogTitle>Edit your public bentoh.me name</DialogTitle>
           </DialogHeader>
           <div className="flex flex-col gap-4 py-4">
             <div className="h-full w-full">
               <label className="flex relative border h-full border-noir bg-primary-foreground flex-row  items-center rounded ">
                 <span className="pl-5 w-full h-full text-black/50 flex-[0] py-3 font-medium">
-                  sidepro.net/
+                  bentoh.me/
                 </span>
                 <Input
                   type="text"

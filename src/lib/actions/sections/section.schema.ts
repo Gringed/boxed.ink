@@ -18,5 +18,3 @@ export const SectionSchema = z.object({
   desktop: z.any().optional(),
   i: z.string().optional(),
 });
-
-export type SectionType = z.infer<typeof SectionSchema>;

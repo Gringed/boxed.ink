@@ -1,7 +1,7 @@
 import { currentUser } from "@/auth/current-user";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Star } from "lucide-react";
+import { Heart, Star } from "lucide-react";
 import { SignInButton } from "./SignInButton";
 import { LoggedInDropdown } from "./LoggedInDropdown";
 import { StarFilledIcon } from "@radix-ui/react-icons";
@@ -49,6 +49,10 @@ export const LoggedInButton = ({ user, sidefolio }: any) => {
               ></path>{" "}
             </g>
           </svg>
+        ) : user.plan === "SUPPORTER" ? (
+          <div className="absolute bottom-0 end-0 p-[3px] rounded-full bg-white">
+            <Heart size={12} className="fill-red-500 text-red-500" />
+          </div>
         ) : null}
       </div>
     </LoggedInDropdown>

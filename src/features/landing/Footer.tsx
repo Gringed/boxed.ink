@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useTransition } from "react";
 import { Section } from "./Section";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -8,10 +8,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ArrowRight, CopyrightIcon } from "lucide-react";
 import Image from "next/image";
+import { AnimatePresence } from "framer-motion";
 import { signInAction } from "../auth/auth.action";
+import { PageLoader } from "@/components/PageLoader";
 
 const Footer = () => {
   const [name, setName] = useState<String>();
+  const [isPending, startTransition] = useTransition();
   return (
     <FadeInSection>
       <Section
@@ -35,30 +38,27 @@ const Footer = () => {
                   alt="d"
                 />
               </h2>
-              <div className="max-w-lg mx-auto">
-                <div className="flex items-center flex-col w-full h-full gap-3">
-                  <div className="h-full w-full">
-                    <label className="flex border h-full border-noir bg-primary-foreground flex-row  items-center rounded ">
-                      <span className="pl-2 w-full h-full flex-1 py-3 font-medium">
-                        sidepro.me/
-                      </span>
-                      <Input
-                        type="text"
-                        placeholder="yourname"
-                        className="flex-[3] pl-0.5 text-base focus-visible:ring-0 shadow-none h-full border-0 rounded-sm  w-full"
-                        required
-                        onChange={(e) => setName(e.target.value)}
-                      />
-                    </label>
-                  </div>
+              <div className="max-w-2xl mx-auto">
+                <div className="flex h-12 w-full items-stretch overflow-hidden rounded-md border border-noir/10 bg-white shadow-sm">
+                  <span className="flex shrink-0 items-center bg-noir/5 pl-5 pr-3 font-medium text-noir/70">
+                    bentoh.me/
+                  </span>
+                  <Input
+                    type="text"
+                    placeholder="yourname"
+                    className="h-full min-w-[6rem] flex-1 rounded-none border-0 bg-white py-0 pl-3 text-base shadow-none focus-visible:ring-0"
+                    required
+                    onChange={(e) => setName(e.target.value)}
+                  />
                   <Button
-                    className="h-full p-3 rounded w-full text-base"
-                    disabled={!name}
+                    className="h-full shrink-0 rounded-none px-6 text-base"
+                    disabled={!name || isPending}
                     onClick={() => {
-                      signInAction();
+                      startTransition(() => signInAction());
                     }}
                   >
-                    Claim my sidefolio <ArrowRight className="ml-2" size={15} />
+                    Claim and start building{" "}
+                    <ArrowRight className="ml-2" size={15} />
                   </Button>
                 </div>
               </div>
@@ -72,26 +72,32 @@ const Footer = () => {
             <div className="flex items-center lg:justify-between flex-col lg:flex-row gap-5 my-5 lg:my-1">
               <div className="flex items-center gap-3 font-medium">
                 <CopyrightIcon />
-                2024 ♥ SidePro
+                {new Date().getFullYear()} ♥ bentoh.me
               </div>
               <div className="flex gap-5 font-medium flex-col lg:flex-row flex-wrap items-center">
-                <Link href={"/changelog"} target="_blank">
-                  Changelog
-                </Link>
+                <Link href={"/changelog"}>Changelog</Link>
                 <Link href={"/tos"}>Terms</Link>
                 <Link href={"/policy"}>Privacy Policy</Link>
                 <Link
                   href={
-                    "mailto:contact@sidepro.me?subject=Help me with SidePro"
+                    "mailto:alexandre.guillome@yucatech.fr?subject=Help me with bentoh.me"
                   }
                 >
                   Contact
+                </Link>
+                <Link
+                  href="https://calendly.com/alexandre-guillome/premiere-impression"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Made by Alexandre
                 </Link>
               </div>
             </div>
           </div>
         </Section>
       </div>
+      <AnimatePresence>{isPending && <PageLoader />}</AnimatePresence>
     </FadeInSection>
   );
 };

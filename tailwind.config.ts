@@ -19,8 +19,8 @@ const config = {
     },
     extend: {
       fontFamily: {
-        Montserrat: ["Nunito", "sans-serif"],
-        MontserratAlt: ["Nunito", "sans-serif"],
+        Montserrat: ["var(--font-outfit)", "sans-serif"],
+        MontserratAlt: ["var(--font-outfit)", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -69,6 +69,9 @@ const config = {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+      },
+      borderWidth: {
+        "1.5": "1.5px",
       },
       keyframes: {
         "accordion-down": {

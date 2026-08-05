@@ -4,7 +4,6 @@ import { PageParams } from "@/lib/types/next";
 import { prisma } from "@/prisma";
 import { redirect } from "next/navigation";
 import React from "react";
-import SectionsPreview from "@/features/platform/preview/components/SectionsPreview";
 import PublishedSections from "@/features/platform/published/PublishedSections";
 import { signInAction } from "@/features/auth/auth.action";
 import Link from "next/link";
@@ -28,7 +27,7 @@ export async function generateMetadata(
   return {
     title: sidefolio?.name || sidefolio?.title,
     icons: {
-      icon: [`${sidefolio?.image || "/favicon.ico"} `],
+      icon: [sidefolio?.image || "/favicon.ico"],
       apple: ["/apple-touch-icon.png?v=4"],
       shortcut: ["/apple-touch-icon.png"],
     },
@@ -96,11 +95,11 @@ const page = async (props: PageParams<{ slug: string }>) => {
                     />
                   ) : null}
                 </Avatar>
-                <span className="text-sm font-medium">My sidefolio</span>
+                <span className="text-sm font-medium">My bentoh.me</span>
               </Link>
             ) : (
               <>
-                <ShinyButton text="Create my sidefolio" />
+                <ShinyButton text="Create my bentoh.me" />
               </>
             )}
           </div>
@@ -118,7 +117,7 @@ const page = async (props: PageParams<{ slug: string }>) => {
             <span className="font-bold text-primary">
               {decodeURI(props.params.slug)}
             </span>{" "}
-            sidefolio doesn't exist now or it's not pusblished, create it for
+            bentoh.me doesn't exist now or it's not published, create it for
             now 😉
           </div>
           {user ? (

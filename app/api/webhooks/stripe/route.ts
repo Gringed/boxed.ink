@@ -1,4 +1,3 @@
-import { currentUser } from "@/auth/current-user";
 import { prisma } from "@/prisma";
 import { stripe } from "@/stripe";
 import { headers } from "next/headers";
@@ -19,25 +18,31 @@ export const POST = async (req: NextRequest) => {
     return new NextResponse("Webhook error", { status: 400 });
   }
 
-  const auth = await currentUser();
   const getOneYearLaterDate = (): Date => {
     const currentDate = new Date();
     const nextYearDate = new Date();
     nextYearDate.setFullYear(currentDate.getFullYear() + 1);
     return nextYearDate;
   };
+
   switch (event.type) {
     case "checkout.session.completed": {
       const session = event.data.object as Stripe.Checkout.Session;
-      const stripeCustomerId = session.customer as any;
+      const stripeCustomerId = session.customer as string;
 
-      const user = await prisma.user.findFirst({
-        where: {
-          id: stripeCustomerId || auth?.id,
-        },
-      });
-      await prisma.user.update({
-        where: { id: user?.id },
+      if (session.mode === "subscription") {
+        await prisma.user.updateMany({
+          where: { stripeCustomerId },
+          data: {
+            plan: "SUPPORTER",
+            expiresAt: undefined,
+          },
+        });
+        break;
+      }
+
+      await prisma.user.updateMany({
+        where: { stripeCustomerId },
         data: {
           plan:
             session.amount_subtotal === 2000 ? "PREMIUM_ONE" : "PREMIUM_LIFE",
@@ -51,14 +56,15 @@ export const POST = async (req: NextRequest) => {
     }
     case "invoice.paid": {
       const invoice = event.data.object as Stripe.Invoice;
-      const stripeCustomerId = invoice.customer as any;
+      const stripeCustomerId = invoice.customer as string;
       const user = await prisma.user.findFirst({
-        where: {
-          id: stripeCustomerId || auth?.id,
-        },
+        where: { stripeCustomerId },
       });
-      await prisma.user.update({
-        where: { id: user?.id },
+      if (user?.plan === "SUPPORTER") {
+        break;
+      }
+      await prisma.user.updateMany({
+        where: { stripeCustomerId },
         data: {
           plan: "PREMIUM_ONE",
           expiresAt: getOneYearLaterDate(),
@@ -68,17 +74,23 @@ export const POST = async (req: NextRequest) => {
     }
     case "invoice.payment_failed": {
       const invoice = event.data.object as Stripe.Invoice;
-      const stripeCustomerId = invoice.customer as any;
-      const user = await prisma.user.findFirst({
-        where: {
-          id: stripeCustomerId || auth?.id,
-        },
-      });
-      await prisma.user.update({
-        where: { id: user?.id },
+      const stripeCustomerId = invoice.customer as string;
+      await prisma.user.updateMany({
+        where: { stripeCustomerId },
         data: {
           plan: "FREEMIUM",
           expiresAt: undefined,
+        },
+      });
+      break;
+    }
+    case "customer.subscription.deleted": {
+      const subscription = event.data.object as Stripe.Subscription;
+      const stripeCustomerId = subscription.customer as string;
+      await prisma.user.updateMany({
+        where: { stripeCustomerId, plan: "SUPPORTER" },
+        data: {
+          plan: "FREEMIUM",
         },
       });
       break;

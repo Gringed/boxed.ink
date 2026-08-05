@@ -9,16 +9,6 @@ import { UserSchema } from "../users/user.schema";
 import { revalidatePath } from "next/cache";
 import { del, put } from "@vercel/blob";
 
-export const sendReviewAction = userAction(
-  z.string(),
-  async (input, context) => {
-    const sendReview = await prisma.review.create({
-      data: { authorId: context.user.id, message: input },
-    });
-    return sendReview;
-  }
-);
-
 export const updateSidefolioAction = userAction(
   z.object({
     id: z.string(),
@@ -75,34 +65,22 @@ export const publishSidefolioAction = userAction(
     data: UserSchema,
   }),
   async (input, context) => {
-    const user = await prisma.user.findUnique({
+    const pusblishedSidefolio = await prisma.sidefolio.update({
       where: {
-        id: context.user.id,
+        id: input.id,
+      },
+      data: {
+        publish: true,
       },
     });
-    let pusblishedSidefolio;
-    if (user?.plan === "PREMIUM_LIFE" || user?.plan === "PREMIUM_ONE") {
-      pusblishedSidefolio = await prisma.sidefolio.update({
-        where: {
-          id: input.id,
-        },
-        data: {
-          publish: true,
-        },
-      });
-    } else {
-      throw new Error("Not authorized");
-    }
     revalidatePath("/dashboard");
     return pusblishedSidefolio;
   }
 );
 
-export const buySidefolioAction = userAction(
-  z.object({
-    type: z.string(),
-  }),
-  async (input, context) => {
+export const subscribeSupporterAction = userAction(
+  z.object({}),
+  async (_input, context) => {
     const user = await prisma.user.findUnique({
       where: {
         id: context.user.id,
@@ -116,18 +94,14 @@ export const buySidefolioAction = userAction(
     const session = await stripe.checkout.sessions.create({
       success_url: process.env.NEXT_PUBLIC_APP_URL + "/dashboard",
       cancel_url: process.env.NEXT_PUBLIC_APP_URL + "/dashboard",
-      payment_method_types: ["card"],
+      mode: "subscription",
       allow_promotion_codes: true,
-      mode: "payment",
       billing_address_collection: "auto",
       customer: stripeCustomerId,
-      customer_email: user?.email,
+      customer_email: stripeCustomerId ? undefined : user?.email,
       line_items: [
         {
-          price:
-            input.type === "one"
-              ? process.env.PRICE_ONE_YEAR
-              : process.env.PRICE_LIFETIME,
+          price: process.env.PRICE_SUPPORTER,
           quantity: 1,
         },
       ],
@@ -138,3 +112,22 @@ export const buySidefolioAction = userAction(
     redirect(session.url);
   }
 );
+
+export const manageBillingAction = userAction(z.object({}), async (_input, context) => {
+  const user = await prisma.user.findUnique({
+    where: {
+      id: context.user.id,
+    },
+    select: {
+      stripeCustomerId: true,
+    },
+  });
+  if (!user?.stripeCustomerId) {
+    throw new Error("No billing account found");
+  }
+  const session = await stripe.billingPortal.sessions.create({
+    customer: user.stripeCustomerId,
+    return_url: process.env.NEXT_PUBLIC_APP_URL + "/dashboard",
+  });
+  redirect(session.url);
+});

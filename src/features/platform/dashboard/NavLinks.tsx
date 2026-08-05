@@ -15,34 +15,24 @@ import {
 } from "@/lib/actions/sections/section.actions";
 import { cn } from "@/lib/utils";
 import {
-  CircleCheck,
   Contact,
-  Eye,
-  GalleryHorizontal,
-  GalleryVertical,
   Heading,
   Image as Image2,
   ImageOff,
   ImagePlus,
   Link2,
-  Loader,
   Loader2,
   LoaderCircle,
   Monitor,
-  MonitorCheck,
-  PaintBucket,
   Plus,
-  Send,
-  Share,
   Share2,
   Smartphone,
-  SquareSplitHorizontal,
   Type,
 } from "lucide-react";
 import confetti from "canvas-confetti";
-import React, { useCallback, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import React, { startTransition, useCallback, useRef, useState } from "react";
 import {
-  buySidefolioAction,
   publishSidefolioAction,
   updateSidefolioAction,
   uploadImageSidefolio,
@@ -56,21 +46,10 @@ import {
 } from "@/components/ui/tooltip";
 
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuPortal,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import Link from "next/link";
-import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
-  DialogPortal,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
@@ -83,15 +62,15 @@ const NavLinks = ({
   setCurrentBreakpoint,
   sidefolio,
   isSaving,
-  handleCompactTypeChange,
   handleSideChange,
-  compactType,
   sections,
   user,
+  isMobile,
 }: any) => {
+  const router = useRouter();
   const [url, setURL] = useState("");
   const [openLink, setOpenLink] = useState(false);
-  const [open, setOpen] = useState(false);
+  const [openAdd, setOpenAdd] = useState(false);
   const [imageLoading, setImageLoading] = useState<boolean>(false);
   const [imageSideLoading, setImageSideLoading] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -118,6 +97,11 @@ const NavLinks = ({
       description: "Add a new description",
       sideId: sidefolio.id,
       i: `n${makeid(40)}`,
+    }).then(() => {
+      toast.success("Your changes have been saved");
+      startTransition(() => {
+        router.refresh();
+      });
     });
   };
   const handleUploadImage = async (file: any) => {
@@ -134,6 +118,10 @@ const NavLinks = ({
     });
     if (res) {
       setImageLoading(false);
+      toast.success("Your changes have been saved");
+      startTransition(() => {
+        router.refresh();
+      });
     }
   };
   const handleUploadImageSidefolio = async (file: any) => {
@@ -143,23 +131,43 @@ const NavLinks = ({
     });
     if (res) {
       setImageSideLoading(false);
+      toast.success("Your changes have been saved");
     }
   };
-  const handlePay = (type: string) => {
-    buySidefolioAction({ type });
-  };
-  const handlePublish = async () => {
-    setIsPublish(true);
-    const res = await publishSidefolioAction({ id: sidefolio.id, data: user });
-
-    if (res.data) {
+  const handleShare = async () => {
+    let justPublished = false;
+    if (!sidefolio.publish) {
+      setIsPublish(true);
+      const res = await publishSidefolioAction({
+        id: sidefolio.id,
+        data: user,
+      });
       setIsPublish(false);
-      toast.success("Sidefolio published");
+      if (!res.data) return;
+      justPublished = true;
+    }
+    const url = `${window.location.origin}/${sidefolio.slug}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success(
+        justPublished
+          ? "Published online and link copied to clipboard"
+          : "Link copied to clipboard"
+      );
+      const rect = shareButtonRef.current?.getBoundingClientRect();
+      const origin = rect
+        ? {
+            x: (rect.left + rect.width / 2) / window.innerWidth,
+            y: rect.top / window.innerHeight,
+          }
+        : { y: 0.6 };
       confetti({
         particleCount: 150,
         spread: 100,
-        origin: { y: 0.6 },
+        origin,
       });
+    } catch {
+      toast.error("Could not copy the link");
     }
   };
   const handleCreateLink = async () => {
@@ -171,7 +179,6 @@ const NavLinks = ({
     } else {
       newUrl = "https://" + url;
     }
-    console.log(newUrl);
     const res = await getPreview({
       title: newUrl,
       description: "Add a new description",
@@ -185,8 +192,14 @@ const NavLinks = ({
     } else {
       setIsLoading(false);
       setOpenLink(false);
+      setURL("");
+      toast.success("Your changes have been saved");
+      startTransition(() => {
+        router.refresh();
+      });
     }
   };
+  const shareButtonRef = useRef<HTMLButtonElement>(null);
   const inputFileRef = useRef<HTMLInputElement>(null);
   const inputFileSideRef = useRef<HTMLInputElement>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -202,8 +215,8 @@ const NavLinks = ({
           data: formData,
           image,
         });
-      } catch (error) {
-        console.log(error);
+        toast.success("Your changes have been saved");
+      } catch {
       } finally {
         setIsSavingC(false);
       }
@@ -235,267 +248,36 @@ const NavLinks = ({
   };
   return (
     <nav className={cn("flex items-center gap-2 ")}>
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button size={"icon"} disabled={isSaving} className="rounded-full">
-              {isSaving ? (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              ref={shareButtonRef}
+              size={"icon"}
+              disabled={isSaving || isPublish}
+              className="rounded-full"
+              onClick={handleShare}
+            >
+              {isSaving || isPublish ? (
                 <LoaderCircle className=" animate-spin" size={17} />
               ) : (
                 <Share2 size={17} />
               )}
             </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuPortal>
-            <DropdownMenuContent className="w-72 mb-2">
-              <DropdownMenuLabel>Share it</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-
-              <DropdownMenuItem className="hover:bg-gray-200/10 focus:bg-gray-200/10 hover:text-primary focus:text-primary cursor-pointer font-medium">
-                <Link
-                  href={"/preview/" + sidefolio.slug}
-                  className="flex  items-center"
-                >
-                  <Eye size={16} className="mr-2" />
-                  View my sidefolio
-                </Link>
-              </DropdownMenuItem>
-              {user?.plan === "FREEMIUM" ? (
-                <DialogTrigger asChild>
-                  <DropdownMenuItem className="hover:bg-gray-200/10 focus:bg-gray-200/10 hover:text-primary focus:text-primary cursor-pointer font-medium">
-                    <Send size={16} className="mr-2" />
-                    Publish my sidefolio
-                  </DropdownMenuItem>
-                </DialogTrigger>
-              ) : (
-                <DropdownMenuItem className="hover:bg-gray-200/10 focus:bg-gray-200/10 hover:text-primary focus:text-primary cursor-pointer font-medium">
-                  {sidefolio.publish ? (
-                    <Link
-                      href={`/${sidefolio.slug}`}
-                      className="font-bold flex items-center"
-                    >
-                      <MonitorCheck size={16} className="mr-2" />
-                      See my online sidefolio
-                    </Link>
-                  ) : (
-                    <div
-                      onClick={handlePublish}
-                      className="flex gap-0.5 items-center"
-                    >
-                      {isPublish ? (
-                        <>
-                          <Loader2 size={16} className="mr-2 animate-spin" />
-                          Publish in progress
-                        </>
-                      ) : (
-                        <>
-                          <Send size={16} className="mr-2" />
-                          Publish my sidefolio
-                        </>
-                      )}
-                    </div>
-                  )}
-                </DropdownMenuItem>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenuPortal>
-        </DropdownMenu>
-        <DialogPortal>
-          <DialogContent className="sm:max-w-[750px] h-fit">
-            <DialogHeader>
-              <DialogTitle>Plan to publish your sidefolio</DialogTitle>
-            </DialogHeader>
-            <div className="">
-              <button className=""></button>
-              <div className="h-full w-full">
-                <div className="mt-5 w-full  grid gap-y-6 sm:grid-cols-2  sm:gap-x-6 ">
-                  <div className="py-12 px-4 flex flex-col rounded-xl border-2 border-primary shadow-xl bg-white text-gray-900 text-center transition duration-75 hover:-rotate-1 hover:scale-105 focus:-rotate-1 focus:scale-105">
-                    <div className="flex items-center justify-center flex-col">
-                      <h3 className="px-6 py-2 inline-block text-2xl md:text-2xl font-bold bg-primary outline-none text-white -rotate-1">
-                        Lifetime
-                      </h3>
-                      <span
-                        className="text-sm font-bold -rotate-1"
-                        style={{ verticalAlign: "super" }}
-                      >
-                        No subscription
-                      </span>
-                    </div>
-
-                    <div className=" py-12 font-bold leading-none text-6xl  md:leading-none  lg:leading-none  xl:leading-none">
-                      <div className="inline-block">
-                        12<sup className="text-2xl">€</sup>
-                        <small className="block text-lg text-right">
-                          for life
-                        </small>
-                      </div>
-                    </div>
-
-                    <ul className="mx-auto text-left md:text-sm md:leading-normal font-bold space-y-4">
-                      <li className="flex gap-2 items-center">
-                        <CircleCheck className=" h-5 text-primary" />
-                        <div>
-                          Show everything with{" "}
-                          <TooltipProvider delayDuration={0}>
-                            <Tooltip>
-                              <TooltipTrigger className="font-medium underline decoration-primary decoration-dashed underline-offset-2 hover:decoration-solid duration-200 cursor-help">
-                                blocks
-                              </TooltipTrigger>
-                              <TooltipContent className="bg-white">
-                                <div className="text-foreground text-medium text-base">
-                                  <h2>Blocks build your sidefolio</h2>
-                                </div>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        </div>
-                      </li>
-                      <li className="flex gap-2 items-center">
-                        <CircleCheck className=" h-5 text-primary" />
-                        <div>All your data in one</div>
-                      </li>
-                      <li className="flex gap-2 items-center">
-                        <CircleCheck className=" h-5 text-primary" />
-                        <div>Customizable</div>
-                      </li>
-                      <li className="flex gap-2 items-center">
-                        <CircleCheck className=" h-5 text-primary" />
-                        <div>Review Support</div>
-                      </li>
-                      <li className="flex gap-2 items-center">
-                        <CircleCheck className=" h-5 text-primary" />
-                        <div>
-                          Visible to{" "}
-                          <TooltipProvider delayDuration={0}>
-                            <Tooltip>
-                              <TooltipTrigger className="font-medium underline decoration-primary decoration-dashed underline-offset-2 hover:decoration-solid duration-200 cursor-help">
-                                others
-                              </TooltipTrigger>
-                              <TooltipContent className="bg-white">
-                                <div className="text-foreground text-medium text-base">
-                                  <h2>
-                                    Publish your sidefolio and share link to
-                                    everyone
-                                  </h2>
-                                </div>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        </div>
-                      </li>
-                    </ul>
-
-                    <div className="mt-16">
-                      <Button
-                        className={cn(
-                          buttonVariants({ variant: "default" }),
-                          "group w-full flex flex-wrap h-full items-center  justify-center text-xl  font-bold   "
-                        )}
-                        onClick={() => handlePay("lifetime")}
-                      >
-                        Grab it
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="py-12 px-4 flex flex-col rounded-xl border border-neutral-500 shadow bg-white text-gray-900 text-center transition duration-75 hover:-rotate-1 hover:scale-105 focus:-rotate-1 focus:scale-105">
-                    <div className="flex items-center justify-center flex-col">
-                      <h3 className="px-6 py-2 inline-block text-2xl md:text-2xl font-bold bg-foreground outline-none text-white rotate-1">
-                        One year
-                      </h3>
-                      <span
-                        className="text-sm font-bold rotate-1"
-                        style={{ verticalAlign: "super" }}
-                      >
-                        No subscription
-                      </span>
-                    </div>
-
-                    <div className=" py-12 font-bold leading-none text-6xl  md:leading-none  lg:leading-none  xl:leading-none">
-                      <div className="inline-block">
-                        30<sup className="text-2xl">€</sup>
-                        <small className="block text-lg text-right">
-                          for one year
-                        </small>
-                      </div>
-                    </div>
-
-                    <ul className="mx-auto text-left md:text-sm md:leading-normal font-bold space-y-4">
-                      <li className="flex gap-2 items-center">
-                        <CircleCheck className=" h-5 text-primary" />
-                        <div>
-                          Show everything with{" "}
-                          <TooltipProvider delayDuration={0}>
-                            <Tooltip>
-                              <TooltipTrigger className="font-medium underline decoration-primary decoration-dashed underline-offset-2 hover:decoration-solid duration-200 cursor-help">
-                                blocks
-                              </TooltipTrigger>
-                              <TooltipContent className="bg-white">
-                                <div className="text-foreground text-medium text-base">
-                                  <h2>Blocks build your sidefolio</h2>
-                                </div>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        </div>
-                      </li>
-                      <li className="flex gap-2 items-center">
-                        <CircleCheck className=" h-5 text-primary" />
-                        <div>All your data in one</div>
-                      </li>
-                      <li className="flex gap-2 items-center">
-                        <CircleCheck className=" h-5 text-primary" />
-                        <div>Customizable</div>
-                      </li>
-                      <li className="flex gap-2 items-center">
-                        <CircleCheck className=" h-5 text-primary" />
-                        <div>Review Support</div>
-                      </li>
-                      <li className="flex gap-2 items-center">
-                        <CircleCheck className=" h-5 text-primary" />
-                        <div>
-                          Visible to{" "}
-                          <TooltipProvider delayDuration={0}>
-                            <Tooltip>
-                              <TooltipTrigger className="font-medium underline decoration-primary decoration-dashed underline-offset-2 hover:decoration-solid duration-200 cursor-help">
-                                others
-                              </TooltipTrigger>
-                              <TooltipContent className="bg-white">
-                                <div className="text-foreground text-medium text-base">
-                                  <h2>
-                                    Publish your sidefolio and share link to
-                                    everyone
-                                  </h2>
-                                </div>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        </div>
-                      </li>
-                    </ul>
-
-                    <div className="mt-16">
-                      <Button
-                        onClick={() => handlePay("one")}
-                        className={cn(
-                          buttonVariants({ variant: "outline" }),
-                          "group w-full flex flex-wrap h-full items-center text-primary justify-center text-xl  font-bold   "
-                        )}
-                      >
-                        Buy it
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </DialogContent>
-        </DialogPortal>
-      </Dialog>
-      <Popover>
+          </TooltipTrigger>
+          <TooltipContent>Copy share link</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+      <Popover open={openAdd} onOpenChange={setOpenAdd}>
         <PopoverTrigger asChild>
           <Button size={"icon"} variant={"outline"} className="rounded-full">
-            <Plus size={17} />
+            <Plus
+              size={17}
+              className={cn(
+                "transition-transform duration-200",
+                openAdd && "rotate-45"
+              )}
+            />
           </Button>
         </PopoverTrigger>
         <PopoverContent side="top" className="w-full mb-2">
@@ -617,7 +399,14 @@ const NavLinks = ({
                           }
                           onClick={handleCreateLink}
                         >
-                          Add link
+                          {isLoading ? (
+                            <>
+                              <Loader2 size={16} className="mr-2 animate-spin" />
+                              Adding link...
+                            </>
+                          ) : (
+                            "Add link"
+                          )}
                         </Button>
                       </DialogFooter>
                     </DialogContent>
@@ -627,6 +416,7 @@ const NavLinks = ({
                     Link
                   </span>
                 </div>
+
                 {/*  */}
               </div>
               <div className="flex w-full h-full justify-between items-center">
@@ -717,58 +507,29 @@ const NavLinks = ({
               sidefolio?.sidebar[0].toUpperCase() + sidefolio?.sidebar.slice(1)}
           </TooltipContent>
         </Tooltip>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              size={"icon"}
-              variant={"outline"}
-              className="rounded-full"
-              onClick={() =>
-                handleCompactTypeChange(
-                  compactType === "horizontal"
-                    ? "vertical"
-                    : compactType === "vertical"
-                    ? null
-                    : "horizontal"
-                )
-              }
-            >
-              {compactType === "horizontal" ? (
-                <GalleryHorizontal size={17} />
-              ) : compactType === "vertical" ? (
-                <GalleryVertical size={17} />
-              ) : (
-                <SquareSplitHorizontal size={17} />
-              )}
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            {compactType
-              ? compactType[0].toUpperCase() + compactType.slice(1)
-              : "No Compaction"}
-          </TooltipContent>
-        </Tooltip>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              size={"icon"}
-              variant={"outline"}
-              className="rounded-full"
-              onClick={() =>
-                currentBreakpoint === "xs"
-                  ? setCurrentBreakpoint("lg")
-                  : setCurrentBreakpoint("xs")
-              }
-            >
-              {currentBreakpoint === "xs" ? (
-                <Smartphone size={17} />
-              ) : (
-                <Monitor size={17} />
-              )}
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>Device</TooltipContent>
-        </Tooltip>
+        {!isMobile && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                size={"icon"}
+                variant={"outline"}
+                className="rounded-full"
+                onClick={() =>
+                  currentBreakpoint === "xs"
+                    ? setCurrentBreakpoint("lg")
+                    : setCurrentBreakpoint("xs")
+                }
+              >
+                {currentBreakpoint === "xs" ? (
+                  <Smartphone size={17} />
+                ) : (
+                  <Monitor size={17} />
+                )}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Device</TooltipContent>
+          </Tooltip>
+        )}
       </TooltipProvider>
     </nav>
   );

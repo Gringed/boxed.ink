@@ -15,10 +15,6 @@ const handleReturnedServerError = (error: Error) => {
   return "An unexpected error occurred";
 };
 
-export const action = createSafeActionClient({
-  handleReturnedServerError: handleReturnedServerError,
-});
-
 export const userAction = createSafeActionClient({
   handleReturnedServerError: handleReturnedServerError,
   middleware: async () => {

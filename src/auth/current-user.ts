@@ -12,13 +12,3 @@ export const currentUser = async () => {
 
   return user;
 };
-
-export const requiredCurrentUser = async () => {
-  const user = await currentUser();
-
-  if (!user) {
-    throw new Error("User not found");
-  }
-
-  return user;
-};

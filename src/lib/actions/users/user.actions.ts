@@ -2,9 +2,8 @@
 
 import { prisma } from "@/prisma";
 
-import { User } from "@prisma/client";
 import { z } from "zod";
-import { UserSchema, UserSearchSchema } from "./user.schema";
+import { UserSchema } from "./user.schema";
 import { ActionError, userAction } from "@/lib/safe.actions";
 import { revalidatePath } from "next/cache";
 import { del, put } from "@vercel/blob";
@@ -106,34 +105,5 @@ export const updateUserAction = userAction(
     });
     revalidatePath("/dashboard");
     return updatedUser;
-  }
-);
-export const updateUserSearchAction = userAction(
-  z.object({
-    id: z.string(),
-    data: UserSearchSchema,
-  }),
-  async (input, context) => {
-    await verifySlugUniqueness(input.id);
-
-    const updatedUser = await prisma.user.update({
-      where: {
-        id: input.id,
-      },
-      data: input.data,
-    });
-
-    return updatedUser;
-  }
-);
-
-export const deleteUserAction = userAction(
-  z.string(),
-  async (userId, context) => {
-    await prisma.user.delete({
-      where: {
-        id: context.user.id,
-      },
-    });
   }
 );

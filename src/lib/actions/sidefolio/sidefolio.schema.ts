@@ -11,5 +11,3 @@ export const SidefolioSchema = z.object({
   bio: z.string().optional(),
   location: z.string().optional(),
 });
-
-export type SidefolioType = z.infer<typeof SidefolioSchema>;

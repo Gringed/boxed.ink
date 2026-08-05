@@ -1,177 +1,61 @@
 import { Separator } from "@/components/ui/separator";
 import { LandingHeader } from "@/features/landing/LandingHeader";
 import { Section } from "@/features/landing/Section";
+import Footer from "@/features/landing/Footer";
 import React from "react";
 
 const page = () => {
   return (
     <>
       <LandingHeader />
-      <div className="flex flex-col w-full h-full ">
-        <Section className="flex flex-col items-start text-medium text-justify  h-full py-10  w-full">
+      <div className="flex flex-col w-full">
+        <Section className="flex flex-col items-start text-medium text-justify py-10 w-full gap-10">
           <div className="w-full">
             <div className="mb-5 flex gap-3 flex-col">
               <h1 className="text-2xl font-bold">
-                June 2024 - Fix problems and crop feature
+                August 6, 2026 - Twitch and YouTube channel blocks
               </h1>
               <Separator />
             </div>
-            <div>
+            <div className="flex flex-col gap-4">
               <p>
-                We're Introducing a crop image feature. Custom size of your
-                images for dekstop and mobile.
+                You can now drop a Twitch or YouTube channel link straight
+                into your page. We automatically fetch the channel's avatar,
+                name and live status (or category for Twitch), and turn it
+                into a proper card with a Watch button - no manual setup
+                needed.
               </p>
-            </div>
-            <div className="my-4 w-1/2">
-              <video
-                className="h-full w-full object-cover object-left"
-                loop
-                autoPlay={true}
-                muted
-              >
-                <source
-                  src="http://res.cloudinary.com/dhgoagdvr/video/upload/v1720528802/Sidepro/iartw8ocgsopd5cckhsv.mp4"
-                  type="video/webm"
-                />
-                <source
-                  src="http://res.cloudinary.com/dhgoagdvr/video/upload/v1720528802/Sidepro/iartw8ocgsopd5cckhsv.mp4"
-                  type="video/mp4"
-                />
-                Download the
-                <a href="http://res.cloudinary.com/dhgoagdvr/video/upload/v1720528802/Sidepro/iartw8ocgsopd5cckhsv.mp4">
-                  WEBM
-                </a>
-                or
-                <a href="http://res.cloudinary.com/dhgoagdvr/video/upload/v1720528802/Sidepro/iartw8ocgsopd5cckhsv.mp4">
-                  MP4
-                </a>
-                video.
-              </video>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
+                <div className="aspect-video w-full rounded-xl border border-dashed border-muted-foreground/30 flex items-center justify-center text-sm text-muted-foreground">
+                  Video coming soon
+                </div>
+                <div className="aspect-video w-full rounded-xl border border-dashed border-muted-foreground/30 flex items-center justify-center text-sm text-muted-foreground">
+                  Video coming soon
+                </div>
+              </div>
             </div>
           </div>
           <div className="w-full">
             <div className="mb-5 flex gap-3 flex-col">
               <h1 className="text-2xl font-bold">
-                May 2024 - Many features was evolved and introducing mobile
-                device
+                August 5, 2026 - A new name, a fresh start
               </h1>
               <Separator />
             </div>
             <div>
               <p>
-                We're Introducing a mobile device to build and view the
-                rendering on the phone.
+                Before today, bentoh was known as SidePro. This whole rebuild
+                started because bento.me shut down and got bought out by
+                Linktree - we didn't want that idea to just die, so we
+                decided to take it back into our own hands. Same mission -
+                help you show off your work - but rethought completely, from
+                the name to the design.
               </p>
-            </div>
-            <div className="my-4">
-              <video
-                className="h-full w-full object-cover object-left"
-                loop
-                autoPlay={true}
-                muted
-              >
-                <source
-                  src="http://res.cloudinary.com/dhgoagdvr/video/upload/v1720528453/Sidepro/dpcbmpjihanjj6oscbaz.mp4"
-                  type="video/webm"
-                />
-                <source
-                  src="http://res.cloudinary.com/dhgoagdvr/video/upload/v1720528453/Sidepro/dpcbmpjihanjj6oscbaz.mp4"
-                  type="video/mp4"
-                />
-                Download the
-                <a href="http://res.cloudinary.com/dhgoagdvr/video/upload/v1720528453/Sidepro/dpcbmpjihanjj6oscbaz.mp4">
-                  WEBM
-                </a>
-                or
-                <a href="http://res.cloudinary.com/dhgoagdvr/video/upload/v1720528453/Sidepro/dpcbmpjihanjj6oscbaz.mp4">
-                  MP4
-                </a>
-                video.
-              </video>
-            </div>
-          </div>
-          <div className="w-full">
-            <div className="mb-5 flex gap-3 flex-col">
-              <h1 className="text-2xl font-bold">
-                April 2024 - Introducing sidepro.me
-              </h1>
-              <Separator />
-            </div>
-            <div>
-              <p>
-                We're Introducing sidepro.me, a simple way to build a porfolio
-                or anything that shows you off.
-              </p>
-            </div>
-            <div className="my-4">
-              <video
-                className="h-full w-full object-cover object-left"
-                loop
-                autoPlay={true}
-                muted
-              >
-                <source
-                  src="http://res.cloudinary.com/dhgoagdvr/video/upload/v1720528146/Sidepro/owirvtdhanhofoq9eelu.mp4"
-                  type="video/webm"
-                />
-                <source
-                  src="http://res.cloudinary.com/dhgoagdvr/video/upload/v1720528146/Sidepro/owirvtdhanhofoq9eelu.mp4"
-                  type="video/mp4"
-                />
-                Download the
-                <a href="http://res.cloudinary.com/dhgoagdvr/video/upload/v1720528146/Sidepro/owirvtdhanhofoq9eelu.mp4">
-                  WEBM
-                </a>
-                or
-                <a href="http://res.cloudinary.com/dhgoagdvr/video/upload/v1720528146/Sidepro/owirvtdhanhofoq9eelu.mp4">
-                  MP4
-                </a>
-                video.
-              </video>
-            </div>
-          </div>
-          <div className="w-full">
-            <div className="mb-5 flex gap-3 flex-col">
-              <h1 className="text-2xl font-bold">
-                April 2024 - Introducing sidepro.me
-              </h1>
-              <Separator />
-            </div>
-            <div>
-              <p>
-                We're Introducing sidepro.me, a simple way to build a porfolio
-                or anything that shows you off.
-              </p>
-            </div>
-            <div className="my-4">
-              <video
-                className="h-full w-full object-cover object-left"
-                loop
-                autoPlay={true}
-                muted
-              >
-                <source
-                  src="http://res.cloudinary.com/dhgoagdvr/video/upload/v1720528146/Sidepro/owirvtdhanhofoq9eelu.mp4"
-                  type="video/webm"
-                />
-                <source
-                  src="http://res.cloudinary.com/dhgoagdvr/video/upload/v1720528146/Sidepro/owirvtdhanhofoq9eelu.mp4"
-                  type="video/mp4"
-                />
-                Download the
-                <a href="http://res.cloudinary.com/dhgoagdvr/video/upload/v1720528146/Sidepro/owirvtdhanhofoq9eelu.mp4">
-                  WEBM
-                </a>
-                or
-                <a href="http://res.cloudinary.com/dhgoagdvr/video/upload/v1720528146/Sidepro/owirvtdhanhofoq9eelu.mp4">
-                  MP4
-                </a>
-                video.
-              </video>
             </div>
           </div>
         </Section>
       </div>
+      <Footer />
     </>
   );
 };

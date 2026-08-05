@@ -10,6 +10,8 @@ import { prisma } from "@/prisma";
 import Sections from "@/features/platform/dashboard/components/Sections";
 import { Metadata } from "next";
 
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata(): Promise<Metadata> {
   const user = await currentUser();
   const sidefolio = await prisma.sidefolio.findFirst({
@@ -21,7 +23,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: sidefolio?.name || sidefolio?.title,
     icons: {
-      icon: [`${sidefolio?.image || "/favicon.ico"} `],
+      icon: [sidefolio?.image || "/favicon.ico"],
       apple: ["/apple-touch-icon.png?v=4"],
       shortcut: ["/apple-touch-icon.png"],
     },

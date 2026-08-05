@@ -1,7 +1,8 @@
 "use client";
 import React, { useState, useEffect, useCallback, useRef } from "react";
 
-import { Responsive, WidthProvider, Layout, Layouts } from "react-grid-layout";
+import { Responsive, Layout, Layouts } from "react-grid-layout";
+import { useSquareRowHeight } from "@/lib/hooks/useSquareRowHeight";
 import { Input } from "@/components/ui/input";
 
 import { MapPin } from "lucide-react";
@@ -17,8 +18,20 @@ import Image from "next/image";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
 import CharacterCount from "@tiptap/extension-character-count";
+import { YouTubeChannelCard } from "@/features/platform/shared/YouTubeChannelCard";
+import { TwitchChannelCard } from "@/features/platform/shared/TwitchChannelCard";
 
-const ResponsiveReactGridLayout = WidthProvider(Responsive);
+const ResponsiveReactGridLayout = Responsive;
+const GRID_MARGIN = 30;
+
+const safeHostname = (url?: string) => {
+  if (!url) return "";
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return "";
+  }
+};
 
 interface SectionsProps {
   sections: any;
@@ -33,10 +46,18 @@ const PublishedSections = ({
   desktop,
   mobile,
 }: SectionsProps) => {
-  const cols = { lg: 4, md: 4, sm: 2, xs: 1, xxs: 1 };
+  const cols = { lg: 8, md: 8, sm: 4, xs: 4, xxs: 4 };
   const [currentBreakpoint, setCurrentBreakpoint] = useState("lg");
+  const {
+    ref: gridWrapperRef,
+    width: gridWidth,
+    rowHeight: gridRowHeight,
+  } = useSquareRowHeight(
+    cols[currentBreakpoint as keyof typeof cols] ?? 8,
+    GRID_MARGIN
+  );
 
-  const [compactType, setCompactType] = useState(sidefolio?.compactType);
+  const compactType = "vertical";
 
   const [mounted, setMounted] = useState(false);
   const [layouts, setLayouts] = useState<Layouts>({
@@ -63,6 +84,15 @@ const PublishedSections = ({
       };
     }
   }, []);
+
+  // Drive the grid's breakpoint (and avatar/text sizing) from the real
+  // viewport width, not the grid sub-container's own (narrower) width —
+  // otherwise react-grid-layout picks its breakpoint internally from
+  // `width={gridWidth}` and silently renders the mobile position dataset
+  // even on desktop screens.
+  useEffect(() => {
+    setCurrentBreakpoint(matches ? "lg" : "xs");
+  }, [matches]);
   const textInputRef = useRef<HTMLInputElement>(null);
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -137,33 +167,39 @@ const PublishedSections = ({
           ? `url("${sidefolio.background}") center / cover no-repeat`
           : sidefolio?.color || "white",
       }}
-      className={`flex  animate-fade w-full  px-4 py-14 flex-col ${
-        sidefolio?.sidebar === "left" && "lg:flex-row"
-      } ${sidefolio?.sidebar === "right" && "lg:flex-row-reverse"} shadow-2xl
-         lg:w-full lg:h-full overflow-auto lg:px-14 lg:py-14 
-            !opacity-100
-       transition-all`}
+      className={`flex relative animate-fade  ${
+        currentBreakpoint === "xs"
+          ? "w-96 border-2 h-[800px] px-4 py-14 flex-col border-b-8 !opacity-100  mt-10 overflow-y-auto overflow-x-hidden rounded-3xl shadow-2xl"
+          : `w-full h-full overflow-auto flex-col  px-4 md:px-4 lg:px-36 xl:px-10  py-14 ${
+              sidefolio?.sidebar === "left"
+                ? " xl:flex-row"
+                : " xl:flex-row-reverse"
+            } !opacity-100`
+      }  transition-all`}
     >
       <div
-        className={` relative  h-full ${
-          currentBreakpoint === "xs" ? "w-full h-full" : "top-[0rem] xl:sticky "
+        className={` relative  ${
+          currentBreakpoint === "xs"
+            ? "w-full max-h-[calc(100vh-100px)]"
+            : "top-[0rem] max-w-full min-w-[calc(100vw-1000px)] min-h-fit  max-h-[calc(100vh+50px)] xl:min-h-[calc(100vh-150px)] xl:sticky overflow-y-auto"
         } `}
         style={{ scrollbarWidth: "none" }}
       >
         <BlurFade inView>
           <div
-            className={
-              "flex flex-col  max-w  w-full rounded-md h-full items-start justify-start gap-4 px-3 py-8"
-            }
+            className={`flex flex-col  w-full rounded-3xl h-full  ${
+              sidefolio?.sidebar === "right" ? "items-end" : "items-start"
+            } justify-start gap-4 2xl:px-12 px-4 py-8`}
             style={{
               scrollbarWidth: "none",
-              minWidth: "min(500px,calc(100vw - 1000px))",
             }}
           >
             <div className="group/avatar rounded-full relative shadow-lg">
               <Avatar
                 className={`${
-                  currentBreakpoint === "xs" ? "size-28" : "lg:size-48 size-28"
+                  currentBreakpoint === "xs"
+                    ? "size-28"
+                    : "2xl:size-52 md:size-40"
                 }  cursor-pointer `}
               >
                 {sidefolio?.image ? (
@@ -183,7 +219,11 @@ const PublishedSections = ({
             </div>
             <div
               className={`w-full transition-all font-bold ${
-                currentBreakpoint === "xs" ? "text-3xl" : "text-sm lg:text-5xl"
+                sidefolio?.sidebar === "right" ? "text-right" : "text-left"
+              } ${
+                currentBreakpoint === "xs"
+                  ? "text-3xl"
+                  : "2xl:text-5xl md:text-4xl"
               } `}
             >
               <EditorContent spellCheck={false} editor={nameEditor} />
@@ -191,12 +231,20 @@ const PublishedSections = ({
 
             <div
               className={`w-full transition-all  ${
-                currentBreakpoint === "xs" ? "text-base" : "text-sm lg:text-lg"
+                sidefolio?.sidebar === "right" ? "text-right" : "text-left"
+              } ${
+                currentBreakpoint === "xs"
+                  ? "text-base"
+                  : " lg:text-lg md:text-base"
               } `}
             >
               <EditorContent editor={bioEditor} spellCheck={false} />
             </div>
-            <div className="z-10 my-5 w-full text-sm flex items-center gap-1">
+            <div
+              className={`z-10 my-5 w-full text-sm flex items-center gap-1 ${
+                sidefolio?.sidebar === "right" ? "flex-row-reverse" : ""
+              }`}
+            >
               <div className="rounded-full  ms-2 border bg-white backdrop-blur-sm shadow">
                 <Image
                   src={
@@ -218,32 +266,38 @@ const PublishedSections = ({
           </div>
         </BlurFade>
       </div>
-      <div className="w-full">
+      <div className="w-full pb-20">
+        <BlurFade inView delay={0.2} className="pb-20">
+        <div ref={gridWrapperRef}>
         <ResponsiveReactGridLayout
           layouts={layouts}
-          measureBeforeMount={false}
+          width={gridWidth}
+          breakpoint={currentBreakpoint}
           useCSSTransforms={mounted}
           compactType={compactType}
           cols={cols}
           isDraggable={false}
           isResizable={false}
-          margin={[30, 30]}
+          margin={[GRID_MARGIN, GRID_MARGIN]}
+          containerPadding={[0, 0]}
           preventCollision={!compactType}
-          {...{ rowHeight: 90 }}
+          rowHeight={gridRowHeight}
         >
           {sections.map((l: any, i: any) => (
             <div
               id={l.id}
               key={l.i}
               className={
-                "border border-gray-300/50 shadow react-grid-item-publish hover:shadow-md group/item rounded-md bg-white relative  flex justify-start cursor-default"
+                l?.type === "TITLE"
+                  ? "border border-transparent group/item relative flex justify-start cursor-default"
+                  : "border border-gray-300/50 shadow react-grid-item-publish hover:shadow-md group/item rounded-3xl bg-white relative  flex justify-start cursor-default"
               }
             >
               {l?.type === "TEXT" ? (
                 <>
                   <div
                     className={
-                      "flex  w-full rounded-md h-full items-start  p-3"
+                      "flex  w-full rounded-3xl h-full items-start overflow-hidden"
                     }
                     style={{
                       background: l?.background ? `${l.background}` : "white",
@@ -255,7 +309,7 @@ const PublishedSections = ({
                       readOnly
                       name="title"
                       style={{ color: l?.color ? `${l.color}` : "black" }}
-                      className={`cursor-default  z-10 bg-transparent border-none  resize-none min-h-0 focus-visible:bg-slate-300/20 focus-visible:ring-0 shadow-none h-full  w-full p-3`}
+                      className={`cursor-default  z-10 bg-transparent border-none rounded-3xl resize-none min-h-0 focus-visible:bg-slate-300/20 focus-visible:ring-0 shadow-none h-full  w-full p-3`}
                       defaultValue={l.title}
                       placeholder="Add a new title"
                     />
@@ -264,10 +318,7 @@ const PublishedSections = ({
               ) : l?.type === "TITLE" ? (
                 <>
                   <div
-                    className={"flex  w-full rounded-md h-full items-start p-3"}
-                    style={{
-                      background: l?.background ? `${l.background}` : "white",
-                    }}
+                    className={"flex  w-full rounded-[22px] h-full items-start p-0.5"}
                   >
                     <Input
                       key={i}
@@ -275,7 +326,11 @@ const PublishedSections = ({
                       name="title"
                       readOnly
                       style={{ color: l?.color ? `${l.color}` : "black" }}
-                      className={`cursor-default  z-10 bg-transparent border-none text-center font-bold text-sm  lg:text-3xl break-words  resize-none min-h-0 focus-visible:bg-slate-300/20 focus-visible:ring-0 shadow-none h-full  w-full p-3`}
+                      className={`cursor-default ${
+                        currentBreakpoint === "xs"
+                          ? "text-lg"
+                          : "text-sm lg:text-3xl"
+                      }  z-10 bg-transparent border-none text-left font-bold break-words  resize-none min-h-0 focus-visible:bg-slate-300/20 focus-visible:ring-0 shadow-none h-full  w-full p-0.5`}
                       defaultValue={l.title}
                       placeholder="Add a new title"
                     />
@@ -286,7 +341,7 @@ const PublishedSections = ({
                   <div
                     key={i}
                     className={
-                      "flex flex-col overflow-auto  w-full rounded-md h-full items-start justify-start gap-6 p-3"
+                      "flex flex-col overflow-auto  w-full rounded-3xl h-full items-start justify-start gap-6 p-3"
                     }
                     style={{
                       background: l?.background ? `${l.background}` : "white",
@@ -346,10 +401,66 @@ const PublishedSections = ({
                     </div>
                   </div>
                 </>
+              ) : l?.type === "LINK" && l?.link?.youtube ? (
+                <>
+                  <div
+                    className="relative w-full h-full rounded-3xl bg-white cursor-pointer"
+                    onClick={() =>
+                      window.open(
+                        l.link.youtube.channelUrl,
+                        "_blank",
+                        "noopener,noreferrer"
+                      )
+                    }
+                  >
+                    {(() => {
+                      const bp = currentBreakpoint as keyof typeof cols;
+                      const currentItem = (layouts[bp] || []).find(
+                        (item: Layout) => item.i === l.i
+                      );
+                      return (
+                        <YouTubeChannelCard
+                          youtube={l.link.youtube}
+                          color={l?.color}
+                          w={currentItem?.w ?? 2}
+                          h={currentItem?.h ?? 2}
+                        />
+                      );
+                    })()}
+                  </div>
+                </>
+              ) : l?.type === "LINK" && l?.link?.twitch ? (
+                <>
+                  <div
+                    className="relative w-full h-full rounded-3xl bg-white cursor-pointer"
+                    onClick={() =>
+                      window.open(
+                        l.link.twitch.channelUrl,
+                        "_blank",
+                        "noopener,noreferrer"
+                      )
+                    }
+                  >
+                    {(() => {
+                      const bp = currentBreakpoint as keyof typeof cols;
+                      const currentItem = (layouts[bp] || []).find(
+                        (item: Layout) => item.i === l.i
+                      );
+                      return (
+                        <TwitchChannelCard
+                          twitch={l.link.twitch}
+                          color={l?.color}
+                          w={currentItem?.w ?? 2}
+                          h={currentItem?.h ?? 2}
+                        />
+                      );
+                    })()}
+                  </div>
+                </>
               ) : l?.type === "LINK" ? (
                 <>
                   <div
-                    className={"flex  w-full rounded-md h-full items-start p-3"}
+                    className={"flex  w-full rounded-3xl h-full items-start p-2"}
                     style={{
                       background: l?.background ? `${l.background}` : "white",
                     }}
@@ -362,25 +473,17 @@ const PublishedSections = ({
                     >
                       <Avatar className="size-10 border shadow-md h-fit object-cover p-1.5">
                         <AvatarFallback>{l.link?.title[0]}</AvatarFallback>
-                        {l.link?.favicons ? (
-                          <object
-                            data={
-                              l?.link.url?.split("/")[2] === "read.cv"
-                                ? l.link?.favicons[1]?.href
-                                : l.link?.favicons[0]?.href
-                            }
-                            type="image/jpeg"
-                            className=" object-cover w-full h-full"
-                          >
-                            <AvatarImage
-                              src={
-                                "https://upload.wikimedia.org/wikipedia/commons/5/56/Chain_link_icon_slanted.png"
-                              }
-                              className=" object-cover "
-                              alt={`${l?.link && l.link.title} picture`}
-                            />
-                          </object>
-                        ) : null}
+                        <AvatarImage
+                          src={
+                            l?.link.url?.split("/")[2] === "read.cv"
+                              ? l.link?.favicons?.[1]?.href
+                              : `https://www.google.com/s2/favicons?sz=128&domain=${safeHostname(
+                                  l?.link?.url
+                                )}`
+                          }
+                          className=" object-cover "
+                          alt={`${l?.link && l.link.title} picture`}
+                        />
                       </Avatar>
                       <div
                         className={`${
@@ -393,10 +496,10 @@ const PublishedSections = ({
                               l.link?.["og:image"] || l.link?.imgTags[0]?.src
                             }
                             type="image/jpeg"
-                            className=" object-cover w-full h-full rounded-md"
+                            className=" object-cover w-full h-full rounded-3xl"
                           >
                             <img
-                              className=" object-cover w-full h-full rounded-md"
+                              className=" object-cover w-full h-full rounded-3xl"
                               src="https://learning.knowbility.org/local/sitepages/upload/no-preview-available.png"
                               alt=""
                             />
@@ -418,13 +521,13 @@ const PublishedSections = ({
                 <>
                   <div
                     className={
-                      "absolute  rounded-md  top-0 left-0 h-full w-full"
+                      "absolute  rounded-3xl  top-0 left-0 h-full w-full"
                     }
                   >
                     <div
                       style={{
                         scrollbarWidth: "none",
-                        clipPath: "inset(0px round 12px)",
+                        clipPath: "inset(0px round 24px)",
                       }}
                       className={` h-full w-full`}
                     >
@@ -432,7 +535,7 @@ const PublishedSections = ({
                         <>
                           <img
                             draggable="false"
-                            className="absolute overflow-clip min-w-full min-h-full  rounded-md"
+                            className="absolute overflow-clip min-w-full min-h-full  rounded-3xl"
                             style={{
                               transform: `translate(${
                                 !matches
@@ -461,6 +564,8 @@ const PublishedSections = ({
             </div>
           ))}
         </ResponsiveReactGridLayout>
+        </div>
+        </BlurFade>
       </div>
     </div>
   );
