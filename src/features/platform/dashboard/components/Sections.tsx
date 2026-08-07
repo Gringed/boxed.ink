@@ -13,6 +13,7 @@ import Placeholder from "@tiptap/extension-placeholder";
 import { Responsive, Layout, Layouts } from "react-grid-layout";
 import { AnimatePresence, motion } from "framer-motion";
 import { Input } from "@/components/ui/input";
+import { isLightColor } from "@/lib/utils";
 import {
   getPreview,
   importLinktreeAction,
@@ -29,6 +30,7 @@ import NavLinks from "../NavLinks";
 import { LoggedInButton } from "@/features/auth/LoggedInButton";
 import {
   Crop,
+  ExternalLink,
   Heart,
   Loader2,
   LoaderIcon,
@@ -63,7 +65,6 @@ const LocationMap = dynamic(
     ),
   { ssr: false }
 );
-import Link from "next/link";
 import {
   Dialog,
   DialogContent,
@@ -94,9 +95,6 @@ import { YouTubeChannelCard } from "@/features/platform/shared/YouTubeChannelCar
 import { TwitchChannelCard } from "@/features/platform/shared/TwitchChannelCard";
 const ResponsiveReactGridLayout = Responsive;
 
-const NO_PREVIEW_IMAGE =
-  "https://learning.knowbility.org/local/sitepages/upload/no-preview-available.png";
-
 const safeHostname = (url?: string) => {
   if (!url) return "";
   try {
@@ -105,6 +103,11 @@ const safeHostname = (url?: string) => {
     return "";
   }
 };
+
+const editableFieldClass = (background?: string) =>
+  isLightColor(background)
+    ? "bg-black/[0.04] hover:bg-black/[0.07] focus-visible:bg-black/[0.07]"
+    : "bg-white/10 hover:bg-white/[0.15] focus-visible:bg-white/[0.15]";
 
 const SIZE_PRESETS: { w: number; h: number }[] = [
   { w: 2, h: 2 },
@@ -155,6 +158,13 @@ const Sections = ({
   );
   const [isMobile, setIsMobile] = useState(false);
   const [isFocus, setIsFocus] = useState(false);
+  const [editingTextId, setEditingTextId] = useState<string | null>(null);
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
+  useEffect(() => {
+    setIsTouchDevice(
+      "ontouchstart" in window || navigator.maxTouchPoints > 0
+    );
+  }, []);
   const [openReview, setOpenReview] = useState(false);
   const compactType = "vertical";
   const [side, setSide] = useState(sidefolio?.sidebar);
@@ -653,6 +663,18 @@ const Sections = ({
     timeoutRef.current = setTimeout(() => {
       saveChanges(name, newValue, l);
     }, 3000);
+  };
+  const handleLinkTitleChange = (
+    e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>,
+    l: any
+  ) => {
+    const newValue = e.target.value;
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    timeoutRef.current = setTimeout(() => {
+      saveChanges("link", { ...l.link, title: newValue }, l);
+    }, 1500);
   };
   const handleTextColorChange = async (
     e: React.ChangeEvent<HTMLInputElement>,
@@ -1264,24 +1286,42 @@ const Sections = ({
                         background: l?.background ? `${l.background}` : "white",
                       }}
                     >
-                      <div
-                        className={"absolute dragMe top-0 left-0 h-full w-full"}
-                      />
-
-                      <Textarea
-                        key={i}
-                        ref={textAreaRef}
-                        onChange={(e) => handleChange(e, l)}
-                        name="title"
-                        onFocus={() => setIsFocus(true)}
-                        onBlur={() => setIsFocus(false)}
-                        style={{ color: l?.color ? `${l.color}` : "black" }}
-                        className={` ${
-                          !isFocus ? "dragMe select-none " : "select-text"
-                        }  z-10 bg-transparent border-none rounded-3xl hover:bg-slate-300/20 resize-none min-h-0 focus-visible:bg-slate-300/20 focus-visible:ring-0 shadow-none h-full  w-full p-3`}
-                        defaultValue={l.title}
-                        placeholder="Add a new title"
-                      />
+                      {(() => {
+                        const isEditingThis = editingTextId === l.i;
+                        return (
+                          <>
+                            <Textarea
+                              key={i}
+                              ref={textAreaRef}
+                              onChange={(e) => handleChange(e, l)}
+                              name="title"
+                              onMouseDown={(e) => {
+                                if (!isEditingThis) e.preventDefault();
+                              }}
+                              onDoubleClick={(e) => {
+                                setEditingTextId(l.i);
+                                (e.currentTarget as HTMLTextAreaElement).focus();
+                              }}
+                              onBlur={() => setEditingTextId(null)}
+                              style={{ color: l?.color ? `${l.color}` : "black" }}
+                              className={`${
+                                isEditingThis
+                                  ? "select-text cursor-text"
+                                  : "dragMe select-none cursor-grab"
+                              }  z-10 bg-transparent border-none rounded-3xl hover:bg-slate-300/20 resize-none min-h-0 focus-visible:bg-slate-300/20 focus-visible:ring-0 shadow-none h-full  w-full p-3`}
+                              defaultValue={l.title}
+                              placeholder="Add a new title"
+                            />
+                            {!isEditingThis && (
+                              <span className="absolute bottom-2 right-3 z-20 text-[10px] text-gray-400 opacity-0 group-hover/item:opacity-100 transition-all pointer-events-none select-none">
+                                {isTouchDevice
+                                  ? "Double-tap to edit"
+                                  : "Double-click to edit"}
+                              </span>
+                            )}
+                          </>
+                        );
+                      })()}
                     </div>
                     <span
                       className="absolute group/span opacity-0 group-focus-visible/item:opacity-100 group-hover/item:opacity-100 transition-all hover:bg-gray-50 hover:shadow-md -right-2 p-2 shadow -m-1 bg-white border rounded-full z-20 -top-2 cursor-pointer"
@@ -1438,84 +1478,92 @@ const Sections = ({
                 ) : l?.type === "LINK" ? (
                   <>
                     <div
-                      className={
-                        "flex  w-full rounded-3xl h-full items-start p-2"
-                      }
+                      className="dragMe relative w-full h-full rounded-3xl cursor-grab overflow-hidden flex flex-col gap-1.5 p-3"
                       style={{
                         background: l?.background ? `${l.background}` : "white",
                       }}
                     >
-                      <div
-                        className={"absolute dragMe top-0 left-0 h-full w-full"}
-                      />
+                      <div className="flex items-center justify-between gap-2 w-full shrink-0">
+                        <Avatar className="size-9 border shadow-md shrink-0 object-cover p-1.5">
+                          <AvatarFallback>{l.link?.title?.[0]}</AvatarFallback>
+                          <AvatarImage
+                            src={
+                              l?.link.url?.split("/")[2] === "read.cv"
+                                ? l.link?.favicons?.[1]?.href
+                                : `https://www.google.com/s2/favicons?sz=128&domain=${safeHostname(
+                                    l?.link?.url
+                                  )}`
+                            }
+                            draggable={false}
+                            className="object-cover select-none"
+                            alt={`${l?.link && l.link.title} picture`}
+                          />
+                        </Avatar>
+                        <a
+                          href={l?.link?.url || "#"}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="shrink-0 text-gray-400 hover:text-noir transition-colors"
+                          title="Opens in a new tab"
+                        >
+                          <ExternalLink size={15} />
+                        </a>
+                      </div>
                       {(() => {
                         const bp = currentBreakpoint as keyof typeof cols;
                         const currentItem = (effectiveLayouts[bp] || []).find(
                           (item: Layout) => item.i === l.i
                         );
-                        const itemW = currentItem?.w ?? 2;
-                        const itemH = currentItem?.h ?? 2;
-                        const mode =
-                          itemW === 4 && itemH === 1
-                            ? "row"
-                            : itemW === 4 && itemH === 4
-                            ? "full"
-                            : itemW === 2 && itemH === 4
-                            ? "tall"
-                            : "compact";
-                        const showsImageArea = mode !== "row";
+                        const isRow =
+                          (currentItem?.w ?? 2) === 4 &&
+                          (currentItem?.h ?? 2) === 1;
+
+                        if (isRow) {
+                          return (
+                            <Input
+                              name="linkTitle"
+                              onChange={(e) => handleLinkTitleChange(e, l)}
+                              style={{
+                                color: l?.color ? `${l.color}` : "black",
+                              }}
+                              className={`shrink-0 min-h-0 h-auto overflow-hidden border-none px-1.5 py-0.5 rounded-md truncate text-sm font-bold focus-visible:ring-0 shadow-none transition-colors ${editableFieldClass(
+                                l?.background
+                              )}`}
+                              defaultValue={l.link?.title}
+                              placeholder="Add a title"
+                            />
+                          );
+                        }
+
                         return (
-                          <Link
-                            target="_blank"
-                            href={l?.link?.url || "#"}
-                            className={`z-0 h-full w-full flex flex-col gap-2 cursor-pointer ${
-                              showsImageArea ? "" : "justify-center"
-                            }`}
-                          >
-                            <div className="flex items-center gap-2 w-full shrink-0">
-                              <Avatar
-                                className={`${
-                                  mode === "row" ? "size-8" : "size-10"
-                                } border shadow-md shrink-0 object-cover p-1.5`}
-                              >
-                                <AvatarFallback>
-                                  {l.link?.title?.[0]}
-                                </AvatarFallback>
-                                <AvatarImage
-                                  src={
-                                    l?.link.url?.split("/")[2] === "read.cv"
-                                      ? l.link?.favicons?.[1]?.href
-                                      : `https://www.google.com/s2/favicons?sz=128&domain=${safeHostname(
-                                          l?.link?.url
-                                        )}`
-                                  }
-                                  className="object-cover"
-                                  alt={`${l?.link && l.link.title} picture`}
-                                />
-                              </Avatar>
-                              <span
-                                className="line-clamp-2 break-words flex-1 min-w-0"
-                                style={{
-                                  color: l?.color ? `${l.color}` : "black",
-                                }}
-                              >
-                                {l.link?.title}
-                              </span>
-                            </div>
-                            {showsImageArea && (
-                              <div className="flex-1 min-h-0 w-full relative">
-                                <img
-                                  className="object-cover w-full h-full rounded-2xl"
-                                  src={
-                                    l.link?.["og:image"] ||
-                                    l.link?.imgTags?.[0]?.src ||
-                                    NO_PREVIEW_IMAGE
-                                  }
-                                  alt=""
-                                />
-                              </div>
-                            )}
-                          </Link>
+                          <>
+                            <Textarea
+                              name="linkTitle"
+                              ref={(el) => {
+                                if (el) {
+                                  el.style.height = "auto";
+                                  el.style.height = `${el.scrollHeight}px`;
+                                }
+                              }}
+                              onInput={(e) => {
+                                const el = e.currentTarget;
+                                el.style.height = "auto";
+                                el.style.height = `${el.scrollHeight}px`;
+                              }}
+                              onChange={(e) => handleLinkTitleChange(e, l)}
+                              style={{
+                                color: l?.color ? `${l.color}` : "black",
+                              }}
+                              className={`shrink-0 min-h-0 overflow-hidden border-none px-1.5 py-0.5 rounded-md resize-none break-words text-sm font-bold focus-visible:ring-0 shadow-none transition-colors ${editableFieldClass(
+                                l?.background
+                              )}`}
+                              defaultValue={l.link?.title}
+                              placeholder="Add a title"
+                            />
+                            <span className="text-xs text-gray-400 break-all">
+                              {l.link?.url}
+                            </span>
+                          </>
                         );
                       })()}
                     </div>

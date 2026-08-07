@@ -14,6 +14,7 @@ export const SectionSchema = z.object({
   type: z.enum(["TITLE", "TEXT", "LINK", "IMAGE", "ME"]).optional(),
   color: z.string().optional(),
   background: z.string().optional(),
+  link: z.any().optional(),
   mobile: z.any().optional(),
   desktop: z.any().optional(),
   i: z.string().optional(),

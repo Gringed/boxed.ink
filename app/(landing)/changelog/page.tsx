@@ -13,6 +13,48 @@ const page = () => {
           <div className="w-full">
             <div className="mb-5 flex gap-3 flex-col">
               <h1 className="text-2xl font-bold">
+                August 7, 2026 - Block polish, all around
+              </h1>
+              <Separator />
+            </div>
+            <div className="flex flex-col gap-3">
+              <p>
+                A round of quality-of-life improvements across most block
+                types:
+              </p>
+              <ul className="list-disc pl-6 flex flex-col gap-2">
+                <li>
+                  <span className="font-semibold">Link blocks</span> got a
+                  redesign - edit the title directly on the block instead of
+                  being stuck with whatever the page's metadata gave you, the
+                  full URL now shows below it, the whole block is clickable
+                  and opens in a new tab, and colors auto-adjust for
+                  readability whatever background you pick.
+                </li>
+                <li>
+                  <span className="font-semibold">Image blocks</span> are
+                  centered and auto-fitted to the block by default now,
+                  instead of needing a manual crop every time - you can still
+                  drag to crop manually if you want a specific framing.
+                </li>
+                <li>
+                  <span className="font-semibold">Text blocks</span> no
+                  longer jump into edit mode on a single click while you're
+                  rearranging your page - double-click (or double-tap on
+                  mobile) to edit, click away to go back to normal.
+                </li>
+                <li>
+                  Your{" "}
+                  <span className="font-semibold">location</span> is now
+                  shown on a real interactive map (search-as-you-type,
+                  zoomable) instead of just as text.
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div className="w-full">
+            <div className="mb-5 flex gap-3 flex-col">
+              <h1 className="text-2xl font-bold">
                 August 6, 2026 - Twitch and YouTube channel blocks
               </h1>
               <Separator />

@@ -5,13 +5,13 @@ import { Responsive, Layout, Layouts } from "react-grid-layout";
 import { useSquareRowHeight } from "@/lib/hooks/useSquareRowHeight";
 import { Input } from "@/components/ui/input";
 
-import { MapPin } from "lucide-react";
+import { ExternalLink, MapPin } from "lucide-react";
 
 import { Textarea } from "@/components/ui/textarea";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-import Link from "next/link";
+import { isLightColor } from "@/lib/utils";
 import BlurFade from "@/components/magicui/blur-fade";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
@@ -322,7 +322,7 @@ const PublishedSections = ({
                       readOnly
                       name="title"
                       style={{ color: l?.color ? `${l.color}` : "black" }}
-                      className={`cursor-default  z-10 bg-transparent border-none rounded-3xl resize-none min-h-0 focus-visible:bg-slate-300/20 focus-visible:ring-0 shadow-none h-full  w-full p-3`}
+                      className={`cursor-default  z-10 bg-transparent border-none rounded-3xl resize-none min-h-0 focus-visible:ring-0 shadow-none h-full  w-full p-3`}
                       defaultValue={l.title}
                       placeholder="Add a new title"
                     />
@@ -343,7 +343,7 @@ const PublishedSections = ({
                         currentBreakpoint === "xs"
                           ? "text-lg"
                           : "text-sm lg:text-3xl"
-                      }  z-10 bg-transparent border-none text-left font-bold break-words  resize-none min-h-0 focus-visible:bg-slate-300/20 focus-visible:ring-0 shadow-none h-full  w-full p-0.5`}
+                      }  z-10 bg-transparent border-none text-left font-bold break-words  resize-none min-h-0 focus-visible:ring-0 shadow-none h-full  w-full p-0.5`}
                       defaultValue={l.title}
                       placeholder="Add a new title"
                     />
@@ -381,7 +381,7 @@ const PublishedSections = ({
                       name="name"
                       readOnly
                       style={{ color: l?.color ? `${l.color}` : "black" }}
-                      className={`  z-10 bg-transparent border-none text-left font-bold text-sm h-fit  lg:text-3xl break-words  resize-none min-h-0 focus-visible:bg-slate-300/20 focus-visible:ring-0 shadow-none  w-full p-3`}
+                      className={`  z-10 bg-transparent border-none text-left font-bold text-sm h-fit  lg:text-3xl break-words  resize-none min-h-0 focus-visible:ring-0 shadow-none  w-full p-3`}
                       defaultValue={l.name}
                       placeholder="Add a new name"
                     />
@@ -394,7 +394,7 @@ const PublishedSections = ({
                         color: l?.color ? `${l.color}` : "black",
                         scrollbarWidth: "none",
                       }}
-                      className={`  z-10 bg-transparent border-none text-base   resize-none min-h-20 focus-visible:bg-slate-300/20 focus-visible:ring-0 shadow-none h-full  w-full p-3`}
+                      className={`  z-10 bg-transparent border-none text-base   resize-none min-h-20 focus-visible:ring-0 shadow-none h-full  w-full p-3`}
                       defaultValue={l.bio}
                       placeholder="Add a new bio"
                     />
@@ -407,7 +407,7 @@ const PublishedSections = ({
                         name="location"
                         readOnly
                         style={{ color: l?.color ? `${l.color}` : "black" }}
-                        className={`   z-10 bg-transparent border-none text-left font-bold text-sm h-fit break-words  resize-none min-h-0 focus-visible:bg-slate-300/20 focus-visible:ring-0 shadow-none  w-full p-3`}
+                        className={`   z-10 bg-transparent border-none text-left font-bold text-sm h-fit break-words  resize-none min-h-0 focus-visible:ring-0 shadow-none  w-full p-3`}
                         defaultValue={l.location}
                         placeholder="Add a new location"
                       />
@@ -473,41 +473,22 @@ const PublishedSections = ({
               ) : l?.type === "LINK" ? (
                 <>
                   <div
-                    className={"flex  w-full rounded-3xl h-full items-start p-2"}
+                    className="relative w-full h-full rounded-3xl overflow-hidden flex flex-col gap-1.5 p-3 cursor-pointer"
                     style={{
                       background: l?.background ? `${l.background}` : "white",
                     }}
+                    onClick={() =>
+                      window.open(l?.link.url, "_blank", "noopener,noreferrer")
+                    }
                   >
                     {(() => {
-                      const bp = currentBreakpoint as keyof typeof cols;
-                      const currentItem = (layouts[bp] || []).find(
-                        (item: Layout) => item.i === l.i
-                      );
-                      const itemW = currentItem?.w ?? 2;
-                      const itemH = currentItem?.h ?? 2;
-                      const mode =
-                        itemW === 4 && itemH === 1
-                          ? "row"
-                          : itemW === 4 && itemH === 4
-                          ? "full"
-                          : itemW === 2 && itemH === 4
-                          ? "tall"
-                          : "compact";
-                      const showsImageArea = mode !== "row";
+                      const mutedColor = isLightColor(l?.background)
+                        ? "rgb(0 0 0 / 0.4)"
+                        : "rgb(255 255 255 / 0.55)";
                       return (
-                        <Link
-                          target="_blank"
-                          href={l?.link.url}
-                          className={`z-10 h-full w-full flex flex-col gap-2 cursor-pointer ${
-                            showsImageArea ? "" : "justify-center"
-                          }`}
-                        >
-                          <div className="flex items-center gap-2 w-full shrink-0">
-                            <Avatar
-                              className={`${
-                                mode === "row" ? "size-8" : "size-10"
-                              } border shadow-md shrink-0 object-cover p-1.5`}
-                            >
+                        <>
+                          <div className="flex items-center justify-between gap-2 w-full shrink-0">
+                            <Avatar className="size-9 border shadow-md shrink-0 object-cover p-1.5">
                               <AvatarFallback>
                                 {l.link?.title[0]}
                               </AvatarFallback>
@@ -519,38 +500,50 @@ const PublishedSections = ({
                                         l?.link?.url
                                       )}`
                                 }
-                                className="object-cover"
+                                draggable={false}
+                                className="object-cover select-none"
                                 alt={`${l?.link && l.link.title} picture`}
                               />
                             </Avatar>
-                            <span
-                              className="line-clamp-2 break-words flex-1 min-w-0"
-                              style={{
-                                color: l?.color ? `${l.color}` : "black",
-                              }}
-                            >
-                              {l.link?.title}
-                            </span>
+                            <ExternalLink
+                              size={15}
+                              className="shrink-0"
+                              style={{ color: mutedColor }}
+                            />
                           </div>
-                          {showsImageArea && (
-                            <div className="flex-1 min-h-0 w-full">
-                              <object
-                                data={
-                                  l.link?.["og:image"] ||
-                                  l.link?.imgTags[0]?.src
-                                }
-                                type="image/jpeg"
-                                className="object-cover w-full h-full rounded-2xl"
-                              >
-                                <img
-                                  className="object-cover w-full h-full rounded-2xl"
-                                  src="https://learning.knowbility.org/local/sitepages/upload/no-preview-available.png"
-                                  alt=""
-                                />
-                              </object>
-                            </div>
-                          )}
-                        </Link>
+                          {(() => {
+                            const bp = currentBreakpoint as keyof typeof cols;
+                            const currentItem = (layouts[bp] || []).find(
+                              (item: Layout) => item.i === l.i
+                            );
+                            const isRow =
+                              (currentItem?.w ?? 2) === 4 &&
+                              (currentItem?.h ?? 2) === 1;
+
+                            return (
+                              <>
+                                <span
+                                  className={`text-sm font-bold ${
+                                    isRow ? "truncate" : "break-words"
+                                  }`}
+                                  style={{
+                                    color: l?.color ? `${l.color}` : "black",
+                                  }}
+                                >
+                                  {l.link?.title}
+                                </span>
+                                {!isRow && (
+                                  <span
+                                    className="text-xs break-all"
+                                    style={{ color: mutedColor }}
+                                  >
+                                    {l.link?.url}
+                                  </span>
+                                )}
+                              </>
+                            );
+                          })()}
+                        </>
                       );
                     })()}
                   </div>

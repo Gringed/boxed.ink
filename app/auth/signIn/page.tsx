@@ -3,7 +3,8 @@
 import { Button } from "@/components/ui/button";
 import { LandingHeader } from "@/features/landing/LandingHeader";
 import { Section } from "@/features/landing/Section";
-import { CopyrightIcon, ImageIcon } from "lucide-react";
+import { SignInIllustration } from "@/features/auth/SignInIllustration";
+import { CopyrightIcon } from "lucide-react";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
 
@@ -12,8 +13,8 @@ const page = () => {
     <div className="flex h-full flex-col">
       <LandingHeader />
       <Section className="mx-auto flex-wrap mt-auto py-20  max-w-7xl gap-16 sm:gap-y-24 grid lg:grid-cols-2 lg:items-center">
-        <div className="w-full h-full min-h-[240px] flex items-center justify-center rounded-md border border-dashed border-noir/20 bg-noir/5">
-          <ImageIcon className="text-noir/30" size={48} />
+        <div className="w-full h-full min-h-[300px] flex items-center justify-center rounded-3xl border border-gray-200 bg-gray-50 p-10">
+          <SignInIllustration className="w-full max-w-md" />
         </div>
         <div className=" w-full flex flex-col gap-4 items-start">
           <div className="text-3xl font-bold tracking-tight text-gray-900  sm:text-4xl lg:text-5xl">
