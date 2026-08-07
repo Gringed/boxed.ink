@@ -68,12 +68,22 @@ const page = () => {
                 needed.
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
-                <div className="aspect-video w-full rounded-xl border border-dashed border-muted-foreground/30 flex items-center justify-center text-sm text-muted-foreground">
-                  Video coming soon
-                </div>
-                <div className="aspect-video w-full rounded-xl border border-dashed border-muted-foreground/30 flex items-center justify-center text-sm text-muted-foreground">
-                  Video coming soon
-                </div>
+                <video
+                  className="aspect-video w-full rounded-xl border border-neutral-300 bg-gray-100 object-contain"
+                  src="https://res.cloudinary.com/dhgoagdvr/video/upload/v1786116355/Sidepro/bentoh.me_twitch_uwwac9.mp4"
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                />
+                <video
+                  className="aspect-video w-full rounded-xl border border-neutral-300 bg-gray-100 object-contain"
+                  src="https://res.cloudinary.com/dhgoagdvr/video/upload/v1786116355/Sidepro/bentoh.me_yt_e7tthq.mp4"
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                />
               </div>
             </div>
           </div>

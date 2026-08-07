@@ -2,7 +2,6 @@
 import React from "react";
 import { Section } from "./Section";
 import { FadeInSection } from "./FadeInSection";
-import { Play } from "lucide-react";
 
 const HowWorksSection = () => {
   return (
@@ -18,15 +17,14 @@ const HowWorksSection = () => {
               <p className="font-medium italic">"Very easily"</p>
             </div>
 
-            {/* Demo video placeholder - replace this block with a <video> once the demo is recorded */}
-            <div className="mx-auto w-full max-w-4xl aspect-video rounded-xl border border-neutral-300 bg-noir flex flex-col items-center justify-center gap-3">
-              <div className="rounded-full bg-white/10 p-5">
-                <Play className="h-10 w-10 text-white" fill="white" />
-              </div>
-              <span className="text-white/70 text-sm font-medium">
-                Demo video coming soon
-              </span>
-            </div>
+            <video
+              className="mx-auto w-full max-w-4xl aspect-video rounded-xl border border-neutral-300 bg-gray-100 object-contain"
+              src="https://res.cloudinary.com/dhgoagdvr/video/upload/v1786115772/Sidepro/bentoh.me_hero_hfjrz8.mp4"
+              autoPlay
+              muted
+              loop
+              playsInline
+            />
           </div>
         </Section>
       </div>
