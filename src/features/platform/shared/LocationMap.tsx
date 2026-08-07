@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { MapContainer, Marker, TileLayer, useMap } from "react-leaflet";
 import L from "leaflet";
@@ -27,11 +28,62 @@ const RecenterOnChange = ({ lat, lng }: { lat: number; lng: number }) => {
   return null;
 };
 
+// Scroll-zoom is off by default so scrolling the page over the map doesn't
+// hijack it into zooming instead — but we still want zoom to work once the
+// user is actually interacting with the map, so enable it just while the
+// cursor is over it.
+const ScrollZoomOnHover = () => {
+  const map = useMap();
+
+  useEffect(() => {
+    const container = map.getContainer();
+    const enable = () => map.scrollWheelZoom.enable();
+    const disable = () => map.scrollWheelZoom.disable();
+    container.addEventListener("mouseenter", enable);
+    container.addEventListener("mouseleave", disable);
+    return () => {
+      container.removeEventListener("mouseenter", enable);
+      container.removeEventListener("mouseleave", disable);
+    };
+  }, [map]);
+
+  return null;
+};
+
 // Drops the "Leaflet" credit but keeps the OpenStreetMap one, which their
 // usage policy requires to stay visible.
 const TrimAttribution = () => {
   const map = useMap();
   map.attributionControl.setPrefix(false);
+  return null;
+};
+
+// Leaflet caches its container size at init and only recomputes it on a
+// window resize — it has no idea when its own container changes size via
+// a CSS/breakpoint class swap (e.g. switching the mobile/desktop preview),
+// which left the map visually off-center after that. A ResizeObserver on
+// the container catches that and re-centers it.
+const SyncSizeOnContainerResize = ({
+  lat,
+  lng,
+}: {
+  lat?: number | null;
+  lng?: number | null;
+}) => {
+  const map = useMap();
+
+  useEffect(() => {
+    const container = map.getContainer();
+    const observer = new ResizeObserver(() => {
+      map.invalidateSize();
+      if (lat != null && lng != null) {
+        map.setView([lat, lng], map.getZoom());
+      }
+    });
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, [map, lat, lng]);
+
   return null;
 };
 
@@ -60,6 +112,8 @@ export const LocationMap = ({
           attribution="&copy; OpenStreetMap contributors"
         />
         <TrimAttribution />
+        <ScrollZoomOnHover />
+        <SyncSizeOnContainerResize lat={lat} lng={lng} />
         {hasCoords && (
           <>
             <Marker position={[lat, lng]} icon={pinIcon} />

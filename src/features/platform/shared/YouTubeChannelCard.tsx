@@ -125,11 +125,11 @@ export const YouTubeChannelCard = ({
     const thumbs = (youtube.videos || []).slice(0, 2);
     return (
       <div className="relative z-10 flex flex-col h-full w-full p-2 gap-1">
-        <div className="flex items-start justify-between gap-2">
+        <div className="flex items-center gap-2">
           <ChannelAvatar youtube={youtube} />
-          <div className="flex flex-col items-end gap-0.5 shrink-0">
-            <Followers youtube={youtube} small />
-            <WatchButton youtube={youtube} size="xs" />
+          <div className="ml-auto flex items-center gap-2 mr-1">
+            <Followers youtube={youtube} />
+            <WatchButton youtube={youtube} />
           </div>
         </div>
         <span className="text-sm font-bold truncate w-full" style={nameStyle}>

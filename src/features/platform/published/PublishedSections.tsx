@@ -150,7 +150,7 @@ const PublishedSections = ({
   });
 
   const locationEditor = useEditor({
-    content: sidefolio?.location || "No Location",
+    content: sidefolio?.location || "",
     editable: false,
     immediatelyRender: false,
     extensions: [
@@ -246,34 +246,36 @@ const PublishedSections = ({
             >
               <EditorContent editor={bioEditor} spellCheck={false} />
             </div>
-            <div
-              className={`z-10 my-5 w-full text-sm flex flex-col gap-2 ${
-                sidefolio?.sidebar === "right" ? "items-end" : "items-start"
-              }`}
-            >
-              <LocationMap
-                lat={sidefolio?.locationLat}
-                lng={sidefolio?.locationLng}
-                className={
-                  currentBreakpoint === "xs"
-                    ? "w-full aspect-[2/1]"
-                    : "w-72 aspect-[2/1]"
-                }
-              />
+            {sidefolio?.location && (
               <div
-                className={`flex items-center gap-1 ${
-                  sidefolio?.sidebar === "right" ? "flex-row-reverse" : ""
+                className={`z-10 my-5 w-full text-sm flex flex-col gap-2 ${
+                  sidefolio?.sidebar === "right" ? "items-end" : "items-start"
                 }`}
               >
-                <MapPin size={16} className="text-primary shrink-0" />
-                <EditorContent
-                  editor={locationEditor}
-                  max={10}
-                  maxLength={10}
-                  spellCheck={false}
+                <LocationMap
+                  lat={sidefolio?.locationLat}
+                  lng={sidefolio?.locationLng}
+                  className={
+                    currentBreakpoint === "xs"
+                      ? "w-full aspect-[2/1]"
+                      : "w-72 aspect-[2/1]"
+                  }
                 />
+                <div
+                  className={`flex items-center gap-1 ${
+                    sidefolio?.sidebar === "right" ? "flex-row-reverse" : ""
+                  }`}
+                >
+                  <MapPin size={16} className="text-primary shrink-0" />
+                  <EditorContent
+                    editor={locationEditor}
+                    max={10}
+                    maxLength={10}
+                    spellCheck={false}
+                  />
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </BlurFade>
       </div>

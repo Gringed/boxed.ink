@@ -1064,16 +1064,18 @@ const Sections = ({
                 side === "right" ? "items-end" : "items-start"
               }`}
             >
-              <LocationMap
-                lat={locationCoords?.lat}
-                lng={locationCoords?.lng}
-                loading={geocodingLocation}
-                className={
-                  currentBreakpoint === "xs"
-                    ? "w-full aspect-[2/1]"
-                    : "w-72 aspect-[2/1]"
-                }
-              />
+              {(locationCoords || geocodingLocation) && (
+                <LocationMap
+                  lat={locationCoords?.lat}
+                  lng={locationCoords?.lng}
+                  loading={geocodingLocation}
+                  className={
+                    currentBreakpoint === "xs"
+                      ? "w-full aspect-[2/1]"
+                      : "w-72 aspect-[2/1]"
+                  }
+                />
+              )}
               <div className="relative w-full">
                 <div
                   className={`flex items-center gap-1 ${

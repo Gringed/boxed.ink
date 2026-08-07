@@ -283,7 +283,7 @@ const NavLinks = ({
         <PopoverContent side="top" className="w-full mb-2">
           <div className="grid gap-4">
             <div className="space-y-2">
-              <h4 className="font-medium leading-none">Add anything</h4>
+              <h4 className="font-medium leading-none">Add blocks</h4>
             </div>
             <div className="grid gap-2">
               <div className="flex w-full justify-between gap-3 flex-wrap items-center">
