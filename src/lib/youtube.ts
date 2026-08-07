@@ -77,6 +77,33 @@ const mirrorAvatarToBlob = async (
   }
 };
 
+const fetchLatestVideos = async (
+  playlistId: string,
+  apiKey: string
+): Promise<YouTubeChannelData["videos"]> => {
+  const videosParams = new URLSearchParams({
+    part: "snippet",
+    playlistId,
+    maxResults: "4",
+    key: apiKey,
+  });
+  const videosRes = await fetch(
+    `${YOUTUBE_API_BASE}/playlistItems?${videosParams}`
+  );
+  if (!videosRes.ok) return [];
+  const videosJson = await videosRes.json();
+  return (videosJson?.items ?? [])
+    .map((item: any) => ({
+      id: item?.snippet?.resourceId?.videoId,
+      title: item?.snippet?.title,
+      thumbnail:
+        item?.snippet?.thumbnails?.high?.url ||
+        item?.snippet?.thumbnails?.medium?.url ||
+        item?.snippet?.thumbnails?.default?.url,
+    }))
+    .filter((v: any) => v.id && v.thumbnail);
+};
+
 export const fetchYouTubeChannelData = async (
   rawUrl: string
 ): Promise<YouTubeChannelData | null> => {
@@ -105,31 +132,9 @@ export const fetchYouTubeChannelData = async (
     const uploadsPlaylistId: string | undefined =
       channel.contentDetails?.relatedPlaylists?.uploads;
 
-    let videos: YouTubeChannelData["videos"] = [];
-    if (uploadsPlaylistId) {
-      const videosParams = new URLSearchParams({
-        part: "snippet",
-        playlistId: uploadsPlaylistId,
-        maxResults: "4",
-        key: apiKey,
-      });
-      const videosRes = await fetch(
-        `${YOUTUBE_API_BASE}/playlistItems?${videosParams}`
-      );
-      if (videosRes.ok) {
-        const videosJson = await videosRes.json();
-        videos = (videosJson?.items ?? [])
-          .map((item: any) => ({
-            id: item?.snippet?.resourceId?.videoId,
-            title: item?.snippet?.title,
-            thumbnail:
-              item?.snippet?.thumbnails?.high?.url ||
-              item?.snippet?.thumbnails?.medium?.url ||
-              item?.snippet?.thumbnails?.default?.url,
-          }))
-          .filter((v: any) => v.id && v.thumbnail);
-      }
-    }
+    const videos = uploadsPlaylistId
+      ? await fetchLatestVideos(uploadsPlaylistId, apiKey)
+      : [];
 
     const rawAvatar =
       channel.snippet?.thumbnails?.medium?.url ||
@@ -142,6 +147,46 @@ export const fetchYouTubeChannelData = async (
       avatar: await mirrorAvatarToBlob(rawAvatar, channelId),
       subscriberCount: Number(channel.statistics?.subscriberCount ?? 0),
       channelUrl: `https://www.youtube.com/channel/${channelId}`,
+      videos,
+    };
+  } catch {
+    return null;
+  }
+};
+
+// Re-fetches only the fields that can change after the block was created
+// (subscriber count, latest videos, display name) — skips re-mirroring the
+// avatar to avoid burning Blob storage/bandwidth on every periodic refresh.
+export const refreshYouTubeChannelData = async (
+  channelId: string
+): Promise<Pick<
+  YouTubeChannelData,
+  "title" | "subscriberCount" | "videos"
+> | null> => {
+  const apiKey = process.env.YOUTUBE_API_KEY;
+  if (!apiKey) return null;
+
+  try {
+    const params = new URLSearchParams({
+      part: "snippet,statistics,contentDetails",
+      id: channelId,
+      key: apiKey,
+    });
+    const channelRes = await fetch(`${YOUTUBE_API_BASE}/channels?${params}`);
+    if (!channelRes.ok) return null;
+    const channelJson = await channelRes.json();
+    const channel = channelJson?.items?.[0];
+    if (!channel) return null;
+
+    const uploadsPlaylistId: string | undefined =
+      channel.contentDetails?.relatedPlaylists?.uploads;
+    const videos = uploadsPlaylistId
+      ? await fetchLatestVideos(uploadsPlaylistId, apiKey)
+      : [];
+
+    return {
+      title: channel.snippet?.title ?? "",
+      subscriberCount: Number(channel.statistics?.subscriberCount ?? 0),
       videos,
     };
   } catch {

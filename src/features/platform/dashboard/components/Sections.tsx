@@ -21,7 +21,6 @@ import {
   updateOrderDesktopSection,
   updateOrderMobileSection,
   updateSectionAction,
-  updateSectionImageAction,
 } from "@/lib/actions/sections/section.actions";
 
 import { Button } from "@/components/ui/button";
@@ -29,12 +28,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import NavLinks from "../NavLinks";
 import { LoggedInButton } from "@/features/auth/LoggedInButton";
 import {
-  Captions,
-  CaptionsOff,
   Crop,
   Heart,
-  ImageIcon,
-  ImageOff,
   Loader2,
   LoaderIcon,
   Locate,
@@ -51,13 +46,23 @@ import {
 import { revalidatePath } from "next/cache";
 import { redirect, useRouter } from "next/navigation";
 import { Textarea } from "@/components/ui/textarea";
-import Image from "next/image";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
+  geocodeSidefolioLocationAction,
   manageBillingAction,
+  searchLocationsAction,
+  setSidefolioLocationAction,
   subscribeSupporterAction,
   updateSidefolioAction,
 } from "@/lib/actions/sidefolio/sidefolio.actions";
+import dynamic from "next/dynamic";
+const LocationMap = dynamic(
+  () =>
+    import("@/features/platform/shared/LocationMap").then(
+      (mod) => mod.LocationMap
+    ),
+  { ssr: false }
+);
 import Link from "next/link";
 import {
   Dialog,
@@ -300,7 +305,7 @@ const Sections = ({
       }),
       DisabledEnter,
       CharacterCount.configure({
-        limit: 35,
+        limit: 150,
       }),
     ],
     async onUpdate({ editor }) {
@@ -312,15 +317,67 @@ const Sections = ({
 
       timeoutRef.current = setTimeout(() => {
         saveSidefolioChanges("location", text);
+        setGeocodingLocation(true);
+        geocodeSidefolioLocationAction({
+          id: sidefolio.id,
+          location: text,
+        })
+          .then((res) => {
+            setLocationCoords(res?.data ?? null);
+          })
+          .finally(() => {
+            setGeocodingLocation(false);
+          });
       }, 3000);
+
+      if (locationSuggestTimeoutRef.current) {
+        clearTimeout(locationSuggestTimeoutRef.current);
+      }
+      locationSuggestTimeoutRef.current = setTimeout(() => {
+        if (text.trim().length < 2) {
+          setLocationSuggestions([]);
+          return;
+        }
+        searchLocationsAction({ query: text }).then((res) => {
+          setLocationSuggestions(res?.data ?? []);
+        });
+      }, 350);
+    },
+    onFocus() {
+      setLocationFocused(true);
+    },
+    onBlur() {
+      setTimeout(() => setLocationFocused(false), 150);
     },
     editorProps: {
       attributes: {
         class:
-          "prose prose-sm sm:prose-base  no-underline lg:prose-lg xl:prose-2xl px-3 focus:outline-none",
+          "prose prose-sm sm:prose-base  no-underline lg:prose-lg xl:prose-2xl focus:outline-none",
       },
     },
   });
+
+  const handleSelectLocationSuggestion = (suggestion: {
+    label: string;
+    lat: number;
+    lng: number;
+  }) => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    if (locationSuggestTimeoutRef.current)
+      clearTimeout(locationSuggestTimeoutRef.current);
+
+    locationEditor?.commands.setContent(suggestion.label);
+    setLocationSuggestions([]);
+    setLocationCoords({ lat: suggestion.lat, lng: suggestion.lng });
+    setSidefolioLocationAction({
+      id: sidefolio.id,
+      location: suggestion.label,
+      lat: suggestion.lat,
+      lng: suggestion.lng,
+    }).then(() => {
+      toast.success("Your changes have been saved");
+    });
+  };
 
   const handleDragImage = (l: any) => {
     const position =
@@ -360,9 +417,22 @@ const Sections = ({
   };
 
   const [isSaving, setIsSaving] = useState<boolean>(false);
-  const [imgLoading, setImgLoading] = useState<string | null>(null);
   const [profileImageLoading, setProfileImageLoading] =
     useState<boolean>(false);
+  const [locationCoords, setLocationCoords] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(
+    sidefolio?.locationLat != null && sidefolio?.locationLng != null
+      ? { lat: sidefolio.locationLat, lng: sidefolio.locationLng }
+      : null
+  );
+  const [geocodingLocation, setGeocodingLocation] = useState(false);
+  const [locationSuggestions, setLocationSuggestions] = useState<
+    { label: string; lat: number; lng: number }[]
+  >([]);
+  const [locationFocused, setLocationFocused] = useState(false);
+  const locationSuggestTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const textInputRef = useRef<HTMLInputElement>(null);
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
@@ -572,23 +642,6 @@ const Sections = ({
     },
     [sidefolio]
   );
-  const handleChangeImageOptions = async (
-    l: any,
-    img: boolean,
-    url: boolean
-  ) => {
-    setImgLoading(l?.id);
-    const data = {
-      showImage: img ? !l?.showImage : l?.showImage,
-      showTitleUrl: url ? !l?.showTitleUrl : l?.showTitleUrl,
-      sideId: sidefolio.id,
-    };
-    const res = await updateSectionImageAction({ id: l.id, data: data });
-    if (res) {
-      setImgLoading(null);
-      toast.success("Your changes have been saved");
-    }
-  };
   const handleChange = async (e: React.ChangeEvent<any>, l: any) => {
     e.preventDefault();
     const newValue = e.target.value;
@@ -997,27 +1050,54 @@ const Sections = ({
               <EditorContent editor={bioEditor} spellCheck={false} />
             </div>
             <div
-              className={`z-10 my-5 w-full text-sm flex items-center gap-1 ${
-                side === "right" ? "flex-row-reverse" : ""
+              className={`z-10 my-5 w-full text-sm flex flex-col gap-2 ${
+                side === "right" ? "items-end" : "items-start"
               }`}
             >
-              <div className="rounded-full  ms-2 border bg-white backdrop-blur-sm shadow">
-                <Image
-                  src={
-                    "https://www.svgrepo.com/show/235547/planet-earth-global.svg"
-                  }
-                  className=""
-                  width={25}
-                  height={25}
-                  alt=""
-                />
-              </div>
-              <EditorContent
-                editor={locationEditor}
-                max={10}
-                maxLength={10}
-                spellCheck={false}
+              <LocationMap
+                lat={locationCoords?.lat}
+                lng={locationCoords?.lng}
+                loading={geocodingLocation}
+                className={
+                  currentBreakpoint === "xs"
+                    ? "w-full aspect-[2/1]"
+                    : "w-72 aspect-[2/1]"
+                }
               />
+              <div className="relative w-full">
+                <div
+                  className={`flex items-center gap-1 ${
+                    side === "right" ? "flex-row-reverse" : ""
+                  }`}
+                >
+                  <MapPin size={16} className="text-primary shrink-0" />
+                  <EditorContent
+                    editor={locationEditor}
+                    max={10}
+                    maxLength={10}
+                    spellCheck={false}
+                  />
+                </div>
+                {locationFocused && locationSuggestions.length > 0 && (
+                  <div
+                    className={`absolute z-50 top-full mt-1 w-64 max-w-[80vw] bg-white border rounded-xl shadow-lg overflow-hidden py-1 ${
+                      side === "right" ? "right-0" : "left-0"
+                    }`}
+                  >
+                    {locationSuggestions.map((s, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => handleSelectLocationSuggestion(s)}
+                        className="block w-full text-left px-3 py-2 text-sm hover:bg-gray-100 truncate"
+                      >
+                        {s.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </BlurFade>
@@ -1356,61 +1436,76 @@ const Sections = ({
                       <div
                         className={"absolute dragMe top-0 left-0 h-full w-full"}
                       />
-                      <Link
-                        target="_blank"
-                        href={l?.link?.url || "#"}
-                        style={{ scrollbarWidth: "none" }}
-                        className="z-0 h-full overflow-auto w-full flex gap-2 items-start cursor-pointer break-all justify-center"
-                      >
-                        <Avatar className="size-10 border shadow-md h-fit object-cover p-1.5">
-                          <AvatarFallback>{l.link?.title?.[0]}</AvatarFallback>
-                          <AvatarImage
-                            src={
-                              l?.link.url?.split("/")[2] === "read.cv"
-                                ? l.link?.favicons?.[1]?.href
-                                : `https://www.google.com/s2/favicons?sz=128&domain=${safeHostname(
-                                    l?.link?.url
-                                  )}`
-                            }
-                            className=" object-cover "
-                            alt={`${l?.link && l.link.title} picture`}
-                          />
-                        </Avatar>
-                        <div
-                          className={`${
-                            !l?.showImage && !l?.showTitleUrl
-                              ? "hidden"
-                              : "flex"
-                          } ${
-                            imgLoading === l.id && "opacity-30"
-                          } flex-col h-full w-full relative  gap-3`}
-                        >
-                          {imgLoading === l.id && (
-                            <Loader2 className=" absolute top-1/2 left-[45%]  animate-spin" />
-                          )}
-                          {l?.showImage && (
-                            <img
-                              className=" object-cover w-full h-full rounded-3xl"
-                              src={
-                                l.link?.["og:image"] ||
-                                l.link?.imgTags?.[0]?.src ||
-                                NO_PREVIEW_IMAGE
-                              }
-                              alt=""
-                            />
-                          )}
-                          {l?.showTitleUrl && (
-                            <span
-                              className=" break-normal"
-                              style={{
-                                color: l?.color ? `${l.color}` : "black",
-                              }}
-                            >
-                              {l.link?.title}
-                            </span>
-                          )}
-                        </div>
-                      </Link>
+                      {(() => {
+                        const bp = currentBreakpoint as keyof typeof cols;
+                        const currentItem = (effectiveLayouts[bp] || []).find(
+                          (item: Layout) => item.i === l.i
+                        );
+                        const itemW = currentItem?.w ?? 2;
+                        const itemH = currentItem?.h ?? 2;
+                        const mode =
+                          itemW === 4 && itemH === 1
+                            ? "row"
+                            : itemW === 4 && itemH === 4
+                            ? "full"
+                            : itemW === 2 && itemH === 4
+                            ? "tall"
+                            : "compact";
+                        const showsImageArea = mode !== "row";
+                        return (
+                          <Link
+                            target="_blank"
+                            href={l?.link?.url || "#"}
+                            className={`z-0 h-full w-full flex flex-col gap-2 cursor-pointer ${
+                              showsImageArea ? "" : "justify-center"
+                            }`}
+                          >
+                            <div className="flex items-center gap-2 w-full shrink-0">
+                              <Avatar
+                                className={`${
+                                  mode === "row" ? "size-8" : "size-10"
+                                } border shadow-md shrink-0 object-cover p-1.5`}
+                              >
+                                <AvatarFallback>
+                                  {l.link?.title?.[0]}
+                                </AvatarFallback>
+                                <AvatarImage
+                                  src={
+                                    l?.link.url?.split("/")[2] === "read.cv"
+                                      ? l.link?.favicons?.[1]?.href
+                                      : `https://www.google.com/s2/favicons?sz=128&domain=${safeHostname(
+                                          l?.link?.url
+                                        )}`
+                                  }
+                                  className="object-cover"
+                                  alt={`${l?.link && l.link.title} picture`}
+                                />
+                              </Avatar>
+                              <span
+                                className="line-clamp-2 break-words flex-1 min-w-0"
+                                style={{
+                                  color: l?.color ? `${l.color}` : "black",
+                                }}
+                              >
+                                {l.link?.title}
+                              </span>
+                            </div>
+                            {showsImageArea && (
+                              <div className="flex-1 min-h-0 w-full relative">
+                                <img
+                                  className="object-cover w-full h-full rounded-2xl"
+                                  src={
+                                    l.link?.["og:image"] ||
+                                    l.link?.imgTags?.[0]?.src ||
+                                    NO_PREVIEW_IMAGE
+                                  }
+                                  alt=""
+                                />
+                              </div>
+                            )}
+                          </Link>
+                        );
+                      })()}
                     </div>
                     <span
                       className="absolute group/span opacity-0 group-focus-visible/item:opacity-100 group-hover/item:opacity-100 transition-all hover:bg-gray-50 hover:shadow-md -right-2 p-2 shadow -m-1 bg-white border rounded-full z-20 -top-2 cursor-pointer"
@@ -1429,60 +1524,6 @@ const Sections = ({
                           className="w-6 h-6 p-0 border-none"
                         />
                       </div>
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div className="flex items-center gap-1">
-                              {l?.showImage ? (
-                                <ImageIcon
-                                  onClick={() =>
-                                    handleChangeImageOptions(l, true, false)
-                                  }
-                                  className="p-1 text-noir cursor-pointer bg-white border  rounded-full"
-                                  size={28}
-                                />
-                              ) : (
-                                <ImageOff
-                                  onClick={() =>
-                                    handleChangeImageOptions(l, true, false)
-                                  }
-                                  className="p-1 text-noir cursor-pointer bg-white border  rounded-full"
-                                  size={28}
-                                />
-                              )}
-                            </div>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            {l?.showImage ? "Hide image" : "Show image"}
-                          </TooltipContent>
-                        </Tooltip>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div className="flex items-center gap-1">
-                              {l?.showTitleUrl ? (
-                                <Captions
-                                  onClick={() =>
-                                    handleChangeImageOptions(l, false, true)
-                                  }
-                                  className="p-1 text-noir cursor-pointer bg-white border  rounded-full"
-                                  size={28}
-                                />
-                              ) : (
-                                <CaptionsOff
-                                  onClick={() =>
-                                    handleChangeImageOptions(l, false, true)
-                                  }
-                                  className="p-1 text-noir cursor-pointer bg-white border  rounded-full"
-                                  size={28}
-                                />
-                              )}
-                            </div>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            {l?.showTitleUrl ? "Hide title" : "Show title"}
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
                       <div className="flex items-center gap-1">
                         <PaintBucket className="text-noir" size={15} />
                         <Input
@@ -1543,7 +1584,10 @@ const Sections = ({
                                   alt=""
                                 />
                               </div>
-                            ) : (
+                            ) : l?.imageX ||
+                              l?.imageY ||
+                              l?.imageMobileX ||
+                              l?.imageMobileY ? (
                               <img
                                 draggable="false"
                                 className="absolute overflow-clip  min-w-full min-h-full  rounded-3xl"
@@ -1559,10 +1603,17 @@ const Sections = ({
                                 src={l.imageUrl}
                                 alt=""
                               />
+                            ) : (
+                              <img
+                                draggable="false"
+                                className="absolute inset-0 w-full h-full object-cover object-center rounded-3xl"
+                                src={l.imageUrl}
+                                alt=""
+                              />
                             )}
                           </>
                         )}
-                        {l?.showTitleUrl && (
+                        {l.link?.title && (
                           <span
                             style={{ color: l?.color ? `${l.color}` : "black" }}
                           >

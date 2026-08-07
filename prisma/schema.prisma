@@ -28,8 +28,6 @@ model Section {
   imageMobileX Int?
   imageMobileY Int?
   imageCaption String?
-  showImage    Boolean   @default(true)
-  showTitleUrl Boolean   @default(true)
   type         Type?
   background   String?
   color        String?
@@ -92,6 +90,8 @@ model Sidefolio {
   image       String?
   bio         String?
   location    String?
+  locationLat Float?
+  locationLng Float?
   sidebar     Side      @default(left)
   section     Section[]
   createdAt   DateTime  @default(now())

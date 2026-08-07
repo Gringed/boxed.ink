@@ -78,12 +78,21 @@ const mirrorAvatarToBlob = async (
   }
 };
 
-export const fetchTwitchChannelData = async (
-  rawUrl: string
-): Promise<TwitchChannelData | null> => {
+interface TwitchStatus {
+  channelId: string;
+  login: string;
+  title: string;
+  avatarSource: string;
+  isLive: boolean;
+  category: string | null;
+  categoryImage: string | null;
+}
+
+// Shared by the initial fetch and the periodic refresh — everything except
+// avatar mirroring (which we only want to do once, not on every refresh).
+const fetchTwitchStatus = async (login: string): Promise<TwitchStatus | null> => {
   const clientId = process.env.TWITCH_CLIENT_ID;
-  const login = parseTwitchChannelUrl(rawUrl);
-  if (!clientId || !login) return null;
+  if (!clientId) return null;
 
   const token = await getTwitchAppToken();
   if (!token) return null;
@@ -155,9 +164,9 @@ export const fetchTwitchChannelData = async (
 
     return {
       channelId: user.id,
+      login: user.login,
       title: user.display_name || user.login,
-      avatar: await mirrorAvatarToBlob(user.profile_image_url, user.id),
-      channelUrl: `https://www.twitch.tv/${user.login}`,
+      avatarSource: user.profile_image_url,
       isLive,
       category,
       categoryImage,
@@ -165,4 +174,47 @@ export const fetchTwitchChannelData = async (
   } catch {
     return null;
   }
+};
+
+export const fetchTwitchChannelData = async (
+  rawUrl: string
+): Promise<TwitchChannelData | null> => {
+  const login = parseTwitchChannelUrl(rawUrl);
+  if (!login) return null;
+
+  const status = await fetchTwitchStatus(login);
+  if (!status) return null;
+
+  return {
+    channelId: status.channelId,
+    title: status.title,
+    avatar: await mirrorAvatarToBlob(status.avatarSource, status.channelId),
+    channelUrl: `https://www.twitch.tv/${status.login}`,
+    isLive: status.isLive,
+    category: status.category,
+    categoryImage: status.categoryImage,
+  };
+};
+
+// Re-fetches only the fields that can change after the block was created
+// (live status, category, display name) — skips re-mirroring the avatar to
+// avoid burning Blob storage/bandwidth on every periodic refresh.
+export const refreshTwitchChannelData = async (
+  channelUrl: string
+): Promise<Pick<
+  TwitchChannelData,
+  "title" | "isLive" | "category" | "categoryImage"
+> | null> => {
+  const login = parseTwitchChannelUrl(channelUrl);
+  if (!login) return null;
+
+  const status = await fetchTwitchStatus(login);
+  if (!status) return null;
+
+  return {
+    title: status.title,
+    isLive: status.isLive,
+    category: status.category,
+    categoryImage: status.categoryImage,
+  };
 };

@@ -8,6 +8,7 @@ import { redirect } from "next/navigation";
 import { UserSchema } from "../users/user.schema";
 import { revalidatePath } from "next/cache";
 import { del, put } from "@vercel/blob";
+import { geocodeLocation, searchLocations } from "@/lib/geocode";
 
 export const updateSidefolioAction = userAction(
   z.object({
@@ -30,6 +31,58 @@ export const updateSidefolioAction = userAction(
     return updateSidefolio;
   }
 );
+export const geocodeSidefolioLocationAction = userAction(
+  z.object({
+    id: z.string(),
+    location: z.string(),
+  }),
+  async (input, context) => {
+    const coords = await geocodeLocation(input.location);
+    await prisma.sidefolio.update({
+      where: {
+        id: input.id,
+      },
+      data: {
+        locationLat: coords?.lat ?? null,
+        locationLng: coords?.lng ?? null,
+      },
+    });
+    revalidatePath("/dashboard");
+    return coords;
+  }
+);
+export const searchLocationsAction = userAction(
+  z.object({
+    query: z.string(),
+  }),
+  async (input, context) => {
+    return await searchLocations(input.query);
+  }
+);
+
+export const setSidefolioLocationAction = userAction(
+  z.object({
+    id: z.string(),
+    location: z.string(),
+    lat: z.number(),
+    lng: z.number(),
+  }),
+  async (input, context) => {
+    await prisma.sidefolio.update({
+      where: {
+        id: input.id,
+      },
+      data: {
+        location: input.location,
+        locationLat: input.lat,
+        locationLng: input.lng,
+      },
+    });
+    revalidatePath("/dashboard");
+    return { lat: input.lat, lng: input.lng };
+  }
+);
+
 export const uploadImageSidefolio = userAction(
   z.object({
     id: z.string(),

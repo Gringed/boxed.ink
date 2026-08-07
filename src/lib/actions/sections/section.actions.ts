@@ -363,27 +363,6 @@ export const updateSectionAction = userAction(
   }
 );
 
-export const updateSectionImageAction = userAction(
-  z.object({
-    id: z.string(),
-    data: z.object({
-      showImage: z.boolean(),
-      showTitleUrl: z.boolean(),
-      sideId: z.string(),
-    }),
-  }),
-  async (input, context) => {
-    let updateRequest;
-    updateRequest = await prisma.section.update({
-      where: {
-        id: input.id,
-      },
-      data: input.data,
-    });
-    revalidatePath("/dashboard");
-    return updateRequest;
-  }
-);
 export const uploadImageSection = userAction(
   z.object({
     file: z.any(),
