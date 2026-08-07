@@ -17,9 +17,10 @@ import { Metadata } from "next";
 export async function generateMetadata(
   props: PageParams<{ slug: string }>
 ): Promise<Metadata> {
+  const params = await props.params;
   const sidefolio = await prisma.sidefolio.findFirst({
     where: {
-      slug: decodeURI(props.params.slug),
+      slug: decodeURI(params.slug),
       publish: true,
     },
   });
@@ -34,14 +35,15 @@ export async function generateMetadata(
   };
 }
 const page = async (props: PageParams<{ slug: string }>) => {
+  const params = await props.params;
   const user = await currentUser();
-  if (!props.params.slug) {
+  if (!params.slug) {
     redirect("/dashboard");
   }
 
   const sidefolio = await prisma.sidefolio.findFirst({
     where: {
-      slug: decodeURI(props.params.slug),
+      slug: decodeURI(params.slug),
       publish: true,
     },
   });
@@ -115,7 +117,7 @@ const page = async (props: PageParams<{ slug: string }>) => {
           <div>
             The{" "}
             <span className="font-bold text-primary">
-              {decodeURI(props.params.slug)}
+              {decodeURI(params.slug)}
             </span>{" "}
             bentoh.me doesn't exist now or it's not published, create it for
             now 😉

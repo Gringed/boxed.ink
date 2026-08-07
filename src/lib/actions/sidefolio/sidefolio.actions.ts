@@ -4,7 +4,6 @@ import { SidefolioSchema } from "./sidefolio.schema";
 import { z } from "zod";
 import { prisma } from "@/prisma";
 import { stripe } from "@/stripe";
-import { redirect } from "next/navigation";
 import { UserSchema } from "../users/user.schema";
 import { revalidatePath } from "next/cache";
 import { del, put } from "@vercel/blob";
@@ -162,7 +161,7 @@ export const subscribeSupporterAction = userAction(
     if (!session.url) {
       throw new Error("Error");
     }
-    redirect(session.url);
+    return { url: session.url };
   }
 );
 
@@ -182,5 +181,5 @@ export const manageBillingAction = userAction(z.object({}), async (_input, conte
     customer: user.stripeCustomerId,
     return_url: process.env.NEXT_PUBLIC_APP_URL + "/dashboard",
   });
-  redirect(session.url);
+  return { url: session.url };
 });

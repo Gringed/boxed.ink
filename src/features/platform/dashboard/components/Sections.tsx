@@ -698,7 +698,12 @@ const Sections = ({
   const handleBecomeSupporter = async () => {
     setIsLoading(true);
     try {
-      await subscribeSupporterAction({});
+      const res = await subscribeSupporterAction({});
+      if (res?.data?.url) {
+        window.location.href = res.data.url;
+      } else {
+        setIsLoading(false);
+      }
     } catch {
       setIsLoading(false);
     }
@@ -706,7 +711,12 @@ const Sections = ({
   const handleManageBilling = async () => {
     setIsLoading(true);
     try {
-      await manageBillingAction({});
+      const res = await manageBillingAction({});
+      if (res?.data?.url) {
+        window.location.href = res.data.url;
+      } else {
+        setIsLoading(false);
+      }
     } catch {
       setIsLoading(false);
     }
