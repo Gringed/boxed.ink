@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 
 export function FadeInSection(props: any) {
   const [isVisible, setVisible] = useState(false);
-  const domRef = useRef();
+  const domRef = useRef(null);
   useEffect(() => {
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => setVisible(entry.isIntersecting));
