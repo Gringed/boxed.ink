@@ -1201,11 +1201,7 @@ const Sections = ({
               <div
                 id={l.id}
                 key={l.i}
-                className={`${
-                  l?.type === "TITLE"
-                    ? "border border-transparent hover:border-gray-300/50 hover:shadow hover:bg-white hover:rounded-3xl transition-all"
-                    : "border border-gray-300/50 shadow hover:shadow-md rounded-3xl bg-white"
-                } group/item hover:z-50 ${
+                className={`group/item hover:z-50 ${
                   l?.i == isCrop && l?.type === "IMAGE" && "z-50"
                 } relative  flex justify-start cursor-grab`}
               >
@@ -1213,7 +1209,7 @@ const Sections = ({
                   <>
                     <div
                       className={
-                        "block-lift flex  w-full rounded-3xl h-full items-start overflow-hidden"
+                        "block-lift flex  w-full rounded-3xl h-full items-start overflow-hidden border border-gray-300/50 shadow hover:shadow-md"
                       }
                       style={{
                         background: l?.background ? `${l.background}` : "white",
@@ -1289,7 +1285,7 @@ const Sections = ({
                   <>
                     <div
                       className={
-                        "block-lift flex  w-full rounded-[22px] h-full items-start p-0.5"
+                        "block-lift flex  w-full rounded-[22px] h-full items-start p-0.5 border border-transparent hover:border-gray-300/50 hover:shadow hover:bg-white transition-all"
                       }
                     >
                       <div
@@ -1336,7 +1332,7 @@ const Sections = ({
                   </>
                 ) : l?.type === "LINK" && l?.link?.youtube ? (
                   <>
-                    <div className="block-lift dragMe relative w-full h-full rounded-3xl bg-white cursor-grab">
+                    <div className="block-lift dragMe relative w-full h-full rounded-3xl bg-white cursor-grab border border-gray-300/50 shadow hover:shadow-md">
                       {(() => {
                         const bp = currentBreakpoint as keyof typeof cols;
                         const currentItem = (effectiveLayouts[bp] || []).find(
@@ -1373,7 +1369,7 @@ const Sections = ({
                   </>
                 ) : l?.type === "LINK" && l?.link?.twitch ? (
                   <>
-                    <div className="block-lift dragMe relative w-full h-full rounded-3xl bg-white cursor-grab">
+                    <div className="block-lift dragMe relative w-full h-full rounded-3xl bg-white cursor-grab border border-gray-300/50 shadow hover:shadow-md">
                       {(() => {
                         const bp = currentBreakpoint as keyof typeof cols;
                         const currentItem = (effectiveLayouts[bp] || []).find(
@@ -1411,7 +1407,7 @@ const Sections = ({
                 ) : l?.type === "LINK" ? (
                   <>
                     <div
-                      className="block-lift dragMe relative w-full h-full rounded-3xl cursor-grab overflow-hidden flex flex-col gap-1.5 p-3"
+                      className="block-lift dragMe relative w-full h-full rounded-3xl cursor-grab overflow-hidden flex flex-col gap-1.5 p-3 border border-gray-300/50 shadow hover:shadow-md"
                       style={{
                         background: l?.background ? `${l.background}` : "white",
                       }}
@@ -1535,6 +1531,7 @@ const Sections = ({
                       className={`block-lift
                       ${!isCrop && "dragMe"}
                         absolute  rounded-3xl  top-0 left-0 h-full w-full
+                        bg-white border border-gray-300/50 shadow hover:shadow-md
 
                     `}
                     >
