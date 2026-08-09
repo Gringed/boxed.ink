@@ -10,14 +10,32 @@ import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit" });
 
+const title = "boxed.ink — the bento-grid link in bio";
+const description =
+  "Drag-and-drop blocks, links, images, live Twitch/YouTube cards, into a bento grid instead of a list. Free forever.";
+
 export const metadata: Metadata = {
-  title: "boxed.ink — the bento-grid link in bio",
-  description:
-    "Drag-and-drop blocks, links, images, live Twitch/YouTube cards, into a bento grid instead of a list. Free forever.",
+  metadataBase: new URL("https://boxed.ink"),
+  title,
+  description,
   icons: {
     icon: ["/favicon.ico?v=7"],
     apple: ["/apple-touch-icon.png?v=4"],
     shortcut: ["/apple-touch-icon.png"],
+  },
+  openGraph: {
+    title,
+    description,
+    url: "https://boxed.ink",
+    siteName: "boxed.ink",
+    images: [{ url: "/og-image.png?v=1", width: 1200, height: 630 }],
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title,
+    description,
+    images: ["/og-image.png?v=1"],
   },
 };
 
