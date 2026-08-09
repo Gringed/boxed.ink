@@ -12,6 +12,8 @@ import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
 import { Responsive, Layout, Layouts } from "react-grid-layout";
 import { AnimatePresence, motion } from "framer-motion";
+import { useLocale, useTranslations } from "next-intl";
+import { PageLoader } from "@/components/PageLoader";
 import { Input } from "@/components/ui/input";
 import { isLightColor } from "@/lib/utils";
 import {
@@ -31,9 +33,6 @@ import { LoggedInButton } from "@/features/auth/LoggedInButton";
 import {
   Crop,
   ExternalLink,
-  Heart,
-  Loader2,
-  LoaderIcon,
   Locate,
   MapPin,
   MessageCircleWarning,
@@ -51,10 +50,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   geocodeSidefolioLocationAction,
-  manageBillingAction,
   searchLocationsAction,
   setSidefolioLocationAction,
-  subscribeSupporterAction,
   updateSidefolioAction,
 } from "@/lib/actions/sidefolio/sidefolio.actions";
 import dynamic from "next/dynamic";
@@ -75,12 +72,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { AlertDialogHeader } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import interact from "interactjs";
@@ -143,6 +134,8 @@ const Sections = ({
   desktop,
   mobile,
 }: SectionsProps) => {
+  const t = useTranslations("editor");
+  const locale = useLocale();
   const [isCrop, setIsCrop] = useState("");
 
   const cols = { lg: 8, md: 8, sm: 4, xs: 4, xxs: 4 };
@@ -165,10 +158,8 @@ const Sections = ({
       "ontouchstart" in window || navigator.maxTouchPoints > 0
     );
   }, []);
-  const [openReview, setOpenReview] = useState(false);
   const compactType = "vertical";
   const [side, setSide] = useState(sidefolio?.sidebar);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [mounted, setMounted] = useState(false);
   const [importURL, setImportURL] = useState("");
   const [openImport, setOpenImport] = useState(false);
@@ -242,7 +233,7 @@ const Sections = ({
     extensions: [
       StarterKit,
       Placeholder.configure({
-        placeholder: "Your name",
+        placeholder: t("namePlaceholder"),
       }),
       CharacterCount.configure({
         limit: 40,
@@ -265,14 +256,14 @@ const Sections = ({
           "prose prose-sm sm:prose-base lg:prose-lg xl:prose-2xl p-3 focus:outline-none",
       },
     },
-  });
+  }, [locale]);
   const bioEditor = useEditor({
     immediatelyRender: false,
     content: sidefolio?.bio || "",
     extensions: [
       StarterKit,
       Placeholder.configure({
-        placeholder: "Introduce yourself...",
+        placeholder: t("bioPlaceholder"),
         emptyNodeClass: `bio-is-empty`,
       }),
       CharacterCount.configure({
@@ -296,7 +287,7 @@ const Sections = ({
           "prose prose-sm sm:prose-base  no-underline lg:prose-lg xl:prose-2xl px-3 focus:outline-none",
       },
     },
-  });
+  }, [locale]);
   const DisabledEnter = Extension.create({
     addKeyboardShortcuts() {
       return {
@@ -310,7 +301,7 @@ const Sections = ({
     extensions: [
       StarterKit,
       Placeholder.configure({
-        placeholder: "Your location",
+        placeholder: t("locationPlaceholder"),
         emptyNodeClass: "bio-is-empty",
       }),
       DisabledEnter,
@@ -365,7 +356,7 @@ const Sections = ({
           "prose prose-sm sm:prose-base  no-underline lg:prose-lg xl:prose-2xl focus:outline-none",
       },
     },
-  });
+  }, [locale]);
 
   const handleSelectLocationSuggestion = (suggestion: {
     label: string;
@@ -384,8 +375,6 @@ const Sections = ({
       location: suggestion.label,
       lat: suggestion.lat,
       lng: suggestion.lng,
-    }).then(() => {
-      toast.success("Your changes have been saved");
     });
   };
 
@@ -473,7 +462,6 @@ const Sections = ({
           });
           if (res) {
             setIsSaving(false);
-            toast.success("Your changes have been saved");
           }
         } else {
           const res = await updateOrderDesktopSection({
@@ -482,7 +470,6 @@ const Sections = ({
           });
           if (res) {
             setIsSaving(false);
-            toast.success("Your changes have been saved");
           }
         }
       }, 400);
@@ -540,13 +527,70 @@ const Sections = ({
     }
   }, []);
 
+  const dragPosRef = useRef<{ x: number; y: number } | null>(null);
+  const handleDragStart = useCallback(
+    (
+      _layout: any,
+      _oldItem: any,
+      _newItem: any,
+      _placeholder: any,
+      event: MouseEvent
+    ) => {
+      dragPosRef.current = { x: event.clientX, y: event.clientY };
+    },
+    []
+  );
+  const handleDrag = useCallback(
+    (
+      _layout: any,
+      _oldItem: any,
+      _newItem: any,
+      _placeholder: any,
+      event: MouseEvent,
+      element: HTMLElement
+    ) => {
+      if (!dragPosRef.current) return;
+      const dx = event.clientX - dragPosRef.current.x;
+      const dy = event.clientY - dragPosRef.current.y;
+      dragPosRef.current = { x: event.clientX, y: event.clientY };
+
+      const lift = element.querySelector<HTMLElement>(".block-lift");
+      if (!lift) return;
+
+      const tilt = Math.max(-8, Math.min(8, dx * 1.5));
+      const shadowX = Math.max(-14, Math.min(14, -dx * 3));
+      const shadowY = Math.max(4, Math.min(28, 14 - dy * 3));
+      lift.style.transform = `scale(1.04) rotate(${tilt}deg)`;
+      lift.style.boxShadow = `${shadowX}px ${shadowY}px 32px -12px rgba(0,0,0,0.35)`;
+    },
+    []
+  );
+  const handleDragStop = useCallback(
+    (
+      _layout: any,
+      _oldItem: any,
+      _newItem: any,
+      _placeholder: any,
+      _event: MouseEvent,
+      element: HTMLElement
+    ) => {
+      dragPosRef.current = null;
+      const lift = element.querySelector<HTMLElement>(".block-lift");
+      if (lift) {
+        lift.style.transform = "";
+        lift.style.boxShadow = "";
+      }
+    },
+    []
+  );
+
   const handleSideChange = useCallback((prev: any) => {
     setSide(prev);
 
     updateSidefolioAction({
       id: sidefolio.id,
       data: { sidebar: prev },
-    }).then(() => toast.success("Your changes have been saved"));
+    });
   }, []);
   const handleUpdateProfileImage = async (file: any) => {
     const res = await uplodadProfileImageAction({
@@ -555,7 +599,6 @@ const Sections = ({
     });
     if (res) {
       setProfileImageLoading(false);
-      toast.success("Your changes have been saved");
     }
   };
   const handleDeleteImageSidefolio = async () => {
@@ -567,7 +610,7 @@ const Sections = ({
     });
     if (res) {
       setProfileImageLoading(false);
-      toast.success("Removed successfully");
+      toast.success(t("removedSuccess"));
     }
   };
   const handleLayoutChange = useCallback(
@@ -628,7 +671,6 @@ const Sections = ({
 
       try {
         await updateSidefolioAction({ id: sidefolio.id, data: formData });
-        toast.success("Your changes have been saved");
       } catch {
       } finally {
         setIsSaving(false);
@@ -644,7 +686,6 @@ const Sections = ({
 
       try {
         await updateSectionAction({ id: l.id, data: formData });
-        toast.success("Your changes have been saved");
       } catch {
       } finally {
         setIsSaving(false);
@@ -710,37 +751,11 @@ const Sections = ({
     setIsSaving(true);
     try {
       await removeSectionAction({ i: i, id: sidefolio.id, image });
-      toast.success("Removed successfully");
+      toast.success(t("removedSuccess"));
     } catch {
     } finally {
       setIsSaving(false);
       router.refresh();
-    }
-  };
-  const handleBecomeSupporter = async () => {
-    setIsLoading(true);
-    try {
-      const res = await subscribeSupporterAction({});
-      if (res?.data?.url) {
-        window.location.href = res.data.url;
-      } else {
-        setIsLoading(false);
-      }
-    } catch {
-      setIsLoading(false);
-    }
-  };
-  const handleManageBilling = async () => {
-    setIsLoading(true);
-    try {
-      const res = await manageBillingAction({});
-      if (res?.data?.url) {
-        window.location.href = res.data.url;
-      } else {
-        setIsLoading(false);
-      }
-    } catch {
-      setIsLoading(false);
     }
   };
   const handlePreviewLinktree = async () => {
@@ -755,7 +770,7 @@ const Sections = ({
       setPreviewLinks(res.data.entries);
       setSelectedLinks(new Set(res.data.entries.map((e: any) => e.url)));
     } else {
-      toast.error("Please fill a valid Linktree username or url");
+      toast.error(t("invalidLinktreeUrl"));
     }
     setIsPreviewing(false);
   };
@@ -779,7 +794,7 @@ const Sections = ({
     if (!previewLinks) return;
     const links = previewLinks.filter((l) => selectedLinks.has(l.url));
     if (links.length === 0) {
-      toast.error("Select at least one link to import");
+      toast.error(t("selectAtLeastOneLink"));
       return;
     }
 
@@ -794,15 +809,13 @@ const Sections = ({
       toast.error(res.data.error);
     } else if (res?.data?.created) {
       toast.success(
-        `Imported ${res.data.created} link${
-          res.data.created > 1 ? "s" : ""
-        } out of ${res.data.total} selected`
+        t("importedLinks", { count: res.data.created, total: res.data.total })
       );
       resetImportDialog();
       setOpenImport(false);
       router.refresh();
     } else {
-      toast.error("Failed to import the selected links");
+      toast.error(t("failedImport"));
     }
     setIsImporting(false);
   };
@@ -849,6 +862,9 @@ const Sections = ({
           />
         )}
       </AnimatePresence>
+      <AnimatePresence>
+        {(isPreviewing || isImporting) && <PageLoader />}
+      </AnimatePresence>
       <div
         className={`fixed ${
           side === "left" ? "left-16" : "right-16"
@@ -875,19 +891,19 @@ const Sections = ({
               >
                 <path d="m13.73635 5.85251 4.00467-4.11665 2.3248 2.3808-4.20064 4.00466h5.9085v3.30473h-5.9365l4.22865 4.10766-2.3248 2.3338L12.0005 12.099l-5.74052 5.76852-2.3248-2.3248 4.22864-4.10766h-5.9375V8.12132h5.9085L3.93417 4.11666l2.3248-2.3808 4.00468 4.11665V0h3.4727zm-3.4727 10.30614h3.4727V24h-3.4727z" />
               </svg>
-              Importer depuis Linktree
+              {t("importFromLinktree")}
             </button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
-              <DialogTitle>Import from Linktree</DialogTitle>
+              <DialogTitle>{t("importFromLinktree")}</DialogTitle>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="flex gap-2">
                 <Input
                   type="text"
                   className="flex-[2]"
-                  placeholder="linktr.ee/username or just username"
+                  placeholder={t("linktreeUrlPlaceholder")}
                   value={importURL}
                   disabled={isPreviewing}
                   onChange={(e) => {
@@ -900,11 +916,7 @@ const Sections = ({
                   disabled={importURL.trim().length === 0 || isPreviewing}
                   onClick={handlePreviewLinktree}
                 >
-                  {isPreviewing ? (
-                    <Loader2 size={16} className="animate-spin" />
-                  ) : (
-                    "Preview"
-                  )}
+                  {t("preview")}
                 </Button>
               </div>
 
@@ -944,14 +956,9 @@ const Sections = ({
                 }
                 onClick={handleImportLinks}
               >
-                {isImporting ? (
-                  <Loader2 size={16} className="mr-2 animate-spin" />
-                ) : null}
                 {previewLinks
-                  ? `Import ${selectedLinks.size} link${
-                      selectedLinks.size > 1 ? "s" : ""
-                    }`
-                  : "Import links"}
+                  ? t("importLinksCta", { count: selectedLinks.size })
+                  : t("importLinksDefault")}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -1065,7 +1072,7 @@ const Sections = ({
                   style={{ opacity: percentage }}
                 >
                   {nameEditor?.storage.characterCount.characters()} / {40}{" "}
-                  characters
+                  {t("characters")}
                 </div>
               )}
             </div>
@@ -1141,7 +1148,7 @@ const Sections = ({
         <div className=" fixed z-[9999] flex bottom-5 left-1/2 -translate-x-2/4 rounded-3xl shadow bg-white/85 backdrop-blur-md">
           <div className="mx-auto p-2 border flex w-full items-center rounded-full shadow-lg  justify-between">
             <div className="flex origin-left  items-center gap-2 text-xl">
-              {/* <Image src="/icon.svg" width={30} height={30} alt="bentoh.me Logo" />{" "} */}
+              {/* <Image src="/icon.svg" width={30} height={30} alt="boxed.ink Logo" />{" "} */}
               <NavLinks
                 currentBreakpoint={currentBreakpoint}
                 setCurrentBreakpoint={handleBreakpointChange}
@@ -1154,83 +1161,6 @@ const Sections = ({
               />
               <div className=" items-center gap-2 flex">
                 <LoggedInButton user={user} sidefolio={sidefolio} />
-                <Dialog open={openReview} onOpenChange={setOpenReview}>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <DialogTrigger asChild>
-                          <Button
-                            size={"icon"}
-                            variant={"outline"}
-                            className="rounded-full"
-                          >
-                            <Heart
-                              size={17}
-                              className={
-                                user?.plan === "SUPPORTER"
-                                  ? "fill-red-500 text-red-500"
-                                  : ""
-                              }
-                            />
-                          </Button>
-                        </DialogTrigger>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        {user?.plan === "SUPPORTER"
-                          ? "You're a Supporter"
-                          : "Become a Supporter"}
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                  <DialogContent className="sm:max-w-[425px]">
-                    <DialogHeader>
-                      <DialogTitle className="flex items-center gap-3">
-                        Support bentoh.me
-                        <Heart className="fill-red-500 text-red-500" size={18} />
-                      </DialogTitle>
-                      <DialogDescription>
-                        {user?.plan === "SUPPORTER"
-                          ? "You're a Supporter - thank you for helping keep bentoh.me alive!"
-                          : "A small monthly subscription that changes nothing in the app - it's just here to support development."}
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="flex flex-col gap-3 py-2 text-sm text-foreground/70">
-                      <p>
-                        bentoh.me stays free forever, no feature is ever
-                        locked behind this. Becoming a Supporter (€2/month)
-                        just gets you a small Supporter badge and early
-                        access to potential new features before anyone else
-                        - it's mainly a way to say thanks and help cover the
-                        costs of running the app.
-                      </p>
-                    </div>
-                    <DialogFooter className="flex !justify-between items-center">
-                      {user?.plan === "SUPPORTER" ? (
-                        <Button
-                          type="button"
-                          disabled={isLoading}
-                          onClick={handleManageBilling}
-                        >
-                          {isLoading && (
-                            <Loader2 size={20} className="mr-2 animate-spin" />
-                          )}
-                          Manage my subscription
-                        </Button>
-                      ) : (
-                        <Button
-                          type="button"
-                          disabled={isLoading}
-                          onClick={handleBecomeSupporter}
-                        >
-                          {isLoading && (
-                            <Loader2 size={20} className="mr-2 animate-spin" />
-                          )}
-                          Become a Supporter - €2/mo
-                        </Button>
-                      )}
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
               </div>
             </div>
           </div>
@@ -1253,6 +1183,9 @@ const Sections = ({
             width={gridWidth}
             onBreakpointChange={handleBreakpointChange}
             onLayoutChange={handleLayoutChange}
+            onDragStart={handleDragStart}
+            onDrag={handleDrag}
+            onDragStop={handleDragStop}
             useCSSTransforms={mounted}
             compactType={compactType}
             breakpoint={currentBreakpoint}
@@ -1280,7 +1213,7 @@ const Sections = ({
                   <>
                     <div
                       className={
-                        "flex  w-full rounded-3xl h-full items-start overflow-hidden"
+                        "block-lift flex  w-full rounded-3xl h-full items-start overflow-hidden"
                       }
                       style={{
                         background: l?.background ? `${l.background}` : "white",
@@ -1310,13 +1243,13 @@ const Sections = ({
                                   : "dragMe select-none cursor-grab"
                               }  z-10 bg-transparent border-none rounded-3xl hover:bg-slate-300/20 resize-none min-h-0 focus-visible:bg-slate-300/20 focus-visible:ring-0 shadow-none h-full  w-full p-3`}
                               defaultValue={l.title}
-                              placeholder="Add a new title"
+                              placeholder={t("addNewTitlePlaceholder")}
                             />
                             {!isEditingThis && (
-                              <span className="absolute bottom-2 right-3 z-20 text-[10px] text-gray-400 opacity-0 group-hover/item:opacity-100 transition-all pointer-events-none select-none">
+                              <span className="block-action absolute bottom-2 right-3 z-20 text-[10px] text-gray-400 opacity-0 group-hover/item:opacity-100 transition-all pointer-events-none select-none">
                                 {isTouchDevice
-                                  ? "Double-tap to edit"
-                                  : "Double-click to edit"}
+                                  ? t("doubleTapToEdit")
+                                  : t("doubleClickToEdit")}
                               </span>
                             )}
                           </>
@@ -1324,12 +1257,12 @@ const Sections = ({
                       })()}
                     </div>
                     <span
-                      className="absolute group/span opacity-0 group-focus-visible/item:opacity-100 group-hover/item:opacity-100 transition-all hover:bg-gray-50 hover:shadow-md -right-2 p-2 shadow -m-1 bg-white border rounded-full z-20 -top-2 cursor-pointer"
+                      className="block-action absolute group/span opacity-0 group-focus-visible/item:opacity-100 group-hover/item:opacity-100 transition-all hover:bg-gray-50 hover:shadow-md -right-2 p-2 shadow -m-1 bg-white border rounded-full z-20 -top-2 cursor-pointer"
                       onClick={() => onRemoveItem(l.i)}
                     >
                       <Trash className="text-noir" size={15} />
                     </span>
-                    <div className="bg-white border shadow flex rounded-full gap-3 cursor-auto px-2 py-1 opacity-0 group-focus-visible/item:opacity-100 group-hover/item:opacity-100 absolute z-50 left-1/2 -translate-x-2/4 -bottom-4 transition-all items-center justify-center">
+                    <div className="block-action bg-white border shadow flex rounded-full gap-3 cursor-auto px-2 py-1 opacity-0 group-focus-visible/item:opacity-100 group-hover/item:opacity-100 absolute z-50 left-1/2 -translate-x-2/4 -bottom-4 transition-all items-center justify-center">
                       <div className="flex items-center gap-1">
                         <Type className="text-noir" size={15} />
                         <Input
@@ -1356,7 +1289,7 @@ const Sections = ({
                   <>
                     <div
                       className={
-                        "flex  w-full rounded-[22px] h-full items-start p-0.5"
+                        "block-lift flex  w-full rounded-[22px] h-full items-start p-0.5"
                       }
                     >
                       <div
@@ -1379,16 +1312,16 @@ const Sections = ({
                             : "text-sm lg:text-3xl"
                         }  z-10 bg-transparent border-none text-left font-bold break-words hover:bg-slate-300/20 resize-none min-h-0 focus-visible:bg-slate-300/20 focus-visible:ring-0 shadow-none h-full  w-full p-0.5`}
                         defaultValue={l.title}
-                        placeholder="Add a new title"
+                        placeholder={t("addNewTitlePlaceholder")}
                       />
                     </div>
                     <span
-                      className="absolute group/span opacity-0 group-focus-visible/item:opacity-100 group-hover/item:opacity-100 transition-all hover:bg-gray-50 hover:shadow-md -right-2 p-2 shadow -m-1 bg-white border rounded-full z-20 -top-2 cursor-pointer"
+                      className="block-action absolute group/span opacity-0 group-focus-visible/item:opacity-100 group-hover/item:opacity-100 transition-all hover:bg-gray-50 hover:shadow-md -right-2 p-2 shadow -m-1 bg-white border rounded-full z-20 -top-2 cursor-pointer"
                       onClick={() => onRemoveItem(l.i)}
                     >
                       <Trash className="text-noir" size={15} />
                     </span>
-                    <div className="bg-white border shadow flex rounded-full gap-3 cursor-auto px-2 py-1 opacity-0 group-focus-visible/item:opacity-100 group-hover/item:opacity-100 absolute z-50 left-1/2 -translate-x-2/4 -bottom-4 transition-all items-center justify-center">
+                    <div className="block-action bg-white border shadow flex rounded-full gap-3 cursor-auto px-2 py-1 opacity-0 group-focus-visible/item:opacity-100 group-hover/item:opacity-100 absolute z-50 left-1/2 -translate-x-2/4 -bottom-4 transition-all items-center justify-center">
                       <div className="flex items-center gap-1">
                         <Type className="text-noir" size={15} />
                         <Input
@@ -1403,7 +1336,7 @@ const Sections = ({
                   </>
                 ) : l?.type === "LINK" && l?.link?.youtube ? (
                   <>
-                    <div className="dragMe relative w-full h-full rounded-3xl bg-white cursor-grab">
+                    <div className="block-lift dragMe relative w-full h-full rounded-3xl bg-white cursor-grab">
                       {(() => {
                         const bp = currentBreakpoint as keyof typeof cols;
                         const currentItem = (effectiveLayouts[bp] || []).find(
@@ -1420,12 +1353,12 @@ const Sections = ({
                       })()}
                     </div>
                     <span
-                      className="absolute group/span opacity-0 group-focus-visible/item:opacity-100 group-hover/item:opacity-100 transition-all hover:bg-gray-50 hover:shadow-md -right-2 p-2 shadow -m-1 bg-white border rounded-full z-20 -top-2 cursor-pointer"
+                      className="block-action absolute group/span opacity-0 group-focus-visible/item:opacity-100 group-hover/item:opacity-100 transition-all hover:bg-gray-50 hover:shadow-md -right-2 p-2 shadow -m-1 bg-white border rounded-full z-20 -top-2 cursor-pointer"
                       onClick={() => onRemoveItem(l.i, l.image)}
                     >
                       <Trash className="text-noir" size={15} />
                     </span>
-                    <div className="bg-white border shadow flex rounded-full gap-3 cursor-auto px-2 py-1 opacity-0 group-focus-visible/item:opacity-100 group-hover/item:opacity-100 absolute z-50 left-1/2 -translate-x-2/4 -bottom-4 transition-all items-center justify-center">
+                    <div className="block-action bg-white border shadow flex rounded-full gap-3 cursor-auto px-2 py-1 opacity-0 group-focus-visible/item:opacity-100 group-hover/item:opacity-100 absolute z-50 left-1/2 -translate-x-2/4 -bottom-4 transition-all items-center justify-center">
                       <div className="flex items-center gap-1">
                         <Type className="text-noir" size={15} />
                         <Input
@@ -1440,7 +1373,7 @@ const Sections = ({
                   </>
                 ) : l?.type === "LINK" && l?.link?.twitch ? (
                   <>
-                    <div className="dragMe relative w-full h-full rounded-3xl bg-white cursor-grab">
+                    <div className="block-lift dragMe relative w-full h-full rounded-3xl bg-white cursor-grab">
                       {(() => {
                         const bp = currentBreakpoint as keyof typeof cols;
                         const currentItem = (effectiveLayouts[bp] || []).find(
@@ -1457,12 +1390,12 @@ const Sections = ({
                       })()}
                     </div>
                     <span
-                      className="absolute group/span opacity-0 group-focus-visible/item:opacity-100 group-hover/item:opacity-100 transition-all hover:bg-gray-50 hover:shadow-md -right-2 p-2 shadow -m-1 bg-white border rounded-full z-20 -top-2 cursor-pointer"
+                      className="block-action absolute group/span opacity-0 group-focus-visible/item:opacity-100 group-hover/item:opacity-100 transition-all hover:bg-gray-50 hover:shadow-md -right-2 p-2 shadow -m-1 bg-white border rounded-full z-20 -top-2 cursor-pointer"
                       onClick={() => onRemoveItem(l.i, l.image)}
                     >
                       <Trash className="text-noir" size={15} />
                     </span>
-                    <div className="bg-white border shadow flex rounded-full gap-3 cursor-auto px-2 py-1 opacity-0 group-focus-visible/item:opacity-100 group-hover/item:opacity-100 absolute z-50 left-1/2 -translate-x-2/4 -bottom-4 transition-all items-center justify-center">
+                    <div className="block-action bg-white border shadow flex rounded-full gap-3 cursor-auto px-2 py-1 opacity-0 group-focus-visible/item:opacity-100 group-hover/item:opacity-100 absolute z-50 left-1/2 -translate-x-2/4 -bottom-4 transition-all items-center justify-center">
                       <div className="flex items-center gap-1">
                         <Type className="text-noir" size={15} />
                         <Input
@@ -1478,7 +1411,7 @@ const Sections = ({
                 ) : l?.type === "LINK" ? (
                   <>
                     <div
-                      className="dragMe relative w-full h-full rounded-3xl cursor-grab overflow-hidden flex flex-col gap-1.5 p-3"
+                      className="block-lift dragMe relative w-full h-full rounded-3xl cursor-grab overflow-hidden flex flex-col gap-1.5 p-3"
                       style={{
                         background: l?.background ? `${l.background}` : "white",
                       }}
@@ -1504,7 +1437,7 @@ const Sections = ({
                           target="_blank"
                           rel="noopener noreferrer"
                           className="shrink-0 text-gray-400 hover:text-noir transition-colors"
-                          title="Opens in a new tab"
+                          title={t("opensInNewTab")}
                         >
                           <ExternalLink size={15} />
                         </a>
@@ -1530,7 +1463,7 @@ const Sections = ({
                                 l?.background
                               )}`}
                               defaultValue={l.link?.title}
-                              placeholder="Add a title"
+                              placeholder={t("addTitlePlaceholder")}
                             />
                           );
                         }
@@ -1558,7 +1491,7 @@ const Sections = ({
                                 l?.background
                               )}`}
                               defaultValue={l.link?.title}
-                              placeholder="Add a title"
+                              placeholder={t("addTitlePlaceholder")}
                             />
                             <span className="text-xs text-gray-400 break-all">
                               {l.link?.url}
@@ -1568,12 +1501,12 @@ const Sections = ({
                       })()}
                     </div>
                     <span
-                      className="absolute group/span opacity-0 group-focus-visible/item:opacity-100 group-hover/item:opacity-100 transition-all hover:bg-gray-50 hover:shadow-md -right-2 p-2 shadow -m-1 bg-white border rounded-full z-20 -top-2 cursor-pointer"
+                      className="block-action absolute group/span opacity-0 group-focus-visible/item:opacity-100 group-hover/item:opacity-100 transition-all hover:bg-gray-50 hover:shadow-md -right-2 p-2 shadow -m-1 bg-white border rounded-full z-20 -top-2 cursor-pointer"
                       onClick={() => onRemoveItem(l.i, l.image)}
                     >
                       <Trash className="text-noir" size={15} />
                     </span>
-                    <div className="bg-white border shadow flex rounded-full gap-3 cursor-auto px-2 py-1 opacity-0 group-focus-visible/item:opacity-100 group-hover/item:opacity-100 absolute z-50 left-1/2 -translate-x-2/4 -bottom-4 transition-all items-center justify-center">
+                    <div className="block-action bg-white border shadow flex rounded-full gap-3 cursor-auto px-2 py-1 opacity-0 group-focus-visible/item:opacity-100 group-hover/item:opacity-100 absolute z-50 left-1/2 -translate-x-2/4 -bottom-4 transition-all items-center justify-center">
                       <div className="flex items-center gap-1">
                         <Type className="text-noir" size={15} />
                         <Input
@@ -1599,7 +1532,7 @@ const Sections = ({
                 ) : (
                   <>
                     <div
-                      className={`
+                      className={`block-lift
                       ${!isCrop && "dragMe"}
                         absolute  rounded-3xl  top-0 left-0 h-full w-full
 
@@ -1683,12 +1616,12 @@ const Sections = ({
                       </div>
                     </div>
                     <span
-                      className="absolute group/span opacity-0 group-focus-visible/item:opacity-100 group-hover/item:opacity-100 transition-all hover:bg-gray-50 hover:shadow-md -right-2 p-2 shadow -m-1 bg-white border rounded-full z-20 -top-2 cursor-pointer"
+                      className="block-action absolute group/span opacity-0 group-focus-visible/item:opacity-100 group-hover/item:opacity-100 transition-all hover:bg-gray-50 hover:shadow-md -right-2 p-2 shadow -m-1 bg-white border rounded-full z-20 -top-2 cursor-pointer"
                       onClick={() => onRemoveItem(l.i, l.image)}
                     >
                       <Trash className="text-noir" size={15} />
                     </span>
-                    <div className="bg-white flex border rounded-full gap-3 cursor-auto px-1 py-1 opacity-0 group-focus-visible/item:opacity-100 group-hover/item:opacity-100 absolute z-50 left-1/2 -translate-x-2/4 -bottom-4 shadow transition-all items-center justify-center">
+                    <div className="block-action bg-white flex border rounded-full gap-3 cursor-auto px-1 py-1 opacity-0 group-focus-visible/item:opacity-100 group-hover/item:opacity-100 absolute z-50 left-1/2 -translate-x-2/4 -bottom-4 shadow transition-all items-center justify-center">
                       <div className="flex items-center ">
                         <Crop
                           onClick={() =>
@@ -1714,7 +1647,7 @@ const Sections = ({
                       (item: Layout) => item.i === l.i
                     );
                     return (
-                      <div className="bg-white border shadow flex rounded-full gap-1 cursor-auto px-1.5 py-1.5 opacity-0 group-focus-visible/item:opacity-100 group-hover/item:opacity-100 transition-all absolute z-50 left-2 -top-6 items-center justify-center">
+                      <div className="block-action bg-white border shadow flex rounded-full gap-1 cursor-auto px-1.5 py-1.5 opacity-0 group-focus-visible/item:opacity-100 group-hover/item:opacity-100 transition-all absolute z-50 left-2 -top-6 items-center justify-center">
                         {SIZE_PRESETS.map((preset) => {
                           const targetW = Math.min(preset.w, maxCols);
                           const isActive =

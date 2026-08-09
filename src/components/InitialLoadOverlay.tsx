@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import Image from "next/image";
+import { Logo } from "@/components/Logo";
 
 export function InitialLoadOverlay() {
   const [visible, setVisible] = useState(true);
@@ -24,13 +24,7 @@ export function InitialLoadOverlay() {
             animate={{ scale: [1, 1.1, 1] }}
             transition={{ duration: 1, repeat: Infinity, ease: "easeInOut" }}
           >
-            <Image
-              src="/icon.svg"
-              width={72}
-              height={72}
-              alt="Loading"
-              priority
-            />
+            <Logo width={72} className="text-noir" />
           </motion.div>
           <div className="h-1 w-40 overflow-hidden rounded-full bg-noir/10">
             <motion.div

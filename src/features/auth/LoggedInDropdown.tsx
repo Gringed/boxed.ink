@@ -20,19 +20,24 @@ import {
   CheckCircle2,
   CirclePlus,
   CreditCard,
+  Globe,
   Home,
   Layers,
   Loader2,
   LogOut,
   MessageCircleWarning,
+  Pencil,
+  Sparkles,
   Square,
   User2Icon,
 } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
+import { AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { signOutAction } from "./auth.action";
+import { PageLoader } from "@/components/PageLoader";
 import {
   Popover,
   PopoverContent,
@@ -60,7 +65,10 @@ import { updateSidefolioAction } from "@/lib/actions/sidefolio/sidefolio.actions
 
 export const LoggedInDropdown = (props: any) => {
   const router = useRouter();
+  const pathname = usePathname();
   let sidefolio = props?.sidefolio;
+  const user = props?.user;
+  const isPremium = user?.plan === "PRO";
 
   const [isLoading, setIsLoading] = useState(false);
   const [field, setField] = useState<string>(sidefolio?.slug);
@@ -68,6 +76,8 @@ export const LoggedInDropdown = (props: any) => {
     field === sidefolio?.slug ? false : true
   );
   const [open, setOpen] = useState(false);
+  const [domain, setDomain] = useState<string>(sidefolio?.customDomain ?? "");
+  const [isSavingDomain, setIsSavingDomain] = useState(false);
   const handleVerifySlug = async (e: any) => {
     e.preventDefault();
     const value = e.target.value;
@@ -91,10 +101,31 @@ export const LoggedInDropdown = (props: any) => {
         },
       });
       setOpen(false);
-      toast.success("Public bentoh.me name updated successfully");
+      toast.success("Public boxed.ink name updated successfully");
       router.refresh();
     } catch {
     }
+  };
+  const handleUpdateDomain = async () => {
+    setIsSavingDomain(true);
+    try {
+      await updateSidefolioAction({
+        id: sidefolio.id,
+        data: {
+          customDomain: domain,
+        },
+      });
+      toast.success("Custom domain saved");
+      router.refresh();
+    } catch {
+      toast.error("Couldn't save this domain");
+    } finally {
+      setIsSavingDomain(false);
+    }
+  };
+  const handleGoToUpgrade = () => {
+    setOpen(false);
+    router.push("/upgrade");
   };
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -104,10 +135,19 @@ export const LoggedInDropdown = (props: any) => {
           <DropdownMenuContent className="w-72 mb-2">
             <DropdownMenuLabel>My Account</DropdownMenuLabel>
             <DropdownMenuSeparator />
+            {pathname !== "/dashboard" && (
+              <DropdownMenuItem
+                className="hover:bg-gray-200/10 focus:bg-gray-200/10 hover:text-primary focus:text-primary cursor-pointer font-medium"
+                onClick={() => router.push("/dashboard")}
+              >
+                <Pencil size={16} className="mr-2" />
+                Continue my build
+              </DropdownMenuItem>
+            )}
             <DialogTrigger asChild>
               <DropdownMenuItem className="hover:bg-gray-200/10 focus:bg-gray-200/10 hover:text-primary focus:text-primary cursor-pointer font-medium">
                 <Layers size={16} className="mr-2" />
-                Change my bentoh.me name
+                Change my boxed.ink name
               </DropdownMenuItem>
             </DialogTrigger>
 
@@ -127,13 +167,13 @@ export const LoggedInDropdown = (props: any) => {
       <DialogPortal>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Edit your public bentoh.me name</DialogTitle>
+            <DialogTitle>Edit your public boxed.ink name</DialogTitle>
           </DialogHeader>
           <div className="flex flex-col gap-4 py-4">
             <div className="h-full w-full">
               <label className="flex relative border h-full border-noir bg-primary-foreground flex-row  items-center rounded ">
                 <span className="pl-5 w-full h-full text-black/50 flex-[0] py-3 font-medium">
-                  bentoh.me/
+                  boxed.ink/
                 </span>
                 <Input
                   type="text"
@@ -179,8 +219,57 @@ export const LoggedInDropdown = (props: any) => {
               Save changes
             </Button>
           </DialogFooter>
+
+          <div className="border-t pt-4 flex flex-col gap-3">
+            <div className="flex items-center gap-2">
+              <Globe size={16} className="text-noir" />
+              <span className="font-semibold text-sm">Custom domain</span>
+              {!isPremium && (
+                <span className="flex items-center gap-1 rounded-full bg-amber-400/15 text-amber-600 text-xs font-bold px-2 py-0.5">
+                  <Sparkles size={11} />
+                  Pro
+                </span>
+              )}
+            </div>
+
+            {isPremium ? (
+              <>
+                <Input
+                  type="text"
+                  placeholder="yourdomain.com"
+                  value={domain}
+                  onChange={(e) => setDomain(e.target.value)}
+                  className="text-base"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Point your domain's DNS to us once saved - we'll follow up
+                  with the exact records to add.
+                </p>
+                <Button
+                  size="sm"
+                  className="w-fit self-end"
+                  disabled={
+                    isSavingDomain || domain === (sidefolio?.customDomain ?? "")
+                  }
+                  onClick={handleUpdateDomain}
+                >
+                  Save domain
+                </Button>
+              </>
+            ) : (
+              <div className="flex items-center justify-between gap-3 rounded-lg bg-noir/5 p-3">
+                <p className="text-sm text-foreground/70">
+                  Use your own domain instead of boxed.ink/{sidefolio?.slug}.
+                </p>
+                <Button size="sm" onClick={handleGoToUpgrade}>
+                  Upgrade to Pro
+                </Button>
+              </div>
+            )}
+          </div>
         </DialogContent>
       </DialogPortal>
+      <AnimatePresence>{isSavingDomain && <PageLoader />}</AnimatePresence>
     </Dialog>
   );
 };

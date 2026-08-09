@@ -2,8 +2,10 @@
 import React from "react";
 import { Section } from "./Section";
 import { FadeInSection } from "./FadeInSection";
+import { useTranslations } from "next-intl";
 
 const HowWorksSection = () => {
+  const t = useTranslations("howWorks");
   return (
     <FadeInSection>
       <div className="relative">
@@ -11,10 +13,10 @@ const HowWorksSection = () => {
           <div className="flex flex-col justify-center w-full">
             <div className="flex items-center mb-16 gap-3 flex-col w-full justify-center">
               <h1 className="max-w-2xl text-center text-4xl font-black tracking-tight leading-none md:text-5xl text-noir">
-                Build anything,{" "}
-                <span className="text-primary">effortlessly</span>
+                {t("titlePrefix")}{" "}
+                <span className="text-primary">{t("titleHighlight")}</span>
               </h1>
-              <p className="font-medium italic">"Very easily"</p>
+              <p className="font-medium italic">{t("quote")}</p>
             </div>
 
             <video

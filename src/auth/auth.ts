@@ -37,7 +37,7 @@ export const {
       }
       await prisma.sidefolio.create({
         data: {
-          title: "My First bentoh.me",
+          title: "My First boxed.ink",
           slug: userSlug!,
           authorId: userId,
           image: userImage ?? "",

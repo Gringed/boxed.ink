@@ -1,0 +1,209 @@
+{
+  "header": {
+    "changelog": "Nouveautés",
+    "pricing": "Tarifs",
+    "newUpdates": "✦ Nouveautés - voir les mises à jour",
+    "enrollNow": "S'inscrire"
+  },
+  "hero": {
+    "titleLine1": "Ton portfolio.",
+    "titleLine2Prefix": "En quelques",
+    "flipWords": ["clics.", "blocs."],
+    "subtitle": "Laisse tomber la pile d'onglets Linktree, Gumroad et Mailchimp.",
+    "subtitleHighlight": "Une seule page, à ton image.",
+    "pillsPrefix": "Ajoute",
+    "pillsSuffix": "et plus encore.",
+    "pillLink": "Lien",
+    "pillImage": "Image",
+    "pillText": "Texte",
+    "pillYoutube": "YouTube",
+    "pillTwitch": "Twitch",
+    "handlePrompt": "Réserve ton identifiant pour commencer :",
+    "handlePlaceholder": "tonpseudo",
+    "cta": "Réserver et commencer",
+    "tip": "💡 Fais-le court et mémorable - tu vas le partager souvent.",
+    "continueCta": "Continuer ma construction"
+  },
+  "editorPreview": {
+    "titlePrefix": "Glisse. Dépose.",
+    "titleHighlight": "C'est fait.",
+    "subtitle": "Pas de code, pas de templates qui te résistent. Déplace les blocs jusqu'à ce que ça te ressemble."
+  },
+  "showcase": {
+    "titlePrefix": "Une seule page pour",
+    "titleHighlight": "tout ce que tu crées",
+    "subtitle": "Liens. Photos. Streams en direct. Vidéos. Tout ce qui raconte ton histoire - ça tient sur une page."
+  },
+  "howWorks": {
+    "titlePrefix": "Construis n'importe quoi,",
+    "titleHighlight": "sans effort",
+    "quote": "« Très facilement »"
+  },
+  "pricing": {
+    "titlePrefix": "Crée ton boxed.ink",
+    "titleHighlight": "gratuitement",
+    "subtitle": "Pas d'essai. Pas de carte bancaire. Pas de piège.",
+    "freeForever": "Gratuit à vie",
+    "price": "0 €",
+    "priceNote": "Aucune carte bancaire requise. Prêt en quelques minutes.",
+    "cta": "Commencer gratuitement",
+    "features": {
+      "dragDrop": {
+        "title": "Blocs glisser-déposer",
+        "description": "Construis ta page comme une grille bento, pas une liste de liens."
+      },
+      "everything": {
+        "title": "Tout au même endroit",
+        "description": "Liens, images, texte - toutes tes données sur une seule page."
+      },
+      "customizable": {
+        "title": "Entièrement personnalisable",
+        "description": "Couleurs, mise en page, tailles - fais en sorte que ça te ressemble."
+      },
+      "support": {
+        "title": "Un vrai support",
+        "description": "Une vraie personne répond et t'aide, pas un bot."
+      },
+      "share": {
+        "title": "Partage en un lien",
+        "description": "Publie et envoie ton boxed.ink à qui tu veux."
+      }
+    },
+    "premium": {
+      "title": "Pro",
+      "price": "4,99 €",
+      "priceNote": "par mois",
+      "featureTitle": "Domaine personnalisé",
+      "featureDescription": "Utilise ton propre domaine à la place de boxed.ink/tonpseudo.",
+      "comingSoon": "D'autres fonctionnalités Pro arrivent bientôt.",
+      "cta": "Passer Pro"
+    }
+  },
+  "faq": {
+    "title": "Des questions ?",
+    "subtitle": "Tout ce que tu dois savoir sur boxed.ink.",
+    "readyPrompt": "Prêt à créer la tienne ?",
+    "cta": "Commencer maintenant",
+    "items": {
+      "free": {
+        "q": "boxed.ink est-il gratuit ?",
+        "a": "Oui, gratuit à vie - pas d'essai, pas de carte bancaire. Il existe un abonnement Pro optionnel à 4,99€/mois pour un domaine personnalisé, avec d'autres fonctionnalités Pro à venir."
+      },
+      "different": {
+        "q": "Qu'est-ce qui différencie boxed.ink de Linktree ou Bento ?",
+        "a": "Au lieu d'une simple liste de boutons, tu construis une grille façon bento - déplace les blocs, redimensionne-les, mélange liens, texte et images comme tu veux. Ça ressemble à un portfolio, pas à une liste."
+      },
+      "code": {
+        "q": "Ai-je besoin de savoir coder ?",
+        "a": "Non. Tout se fait en glisser-déposer dans l'éditeur - aucun template à combattre."
+      },
+      "twitch": {
+        "q": "Puis-je afficher ma chaîne Twitch ou YouTube ?",
+        "a": "Oui - colle le lien de ta chaîne et elle se transforme en carte en direct (statut live et catégorie pour Twitch, nombre d'abonnés et dernières vidéos pour YouTube), rafraîchie automatiquement."
+      },
+      "linktree": {
+        "q": "J'ai déjà un Linktree, puis-je basculer facilement ?",
+        "a": "Oui - colle ton nom d'utilisateur Linktree et on importe tous tes liens existants en un clic."
+      },
+      "mobile": {
+        "q": "Est-ce que ça fonctionne bien sur mobile ?",
+        "a": "Oui, et tu peux organiser ta page différemment sur mobile et sur desktop - ce sont des mises en page indépendantes, pas juste une version compressée de l'autre."
+      }
+    }
+  },
+  "footer": {
+    "buildNow": "Construis maintenant !",
+    "handlePlaceholder": "tonpseudo",
+    "cta": "Réserver et commencer",
+    "changelog": "Nouveautés",
+    "terms": "Conditions",
+    "privacy": "Politique de confidentialité",
+    "contact": "Contact",
+    "madeBy": "Fait par Alexandre",
+    "copyright": "{year} ♥ boxed.ink",
+    "marquee": {
+      "bentoGrid": "Grille bento",
+      "linkInBio": "Link in bio",
+      "twitch": "Twitch",
+      "youtube": "YouTube",
+      "freeForever": "Gratuit à vie"
+    }
+  },
+  "signIn": {
+    "titlePrefix": "Connecte-toi",
+    "or": "ou",
+    "titleSuffix": "inscris-toi",
+    "titleEnd": "pour continuer",
+    "google": "Continuer avec Google"
+  },
+  "upgrade": {
+    "eyebrow": "boxed.ink Pro",
+    "title": "Fais de boxed.ink vraiment le tien",
+    "subtitle": "Commence par ton propre domaine - d'autres fonctionnalités Pro arrivent bientôt.",
+    "backToEditor": "Retour à l'éditeur",
+    "price": "4,99 €",
+    "priceNote": "par mois, résiliable à tout moment",
+    "featureTitle": "Domaine personnalisé",
+    "featureDescription": "Pointe tondomaine.com vers ta page au lieu de boxed.ink/tonpseudo.",
+    "comingSoonTitle": "D'autres arrivent",
+    "comingSoonDescription": "Pro ne fait que commencer - de nouvelles fonctionnalités se débloqueront ici au fil du temps.",
+    "cta": "S'abonner - 4,99 €/mois",
+    "supportNote": "Ça aide aussi à garder boxed.ink gratuit pour tout le monde.",
+    "alreadyTitle": "Tu es Pro",
+    "alreadyDescription": "Merci de soutenir boxed.ink - gère ton abonnement à tout moment.",
+    "manageCta": "Gérer mon abonnement"
+  },
+  "editor": {
+    "namePlaceholder": "Ton nom",
+    "bioPlaceholder": "Présente-toi...",
+    "locationPlaceholder": "Ta localisation",
+    "removedSuccess": "Supprimé avec succès",
+    "invalidLinktreeUrl": "Renseigne un nom d'utilisateur ou une url Linktree valide",
+    "selectAtLeastOneLink": "Sélectionne au moins un lien à importer",
+    "importedLinks": "{count, plural, one {# lien importé} other {# liens importés}} sur {total} sélectionnés",
+    "failedImport": "Échec de l'import des liens sélectionnés",
+    "importFromLinktree": "Importer depuis Linktree",
+    "linktreeUrlPlaceholder": "linktr.ee/pseudo ou juste le pseudo",
+    "preview": "Aperçu",
+    "importLinksCta": "{count, plural, one {Importer # lien} other {Importer # liens}}",
+    "importLinksDefault": "Importer les liens",
+    "characters": "caractères",
+    "doubleTapToEdit": "Double-tap pour modifier",
+    "doubleClickToEdit": "Double-clic pour modifier",
+    "addNewTitlePlaceholder": "Ajoute un nouveau titre",
+    "addTitlePlaceholder": "Ajoute un titre",
+    "opensInNewTab": "S'ouvre dans un nouvel onglet",
+    "copyShareLink": "Copier le lien de partage",
+    "addBlocks": "Ajouter des blocs",
+    "blockTitle": "Titre",
+    "blockText": "Texte",
+    "blockImage": "Image",
+    "blockLink": "Lien",
+    "addLinkTitle": "Ajouter un lien",
+    "addLinkPlaceholder": "Colle ton lien ici",
+    "addingLink": "Ajout du lien...",
+    "background": "Fond",
+    "previewMobile": "Aperçu mobile",
+    "previewDesktop": "Aperçu ordinateur",
+    "language": "Changer de langue",
+    "moveProfileLeft": "Déplacer le profil à gauche",
+    "moveProfileRight": "Déplacer le profil à droite",
+    "publishedAndCopied": "Publié en ligne et lien copié dans le presse-papiers",
+    "linkCopied": "Lien copié dans le presse-papiers",
+    "copyFailed": "Impossible de copier le lien",
+    "invalidUrl": "Renseigne une url valide",
+    "watch": "Regarder",
+    "subscribers": "abonnés",
+    "live": "En direct",
+    "offline": "Hors ligne",
+    "playingPrefix": "Joue à",
+    "lastPlayedPrefix": "A joué à"
+  },
+  "published": {
+    "myBoxedInk": "Mon boxed.ink",
+    "createMyBoxedInk": "Créer mon boxed.ink",
+    "notFoundPrefix": "Le boxed.ink",
+    "notFoundSuffix": "n'existe pas ou n'est pas publié, crée-le dès maintenant 😉",
+    "goToDashboard": "Aller à mon tableau de bord"
+  }
+}

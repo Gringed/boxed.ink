@@ -15,6 +15,7 @@ import {
 } from "@/lib/actions/sections/section.actions";
 import { cn } from "@/lib/utils";
 import {
+  Check,
   Contact,
   Heading,
   Image as Image2,
@@ -30,8 +31,15 @@ import {
   Type,
 } from "lucide-react";
 import confetti from "canvas-confetti";
+import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from "next/navigation";
-import React, { startTransition, useCallback, useRef, useState } from "react";
+import React, {
+  startTransition,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import {
   publishSidefolioAction,
   updateSidefolioAction,
@@ -57,6 +65,8 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { del } from "@vercel/blob";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
+import { FlagLanguageSwitcher } from "@/components/FlagLanguageSwitcher";
 const NavLinks = ({
   currentBreakpoint,
   setCurrentBreakpoint,
@@ -68,6 +78,7 @@ const NavLinks = ({
   isMobile,
 }: any) => {
   const router = useRouter();
+  const t = useTranslations("editor");
   const [url, setURL] = useState("");
   const [openLink, setOpenLink] = useState(false);
   const [openAdd, setOpenAdd] = useState(false);
@@ -76,6 +87,18 @@ const NavLinks = ({
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isPublish, setIsPublish] = useState<boolean>(false);
   const [isSavingC, setIsSavingC] = useState<boolean>(false);
+  const [justSaved, setJustSaved] = useState(false);
+  const wasSavingRef = useRef(false);
+
+  useEffect(() => {
+    const wasSaving = wasSavingRef.current;
+    wasSavingRef.current = isSaving;
+    if (wasSaving && !isSaving) {
+      setJustSaved(true);
+      const timeout = setTimeout(() => setJustSaved(false), 500);
+      return () => clearTimeout(timeout);
+    }
+  }, [isSaving]);
   function makeid(length: number) {
     let result = "";
     const characters =
@@ -98,7 +121,6 @@ const NavLinks = ({
       sideId: sidefolio.id,
       i: `n${makeid(40)}`,
     }).then(() => {
-      toast.success("Your changes have been saved");
       startTransition(() => {
         router.refresh();
       });
@@ -118,7 +140,6 @@ const NavLinks = ({
     });
     if (res) {
       setImageLoading(false);
-      toast.success("Your changes have been saved");
       startTransition(() => {
         router.refresh();
       });
@@ -131,7 +152,6 @@ const NavLinks = ({
     });
     if (res) {
       setImageSideLoading(false);
-      toast.success("Your changes have been saved");
     }
   };
   const handleShare = async () => {
@@ -150,9 +170,7 @@ const NavLinks = ({
     try {
       await navigator.clipboard.writeText(url);
       toast.success(
-        justPublished
-          ? "Published online and link copied to clipboard"
-          : "Link copied to clipboard"
+        justPublished ? t("publishedAndCopied") : t("linkCopied")
       );
       const rect = shareButtonRef.current?.getBoundingClientRect();
       const origin = rect
@@ -167,7 +185,7 @@ const NavLinks = ({
         origin,
       });
     } catch {
-      toast.error("Could not copy the link");
+      toast.error(t("copyFailed"));
     }
   };
   const handleCreateLink = async () => {
@@ -187,13 +205,12 @@ const NavLinks = ({
       i: `n${makeid(40)}`,
     });
     if (res.data?.error) {
-      toast.error("Please fill a valid url");
+      toast.error(t("invalidUrl"));
       setIsLoading(false);
     } else {
       setIsLoading(false);
       setOpenLink(false);
       setURL("");
-      toast.success("Your changes have been saved");
       startTransition(() => {
         router.refresh();
       });
@@ -215,7 +232,6 @@ const NavLinks = ({
           data: formData,
           image,
         });
-        toast.success("Your changes have been saved");
       } catch {
       } finally {
         setIsSavingC(false);
@@ -251,21 +267,45 @@ const NavLinks = ({
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button
-              ref={shareButtonRef}
-              size={"icon"}
-              disabled={isSaving || isPublish}
-              className="rounded-full"
-              onClick={handleShare}
-            >
-              {isSaving || isPublish ? (
-                <LoaderCircle className=" animate-spin" size={17} />
-              ) : (
-                <Share2 size={17} />
-              )}
-            </Button>
+            <div className="relative">
+              <AnimatePresence>
+                {justSaved && (
+                  <motion.span
+                    className="absolute inset-0 rounded-full bg-primary pointer-events-none"
+                    initial={{ scale: 1, opacity: 0.55 }}
+                    animate={{ scale: 1.7, opacity: 0 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.5, ease: "easeOut" }}
+                  />
+                )}
+              </AnimatePresence>
+              <Button
+                ref={shareButtonRef}
+                size={"icon"}
+                disabled={isSaving || isPublish}
+                className={cn(
+                  "rounded-full relative transition-colors",
+                  justSaved && "!bg-white"
+                )}
+                onClick={handleShare}
+              >
+                {isSaving || isPublish ? (
+                  <LoaderCircle className=" animate-spin" size={17} />
+                ) : justSaved ? (
+                  <motion.div
+                    initial={{ scale: 0.6 }}
+                    animate={{ scale: [0.6, 1.25, 1] }}
+                    transition={{ duration: 0.4, ease: "easeOut" }}
+                  >
+                    <Check size={17} className="text-primary" />
+                  </motion.div>
+                ) : (
+                  <Share2 size={17} />
+                )}
+              </Button>
+            </div>
           </TooltipTrigger>
-          <TooltipContent>Copy share link</TooltipContent>
+          <TooltipContent>{t("copyShareLink")}</TooltipContent>
         </Tooltip>
       </TooltipProvider>
       <Popover open={openAdd} onOpenChange={setOpenAdd}>
@@ -283,7 +323,7 @@ const NavLinks = ({
         <PopoverContent side="top" className="w-full mb-2">
           <div className="grid gap-4">
             <div className="space-y-2">
-              <h4 className="font-medium leading-none">Add blocks</h4>
+              <h4 className="font-medium leading-none">{t("addBlocks")}</h4>
             </div>
             <div className="grid gap-2">
               <div className="flex w-full justify-between gap-3 flex-wrap items-center">
@@ -300,7 +340,7 @@ const NavLinks = ({
                     <Heading strokeWidth={3} size={17} />
                   </Button>
                   <span className="group-hover/tooltip:visible transition-all p-1 px-2 font-medium group-hover/tooltip:opacity-100 z-50 text-xs text-white rounded-full bg-primary opacity-0 absolute -top-7 -translate-x-2/4 left-1/2 invisible">
-                    Title
+                    {t("blockTitle")}
                   </span>
                 </div>
                 <div className="group/tooltip relative  ">
@@ -316,7 +356,7 @@ const NavLinks = ({
                     <Type strokeWidth={3} size={17} />
                   </Button>
                   <span className="group-hover/tooltip:visible transition-all p-1 px-2 font-medium group-hover/tooltip:opacity-100 z-50 text-xs text-white rounded-full bg-primary opacity-0 absolute -top-7 -translate-x-2/4 left-1/2 invisible">
-                    Text
+                    {t("blockText")}
                   </span>
                 </div>
                 <div className="group/tooltip relative  ">
@@ -358,7 +398,7 @@ const NavLinks = ({
                     )}
                   </Button>
                   <span className="group-hover/tooltip:visible transition-all p-1 px-2 font-medium group-hover/tooltip:opacity-100 z-50 text-xs text-white rounded-full bg-primary opacity-0 absolute -top-7 -translate-x-2/4 left-1/2 invisible">
-                    Image
+                    {t("blockImage")}
                   </span>
                 </div>
 
@@ -376,13 +416,13 @@ const NavLinks = ({
                     </DialogTrigger>
                     <DialogContent className="sm:max-w-[425px]">
                       <DialogHeader>
-                        <DialogTitle>Add link</DialogTitle>
+                        <DialogTitle>{t("addLinkTitle")}</DialogTitle>
                       </DialogHeader>
                       <div className="grid gap-4 py-4">
                         <Input
                           type="text"
                           className="flex-[2]"
-                          placeholder="Paste your link here"
+                          placeholder={t("addLinkPlaceholder")}
                           onChange={(e) => setURL(e.target.value)}
                         />
                       </div>
@@ -402,10 +442,10 @@ const NavLinks = ({
                           {isLoading ? (
                             <>
                               <Loader2 size={16} className="mr-2 animate-spin" />
-                              Adding link...
+                              {t("addingLink")}
                             </>
                           ) : (
-                            "Add link"
+                            t("addLinkTitle")
                           )}
                         </Button>
                       </DialogFooter>
@@ -413,7 +453,7 @@ const NavLinks = ({
                   </Dialog>
 
                   <span className="group-hover/tooltip:visible transition-all p-1 px-2 font-medium group-hover/tooltip:opacity-100 z-50 text-xs text-white rounded-full bg-primary opacity-0 absolute -top-7 -translate-x-2/4 left-1/2 invisible">
-                    Link
+                    {t("blockLink")}
                   </span>
                 </div>
 
@@ -421,7 +461,7 @@ const NavLinks = ({
               </div>
               <div className="flex w-full h-full justify-between items-center">
                 <div className="w-full h-full flex items-center">
-                  Background
+                  {t("background")}
                 </div>
                 <div className="w-full flex justify-between gap-3 h-full">
                   <Input
@@ -503,8 +543,9 @@ const NavLinks = ({
             </Button>
           </TooltipTrigger>
           <TooltipContent>
-            {sidefolio?.sidebar &&
-              sidefolio?.sidebar[0].toUpperCase() + sidefolio?.sidebar.slice(1)}
+            {sidefolio?.sidebar === "left"
+              ? t("moveProfileRight")
+              : t("moveProfileLeft")}
           </TooltipContent>
         </Tooltip>
         {!isMobile && (
@@ -527,9 +568,14 @@ const NavLinks = ({
                 )}
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Device</TooltipContent>
+            <TooltipContent>
+              {currentBreakpoint === "xs"
+                ? t("previewDesktop")
+                : t("previewMobile")}
+            </TooltipContent>
           </Tooltip>
         )}
+        <FlagLanguageSwitcher />
       </TooltipProvider>
     </nav>
   );

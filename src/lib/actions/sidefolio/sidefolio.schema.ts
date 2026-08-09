@@ -10,4 +10,9 @@ export const SidefolioSchema = z.object({
   image: z.string().optional(),
   bio: z.string().optional(),
   location: z.string().optional(),
+  customDomain: z
+    .string()
+    .regex(/^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/i, "Enter a valid domain")
+    .optional()
+    .or(z.literal("")),
 });

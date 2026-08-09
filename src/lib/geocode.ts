@@ -26,7 +26,7 @@ export const searchLocations = async (
       `https://nominatim.openstreetmap.org/search?${params}`,
       {
         headers: {
-          "User-Agent": "bentoh.me/1.0 (https://bentoh.me)",
+          "User-Agent": "boxed.ink/1.0 (https://boxed.ink)",
         },
       }
     );
@@ -86,7 +86,7 @@ export const geocodeLocation = async (
       `https://nominatim.openstreetmap.org/search?${params}`,
       {
         headers: {
-          "User-Agent": "bentoh.me/1.0 (https://bentoh.me)",
+          "User-Agent": "boxed.ink/1.0 (https://boxed.ink)",
         },
       }
     );

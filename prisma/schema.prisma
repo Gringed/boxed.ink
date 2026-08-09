@@ -93,6 +93,7 @@ model Sidefolio {
   locationLat Float?
   locationLng Float?
   sidebar     Side      @default(left)
+  customDomain String?  @unique
   section     Section[]
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -102,7 +103,7 @@ enum Plan {
   FREEMIUM
   PREMIUM_ONE
   PREMIUM_LIFE
-  SUPPORTER
+  PRO
 }
 
 model User {

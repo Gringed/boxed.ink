@@ -3,11 +3,18 @@ import { LandingHeader } from "@/features/landing/LandingHeader";
 import { Section } from "@/features/landing/Section";
 import Footer from "@/features/landing/Footer";
 import React from "react";
+import { currentUser } from "@/auth/current-user";
+import { prisma } from "@/prisma";
 
-const page = () => {
+const page = async () => {
+  const user = await currentUser();
+  const sidefolio = user
+    ? await prisma.sidefolio.findFirst({ where: { authorId: user.id } })
+    : null;
+
   return (
     <>
-      <LandingHeader />
+      <LandingHeader user={user} sidefolio={sidefolio} />
       <div className="flex flex-col w-full">
         <Section className="flex flex-col items-start text-medium text-justify py-10 w-full gap-6">
           <div className="w-full">
@@ -17,7 +24,7 @@ const page = () => {
             </div>
             <p>
               These Terms and Conditions ("Terms") govern your access to and
-              use of bentoh.me (the "Service"), operated by Dev Engine, a
+              use of boxed.ink (the "Service"), operated by Dev Engine, a
               French sole proprietorship (entrepreneur individuel) run by
               Alexandre Guillôme, registered under SIREN 911 591 691 (SIRET
               911 591 691 00041) ("we", "us", "Dev Engine"). By creating an
@@ -29,7 +36,7 @@ const page = () => {
           <div>
             <h2 className="text-lg font-semibold mb-2">1. The Service</h2>
             <p>
-              bentoh.me lets users create and publish personal pages,
+              boxed.ink lets users create and publish personal pages,
               portfolios and link-in-bio style profiles. We may add, modify
               or remove features at any time, with or without notice.
             </p>
@@ -41,7 +48,7 @@ const page = () => {
             </h2>
             <p>
               You must be at least 16 years old to use the Service. To use
-              bentoh.me you must sign in with a Google account. You are
+              boxed.ink you must sign in with a Google account. You are
               responsible for maintaining the confidentiality of your
               account and for all activity that occurs under it. You agree
               to provide accurate information and to notify us promptly of
@@ -231,7 +238,7 @@ const page = () => {
           <p>Last updated: 5 August 2026.</p>
         </Section>
       </div>
-      <Footer />
+      <Footer user={user} />
     </>
   );
 };

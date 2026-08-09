@@ -1,4 +1,5 @@
 "use client";
+import { useTranslations } from "next-intl";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { type TwitchChannelData } from "@/lib/twitch";
 
@@ -34,26 +35,29 @@ const WatchButton = ({
 }: {
   twitch: TwitchChannelData;
   size?: "xs" | "sm" | "md";
-}) => (
-  <a
-    href={twitch.channelUrl}
-    target="_blank"
-    rel="noopener noreferrer"
-    onClick={(e) => e.stopPropagation()}
-    className={`shrink-0 flex items-center bg-white hover:bg-[#F5F0FF] border border-[#9146FF] text-[#9146FF] font-bold rounded-full transition-colors whitespace-nowrap ${
-      size === "md"
-        ? "text-sm gap-1.5 px-3.5 py-1.5"
-        : size === "xs"
-        ? "text-xs gap-1 px-2.5 py-0.5"
-        : "text-xs gap-1 px-3 py-1"
-    }`}
-  >
-    <TwitchLogo
-      className={size === "md" ? "size-4" : size === "xs" ? "size-3" : "size-3"}
-    />
-    Watch
-  </a>
-);
+}) => {
+  const t = useTranslations("editor");
+  return (
+    <a
+      href={twitch.channelUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      onClick={(e) => e.stopPropagation()}
+      className={`shrink-0 flex items-center bg-white hover:bg-[#F5F0FF] border border-[#9146FF] text-[#9146FF] font-bold rounded-full transition-colors whitespace-nowrap ${
+        size === "md"
+          ? "text-sm gap-1.5 px-3.5 py-1.5"
+          : size === "xs"
+          ? "text-xs gap-1 px-2.5 py-0.5"
+          : "text-xs gap-1 px-3 py-1"
+      }`}
+    >
+      <TwitchLogo
+        className={size === "md" ? "size-4" : size === "xs" ? "size-3" : "size-3"}
+      />
+      {t("watch")}
+    </a>
+  );
+};
 
 const ChannelAvatar = ({
   twitch,
@@ -79,15 +83,16 @@ const LiveStatus = ({
 }: {
   twitch: TwitchChannelData;
   small?: boolean;
-}) =>
-  twitch.isLive ? (
+}) => {
+  const t = useTranslations("editor");
+  return twitch.isLive ? (
     <span
       className={`flex items-center gap-1 font-bold text-[#eb0400] whitespace-nowrap ${
         small ? "text-xs" : "text-sm"
       }`}
     >
       <span className="size-1.5 rounded-full bg-[#eb0400]" />
-      Live
+      {t("live")}
     </span>
   ) : (
     <span
@@ -95,9 +100,10 @@ const LiveStatus = ({
         small ? "text-xs" : "text-sm"
       }`}
     >
-      Offline
+      {t("offline")}
     </span>
   );
+};
 
 const CategoryDisplay = ({
   twitch,
@@ -106,6 +112,7 @@ const CategoryDisplay = ({
   twitch: TwitchChannelData;
   compact?: boolean;
 }) => {
+  const t = useTranslations("editor");
   if (!twitch.category) return null;
   return (
     <div className="flex items-center gap-2 min-h-0 overflow-hidden">
@@ -124,7 +131,7 @@ const CategoryDisplay = ({
           compact ? "text-xs" : "text-sm"
         }`}
       >
-        {twitch.isLive ? "Playing " : "Last played "}
+        {twitch.isLive ? t("playingPrefix") : t("lastPlayedPrefix")}{" "}
         <span className="font-semibold">{twitch.category}</span>
       </span>
     </div>
@@ -132,6 +139,7 @@ const CategoryDisplay = ({
 };
 
 const CategoryDisplayLarge = ({ twitch }: { twitch: TwitchChannelData }) => {
+  const t = useTranslations("editor");
   if (!twitch.category) return null;
   return (
     <div className="flex flex-col items-center justify-center gap-2 h-full w-full min-h-0">
@@ -145,7 +153,7 @@ const CategoryDisplayLarge = ({ twitch }: { twitch: TwitchChannelData }) => {
       )}
       <div className="text-center shrink-0">
         <div className="text-xs text-gray-500">
-          {twitch.isLive ? "Playing" : "Last played"}
+          {twitch.isLive ? t("playingPrefix") : t("lastPlayedPrefix")}
         </div>
         <div className="text-sm font-bold truncate max-w-full">
           {twitch.category}

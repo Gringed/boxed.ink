@@ -1,14 +1,14 @@
 import { currentUser } from "@/auth/current-user";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Heart, Star } from "lucide-react";
+import { Sparkles, Star } from "lucide-react";
 import { SignInButton } from "./SignInButton";
 import { LoggedInDropdown } from "./LoggedInDropdown";
 import { StarFilledIcon } from "@radix-ui/react-icons";
 
 export const LoggedInButton = ({ user, sidefolio }: any) => {
   return (
-    <LoggedInDropdown sidefolio={sidefolio}>
+    <LoggedInDropdown user={user} sidefolio={sidefolio}>
       <div className="relative w-fit">
         <Avatar className="size-9 cursor-pointer ">
           <AvatarFallback>{user.name?.[0]}</AvatarFallback>
@@ -49,9 +49,9 @@ export const LoggedInButton = ({ user, sidefolio }: any) => {
               ></path>{" "}
             </g>
           </svg>
-        ) : user.plan === "SUPPORTER" ? (
+        ) : user.plan === "PRO" ? (
           <div className="absolute bottom-0 end-0 p-[3px] rounded-full bg-white">
-            <Heart size={12} className="fill-red-500 text-red-500" />
+            <Sparkles size={12} className="fill-amber-400 text-amber-400" />
           </div>
         ) : null}
       </div>

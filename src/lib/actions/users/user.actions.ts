@@ -42,6 +42,10 @@ export const uplodadProfileImageAction = userAction(
           image: "",
         },
       });
+      await prisma.user.update({
+        where: { id: context.user.id },
+        data: { image: "" },
+      });
 
       revalidatePath("/dashboard");
       return res;
@@ -64,6 +68,10 @@ export const uplodadProfileImageAction = userAction(
             image: blob.url,
           },
         });
+        await prisma.user.update({
+          where: { id: context.user.id },
+          data: { image: blob.url },
+        });
       }
       revalidatePath("/dashboard");
       return response;
@@ -84,6 +92,10 @@ export const uplodadProfileImageAction = userAction(
           data: {
             image: blob.url,
           },
+        });
+        await prisma.user.update({
+          where: { id: context.user.id },
+          data: { image: blob.url },
         });
       }
       revalidatePath("/dashboard");

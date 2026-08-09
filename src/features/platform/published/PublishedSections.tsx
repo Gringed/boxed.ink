@@ -108,7 +108,7 @@ const PublishedSections = ({
   }, []);
 
   const nameEditor = useEditor({
-    content: sidefolio?.name.replaceAll("\n\n", "<p>") || "",
+    content: sidefolio?.name?.replaceAll("\n\n", "<p>") || "",
     editable: false,
     immediatelyRender: false,
 

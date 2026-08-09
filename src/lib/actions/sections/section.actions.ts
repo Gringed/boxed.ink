@@ -121,7 +121,7 @@ const fetchLinktreeEntries = async (rawUrl: string) => {
   try {
     res = await fetch(`https://linktr.ee/${username}`, {
       headers: {
-        "User-Agent": "Mozilla/5.0 (compatible; BentohImporter/1.0)",
+        "User-Agent": "Mozilla/5.0 (compatible; BoxedInkImporter/1.0)",
       },
     });
   } catch (err) {

@@ -1,5 +1,5 @@
 "use server";
-import { userAction } from "@/lib/safe.actions";
+import { ActionError, userAction } from "@/lib/safe.actions";
 import { SidefolioSchema } from "./sidefolio.schema";
 import { z } from "zod";
 import { prisma } from "@/prisma";
@@ -16,6 +16,9 @@ export const updateSidefolioAction = userAction(
     image: z.string().optional(),
   }),
   async (input, context) => {
+    if (input.data.customDomain && context.user.plan !== "PRO") {
+      throw new ActionError("A Pro subscription is required for a custom domain");
+    }
     if (input.image) {
       await del(input.image);
     }
@@ -130,7 +133,7 @@ export const publishSidefolioAction = userAction(
   }
 );
 
-export const subscribeSupporterAction = userAction(
+export const subscribeAction = userAction(
   z.object({}),
   async (_input, context) => {
     const user = await prisma.user.findUnique({
@@ -145,7 +148,7 @@ export const subscribeSupporterAction = userAction(
     const stripeCustomerId = user?.stripeCustomerId ?? undefined;
     const session = await stripe.checkout.sessions.create({
       success_url: process.env.NEXT_PUBLIC_APP_URL + "/dashboard",
-      cancel_url: process.env.NEXT_PUBLIC_APP_URL + "/dashboard",
+      cancel_url: process.env.NEXT_PUBLIC_APP_URL + "/upgrade",
       mode: "subscription",
       allow_promotion_codes: true,
       billing_address_collection: "auto",
@@ -153,7 +156,7 @@ export const subscribeSupporterAction = userAction(
       customer_email: stripeCustomerId ? undefined : user?.email,
       line_items: [
         {
-          price: process.env.PRICE_SUPPORTER,
+          price: process.env.PRICE_PRO,
           quantity: 1,
         },
       ],

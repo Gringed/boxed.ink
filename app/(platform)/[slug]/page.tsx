@@ -13,7 +13,9 @@ import { SignInButton } from "@/features/auth/SignInButton";
 import { LoggedInButton } from "@/features/auth/LoggedInButton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import ShinyButton from "@/components/magicui/shiny-button";
+import { FlagLanguageSwitcher } from "@/components/FlagLanguageSwitcher";
 import { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 export async function generateMetadata(
   props: PageParams<{ slug: string }>
 ): Promise<Metadata> {
@@ -37,6 +39,7 @@ export async function generateMetadata(
 const page = async (props: PageParams<{ slug: string }>) => {
   const params = await props.params;
   const user = await currentUser();
+  const t = await getTranslations("published");
   if (!params.slug) {
     redirect("/dashboard");
   }
@@ -82,6 +85,9 @@ const page = async (props: PageParams<{ slug: string }>) => {
     <>
       {sidefolio ? (
         <div className="flex justify-center h-full">
+          <div className="fixed top-4 right-4 z-50">
+            <FlagLanguageSwitcher />
+          </div>
           <div className="fixed bottom-5 xl:right-5 bg-transparent p-2   z-50">
             {user ? (
               <Link
@@ -97,11 +103,11 @@ const page = async (props: PageParams<{ slug: string }>) => {
                     />
                   ) : null}
                 </Avatar>
-                <span className="text-sm font-medium">My bentoh.me</span>
+                <span className="text-sm font-medium">{t("myBoxedInk")}</span>
               </Link>
             ) : (
               <>
-                <ShinyButton text="Create my bentoh.me" />
+                <ShinyButton text={t("createMyBoxedInk")} />
               </>
             )}
           </div>
@@ -115,19 +121,18 @@ const page = async (props: PageParams<{ slug: string }>) => {
       ) : (
         <div className="h-screen w-full flex justify-center items-center flex-col gap-4">
           <div>
-            The{" "}
+            {t("notFoundPrefix")}{" "}
             <span className="font-bold text-primary">
               {decodeURI(params.slug)}
             </span>{" "}
-            bentoh.me doesn't exist now or it's not published, create it for
-            now 😉
+            {t("notFoundSuffix")}
           </div>
           {user ? (
             <Link
               href={"/dashboard"}
               className={cn(buttonVariants({ variant: "default" }))}
             >
-              Go to my dashboard
+              {t("goToDashboard")}
             </Link>
           ) : (
             <SignInButton />

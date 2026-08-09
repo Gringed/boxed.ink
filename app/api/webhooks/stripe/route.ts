@@ -33,7 +33,7 @@ export const POST = async (req: NextRequest) => {
         await prisma.user.updateMany({
           where: { stripeCustomerId },
           data: {
-            plan: "SUPPORTER",
+            plan: "PRO",
             expiresAt: undefined,
           },
         });
@@ -59,7 +59,7 @@ export const POST = async (req: NextRequest) => {
       const user = await prisma.user.findFirst({
         where: { stripeCustomerId },
       });
-      if (user?.plan === "SUPPORTER") {
+      if (user?.plan === "PRO") {
         break;
       }
       await prisma.user.updateMany({
@@ -87,7 +87,7 @@ export const POST = async (req: NextRequest) => {
       const subscription = event.data.object as Stripe.Subscription;
       const stripeCustomerId = subscription.customer as string;
       await prisma.user.updateMany({
-        where: { stripeCustomerId, plan: "SUPPORTER" },
+        where: { stripeCustomerId, plan: "PRO" },
         data: {
           plan: "FREEMIUM",
         },

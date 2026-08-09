@@ -7,19 +7,33 @@ import {
   useScroll,
 } from "framer-motion";
 
-import Image from "next/image";
-import { Menu } from "lucide-react";
-import { useState, useTransition } from "react";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import Link from "next/link";
+import { useEffect, useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
 
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { SignInButton } from "../auth/SignInButton";
+import { LoggedInButton } from "../auth/LoggedInButton";
 import { PageLoader } from "@/components/PageLoader";
+import { FlagLanguageSwitcher } from "@/components/FlagLanguageSwitcher";
+import { Logo } from "@/components/Logo";
 
-export function LandingHeader() {
+type LandingHeaderProps = {
+  user?: any;
+  sidefolio?: any;
+};
+
+export function LandingHeader({ user, sidefolio }: LandingHeaderProps) {
+  const t = useTranslations("header");
   const [hiddenChangeLog, setHiddenChangelog] = useState(false);
+  const [hasArrived, setHasArrived] = useState(false);
   const [isNavigating, startNavigation] = useTransition();
   const { scrollY } = useScroll();
+
+  useEffect(() => {
+    const timeout = setTimeout(() => setHasArrived(true), 700);
+    return () => clearTimeout(timeout);
+  }, []);
 
   useMotionValueEvent(scrollY, "change", (latest) => {
     if (latest > 50) {
@@ -29,57 +43,78 @@ export function LandingHeader() {
     }
   });
   const router = useRouter();
+  const pathname = usePathname();
+
+  const handleLogoClick = () => {
+    if (pathname === "/") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      startNavigation(() => router.push("/"));
+    }
+  };
+
+  const handleChangelogClick = (e: React.MouseEvent) => {
+    if (pathname !== "/changelog") {
+      e.preventDefault();
+      startNavigation(() => router.push("/changelog"));
+    }
+  };
+
   return (
-    <div className="relative h-[150px]">
-      <header className="fixed z-20 inset-x-0 flex h-20 shadow bg-white/85 backdrop-blur-md">
-        <div className="mx-auto max-w-screen-2xl flex w-full items-center justify-between sm:px-16 px-6">
+    <div className="relative h-[110px]">
+      <header className="fixed z-20 inset-x-0 top-4 flex justify-center px-4">
+        <div className="flex items-center gap-7 sm:gap-8 md:min-w-[560px] justify-between rounded-full bg-noir/95 backdrop-blur-md text-white pl-6 pr-5 py-2.5 sm:py-3 border-1.5 border-white shadow-[0px_0px_20px_10px_hsl(var(--noir)/0.35)] sm:pl-6 sm:pr-3">
           <div
-            onClick={() => startNavigation(() => router.push("/"))}
-            className="flex cursor-pointer origin-left items-center gap-2 text-xl"
+            onClick={handleLogoClick}
+            className="flex cursor-pointer items-center gap-1.5 shrink-0"
           >
-            <Image
-              src="/icon.svg"
-              width={64}
-              height={64}
-              alt="bentoh.me logo"
-              priority
-            />{" "}
-            <h1 className="md:block hidden font-MontserratAlt font-extrabold text-2xl md:text-3xl">
-              bentoh.me
-            </h1>
+            <Logo width={24} className="text-white shrink-0 sm:hidden" />
+            <Logo width={28} className="text-white shrink-0 hidden sm:block" />
+            <span className="hidden sm:block font-MontserratAlt font-extrabold text-lg">
+              boxed.ink
+            </span>
           </div>
-          <nav className="flex items-center gap-4 text-sm font-medium  ">
-            <Sheet>
-              <SheetTrigger>
-                <Menu className="text-noir sm:hidden" />
-              </SheetTrigger>
-              <SheetContent className="sm:w-72 overflow-y-scroll">
-                <>
-                  <ul className="flex flex-col gap-8">
-                    <li className="border-b">
-                      <SignInButton />
-                    </li>
-                  </ul>
-                </>
-              </SheetContent>
-            </Sheet>
-            <div className="hidden items-center gap-5 sm:flex">
-              <SignInButton />
-            </div>
+          <nav className="flex items-center gap-6 text-[11px] sm:text-sm font-medium text-white/70">
+            <Link
+              href="/#pricing"
+              className="hover:text-white transition-colors whitespace-nowrap"
+            >
+              {t("pricing")}
+            </Link>
+            <Link
+              href="/changelog"
+              onClick={handleChangelogClick}
+              className="hover:text-white transition-colors whitespace-nowrap"
+            >
+              {t("changelog")}
+            </Link>
           </nav>
+          <div className="shrink-0">
+            <FlagLanguageSwitcher bare />
+          </div>
+          <div className="flex items-center gap-5 shrink-0 [&_button]:h-8 [&_button]:px-3 [&_button]:text-xs sm:[&_button]:h-9 sm:[&_button]:px-4 sm:[&_button]:text-sm">
+            {user ? (
+              <LoggedInButton user={user} sidefolio={sidefolio} />
+            ) : (
+              <SignInButton />
+            )}
+          </div>
         </div>
       </header>
       <motion.a
         href="/changelog"
         variants={{
-          visible: { y: 0, display: "flex" },
-          hidden: { y: "-100px", display: "none" },
+          visible: { y: 0, opacity: 1, display: "flex" },
+          hidden: { y: "-30px", opacity: 0, display: "none" },
         }}
-        transition={{ duration: 0.4, ease: "easeInOut" }}
-        animate={hiddenChangeLog ? "hidden" : "visible"}
-        className="bg-primary shadow-lg font-bold border-black/40 border-t-2 top-20 absolute py-2  w-full    items-center justify-center sm:px-16 px-6 text-white flex"
+        initial="hidden"
+        transition={{ duration: 0.3, ease: "easeInOut" }}
+        animate={hasArrived && !hiddenChangeLog ? "visible" : "hidden"}
+        className="absolute top-[80px] inset-x-0 flex justify-center"
       >
-        New updates! See what is new
+        <span className="rounded-full bg-primary/10 text-primary font-semibold text-xs sm:text-sm px-4 py-1.5">
+          {t("newUpdates")}
+        </span>
       </motion.a>
       <AnimatePresence>{isNavigating && <PageLoader />}</AnimatePresence>
     </div>

@@ -1,7 +1,7 @@
 "use client";
 import { type AnimationProps, motion } from "framer-motion";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { Logo } from "@/components/Logo";
 
 const animationProps = {
   initial: { "--x": "100%", scale: 0.8 },
@@ -39,7 +39,7 @@ const ShinyButton = ({ text = "shiny-button" }) => {
             "linear-gradient(-75deg,hsl(var(--primary)) calc(var(--x) + 20%),transparent calc(var(--x) + 30%),hsl(var(--primary)) calc(var(--x) + 100%))",
         }}
       >
-        <Image src={"/icon.svg"} alt="d" width={25} height={25} priority />
+        <Logo width={25} className="text-noir" />
         {text}
       </span>
       <span

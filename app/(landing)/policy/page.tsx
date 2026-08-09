@@ -3,11 +3,18 @@ import { LandingHeader } from "@/features/landing/LandingHeader";
 import { Section } from "@/features/landing/Section";
 import Footer from "@/features/landing/Footer";
 import React from "react";
+import { currentUser } from "@/auth/current-user";
+import { prisma } from "@/prisma";
 
-const page = () => {
+const page = async () => {
+  const user = await currentUser();
+  const sidefolio = user
+    ? await prisma.sidefolio.findFirst({ where: { authorId: user.id } })
+    : null;
+
   return (
     <>
-      <LandingHeader />
+      <LandingHeader user={user} sidefolio={sidefolio} />
       <div className="flex flex-col w-full">
         <Section className="flex flex-col items-start text-medium text-justify py-10 w-full gap-6">
           <div className="w-full">
@@ -18,7 +25,7 @@ const page = () => {
             <p>
               This Privacy Policy explains how Dev Engine ("we", "us", "our")
               collects, uses, discloses and protects your personal data when
-              you use bentoh.me (the "Service"). We are committed to
+              you use boxed.ink (the "Service"). We are committed to
               protecting your privacy and complying with the EU General Data
               Protection Regulation (GDPR) and the French Data Protection Act.
             </p>
@@ -29,7 +36,7 @@ const page = () => {
               1. Who is responsible for your data
             </h2>
             <p>
-              The data controller for bentoh.me is Dev Engine, a French sole
+              The data controller for boxed.ink is Dev Engine, a French sole
               proprietorship (entrepreneur individuel) operated by Alexandre
               Guillôme.
             </p>
@@ -56,7 +63,7 @@ const page = () => {
               </li>
               <li>
                 <strong>Profile and content data:</strong> the text, links,
-                images and other content you add to your bentoh.me page(s).
+                images and other content you add to your boxed.ink page(s).
               </li>
               <li>
                 <strong>Technical data:</strong> IP address, browser type,
@@ -87,7 +94,7 @@ const page = () => {
             <p>
               We do not sell your personal data. We share data only with
               service providers ("subprocessors") strictly necessary to
-              operate bentoh.me, and only to the extent required:
+              operate boxed.ink, and only to the extent required:
             </p>
             <ul className="list-disc pl-6 mt-2">
               <li><strong>Google</strong> – authentication (Sign in with Google).</li>
@@ -210,7 +217,7 @@ const page = () => {
           <p>Last updated: 5 August 2026.</p>
         </Section>
       </div>
-      <Footer />
+      <Footer user={user} />
     </>
   );
 };

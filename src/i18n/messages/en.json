@@ -1,0 +1,209 @@
+{
+  "header": {
+    "changelog": "Changelog",
+    "pricing": "Pricing",
+    "newUpdates": "✦ New updates - see what's new",
+    "enrollNow": "Enroll now"
+  },
+  "hero": {
+    "titleLine1": "Your portfolio.",
+    "titleLine2Prefix": "In few",
+    "flipWords": ["Moves.", "Blocks."],
+    "subtitle": "Ditch the stack of Linktree, Gumroad and Mailchimp tabs.",
+    "subtitleHighlight": "One page, built your way.",
+    "pillsPrefix": "Add",
+    "pillsSuffix": "and more.",
+    "pillLink": "Link",
+    "pillImage": "Image",
+    "pillText": "Text",
+    "pillYoutube": "YouTube",
+    "pillTwitch": "Twitch",
+    "handlePrompt": "Grab your handle to start:",
+    "handlePlaceholder": "yourname",
+    "cta": "Claim and start building",
+    "tip": "💡 Make it short and memorable - you'll be sharing it a lot.",
+    "continueCta": "Continue my build"
+  },
+  "editorPreview": {
+    "titlePrefix": "Drag it. Drop it.",
+    "titleHighlight": "Done.",
+    "subtitle": "No code, no templates fighting you. Move blocks around until it feels like you."
+  },
+  "showcase": {
+    "titlePrefix": "One page for",
+    "titleHighlight": "everything you make",
+    "subtitle": "Links. Photos. Live streams. Videos. Whatever tells your story - it all fits."
+  },
+  "howWorks": {
+    "titlePrefix": "Build anything,",
+    "titleHighlight": "effortlessly",
+    "quote": "\"Very easily\""
+  },
+  "pricing": {
+    "titlePrefix": "Build your boxed.ink for",
+    "titleHighlight": "free",
+    "subtitle": "No trial. No credit card. No catch.",
+    "freeForever": "Free forever",
+    "price": "€0",
+    "priceNote": "No credit card required. Live in minutes.",
+    "cta": "Start for free",
+    "features": {
+      "dragDrop": {
+        "title": "Drag-and-drop blocks",
+        "description": "Build your page like a bento grid, not a list of links."
+      },
+      "everything": {
+        "title": "Everything in one place",
+        "description": "Links, images, text - all your data lives on one page."
+      },
+      "customizable": {
+        "title": "Fully customizable",
+        "description": "Colors, layout, sizing - make it look like you."
+      },
+      "support": {
+        "title": "Real support",
+        "description": "A human reviews and helps, not a bot."
+      },
+      "share": {
+        "title": "Share with one link",
+        "description": "Publish and send your boxed.ink to anyone."
+      }
+    },
+    "premium": {
+      "title": "Pro",
+      "price": "€4.99",
+      "priceNote": "per month",
+      "featureTitle": "Custom domain",
+      "featureDescription": "Use your own domain instead of boxed.ink/yourname.",
+      "comingSoon": "More Pro features coming.",
+      "cta": "Go Pro"
+    }
+  },
+  "faq": {
+    "title": "Questions?",
+    "subtitle": "Everything you might want to know about boxed.ink.",
+    "readyPrompt": "Ready to build yours?",
+    "cta": "Start now",
+    "items": {
+      "free": {
+        "q": "Is boxed.ink free?",
+        "a": "Yes, free forever - no trial, no credit card. There's an optional €4.99/mo Pro tier if you want a custom domain, with more Pro features on the way."
+      },
+      "different": {
+        "q": "What's different from Linktree or Bento?",
+        "a": "Instead of a plain list of buttons, you build a bento-style grid - drag blocks, resize them, mix links, text and images however you want. It looks like a portfolio, not a list."
+      },
+      "code": {
+        "q": "Do I need to know how to code?",
+        "a": "No. Everything is drag-and-drop in the editor - no templates to fight with."
+      },
+      "twitch": {
+        "q": "Can I show my Twitch or YouTube channel?",
+        "a": "Yes - paste your channel link and it turns into a live card (live status and category for Twitch, subscriber count and latest videos for YouTube), refreshed automatically."
+      },
+      "linktree": {
+        "q": "I already have a Linktree, can I switch easily?",
+        "a": "Yes - paste your Linktree username and we import all your existing links in one click."
+      },
+      "mobile": {
+        "q": "Does it work well on mobile?",
+        "a": "Yes, and you can lay your page out differently on mobile vs desktop - they're independent layouts, not just a squished version of each other."
+      }
+    }
+  },
+  "footer": {
+    "buildNow": "Build now!",
+    "handlePlaceholder": "yourname",
+    "cta": "Claim and start building",
+    "changelog": "Changelog",
+    "terms": "Terms",
+    "privacy": "Privacy Policy",
+    "contact": "Contact",
+    "madeBy": "Made by Alexandre",
+    "copyright": "{year} ♥ boxed.ink",
+    "marquee": {
+      "bentoGrid": "Bento grid",
+      "linkInBio": "Link in bio",
+      "twitch": "Twitch",
+      "youtube": "YouTube",
+      "freeForever": "Free forever"
+    }
+  },
+  "signIn": {
+    "titlePrefix": "Sign in",
+    "or": "or",
+    "titleSuffix": "Sign up",
+    "titleEnd": "to continue",
+    "google": "Sign in with Google"
+  },
+  "upgrade": {
+    "eyebrow": "boxed.ink Pro",
+    "title": "Make boxed.ink truly yours",
+    "subtitle": "Start with your own domain - more Pro features are on the way.",
+    "backToEditor": "Back to editor",
+    "price": "€4.99",
+    "priceNote": "per month, cancel anytime",
+    "featureTitle": "Custom domain",
+    "featureDescription": "Point yourdomain.com at your page instead of boxed.ink/yourname.",
+    "comingSoonTitle": "More on the way",
+    "comingSoonDescription": "Pro is just getting started - new features will unlock here as they ship.",
+    "cta": "Subscribe - €4.99/mo",
+    "supportNote": "It also helps keep boxed.ink free for everyone else.",
+    "alreadyTitle": "You're Pro",
+    "alreadyDescription": "Thanks for supporting boxed.ink - manage your subscription anytime.",
+    "manageCta": "Manage subscription"
+  },
+  "editor": {
+    "namePlaceholder": "Your name",
+    "bioPlaceholder": "Introduce yourself...",
+    "locationPlaceholder": "Your location",
+    "removedSuccess": "Removed successfully",
+    "invalidLinktreeUrl": "Please fill a valid Linktree username or url",
+    "selectAtLeastOneLink": "Select at least one link to import",
+    "importedLinks": "{count, plural, one {Imported # link} other {Imported # links}} out of {total} selected",
+    "failedImport": "Failed to import the selected links",
+    "importFromLinktree": "Import from Linktree",
+    "linktreeUrlPlaceholder": "linktr.ee/username or just username",
+    "preview": "Preview",
+    "importLinksCta": "{count, plural, one {Import # link} other {Import # links}}",
+    "importLinksDefault": "Import links",
+    "characters": "characters",
+    "doubleTapToEdit": "Double-tap to edit",
+    "doubleClickToEdit": "Double-click to edit",
+    "addNewTitlePlaceholder": "Add a new title",
+    "addTitlePlaceholder": "Add a title",
+    "opensInNewTab": "Opens in a new tab",
+    "copyShareLink": "Copy share link",
+    "addBlocks": "Add blocks",
+    "blockTitle": "Title",
+    "blockText": "Text",
+    "blockImage": "Image",
+    "blockLink": "Link",
+    "addLinkTitle": "Add link",
+    "addLinkPlaceholder": "Paste your link here",
+    "addingLink": "Adding link...",
+    "background": "Background",
+    "previewMobile": "Preview on mobile",
+    "previewDesktop": "Preview on desktop",
+    "language": "Change language",
+    "moveProfileLeft": "Move profile to the left",
+    "moveProfileRight": "Move profile to the right",
+    "publishedAndCopied": "Published online and link copied to clipboard",
+    "linkCopied": "Link copied to clipboard",
+    "copyFailed": "Could not copy the link",
+    "invalidUrl": "Please fill a valid url",
+    "watch": "Watch",
+    "subscribers": "subscribers",
+    "live": "Live",
+    "offline": "Offline",
+    "playingPrefix": "Playing",
+    "lastPlayedPrefix": "Last played"
+  },
+  "published": {
+    "myBoxedInk": "My boxed.ink",
+    "createMyBoxedInk": "Create my boxed.ink",
+    "notFoundPrefix": "The",
+    "notFoundSuffix": "boxed.ink doesn't exist now or it's not published, create it for now 😉",
+    "goToDashboard": "Go to my dashboard"
+  }
+}

@@ -1,4 +1,5 @@
 "use client";
+import { useTranslations } from "next-intl";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatCount, type YouTubeChannelData } from "@/lib/youtube";
 
@@ -33,26 +34,29 @@ const WatchButton = ({
 }: {
   youtube: YouTubeChannelData;
   size?: "xs" | "sm" | "md";
-}) => (
-  <a
-    href={youtube.channelUrl}
-    target="_blank"
-    rel="noopener noreferrer"
-    onClick={(e) => e.stopPropagation()}
-    className={`shrink-0 flex items-center bg-white hover:bg-[#FFF5F5] border border-[#FF0000] text-[#FF0000] font-bold rounded-full transition-colors whitespace-nowrap ${
-      size === "md"
-        ? "text-sm gap-1.5 px-3.5 py-1.5"
-        : size === "xs"
-        ? "text-[10px] gap-1 px-2 py-0.5"
-        : "text-xs gap-1 px-3 py-1"
-    }`}
-  >
-    <YouTubeLogo
-      className={size === "md" ? "size-4" : size === "xs" ? "size-2.5" : "size-3"}
-    />
-    Watch
-  </a>
-);
+}) => {
+  const t = useTranslations("editor");
+  return (
+    <a
+      href={youtube.channelUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      onClick={(e) => e.stopPropagation()}
+      className={`shrink-0 flex items-center bg-white hover:bg-[#FFF5F5] border border-[#FF0000] text-[#FF0000] font-bold rounded-full transition-colors whitespace-nowrap ${
+        size === "md"
+          ? "text-sm gap-1.5 px-3.5 py-1.5"
+          : size === "xs"
+          ? "text-[10px] gap-1 px-2 py-0.5"
+          : "text-xs gap-1 px-3 py-1"
+      }`}
+    >
+      <YouTubeLogo
+        className={size === "md" ? "size-4" : size === "xs" ? "size-2.5" : "size-3"}
+      />
+      {t("watch")}
+    </a>
+  );
+};
 
 const ChannelAvatar = ({
   youtube,
@@ -78,15 +82,18 @@ const Followers = ({
 }: {
   youtube: YouTubeChannelData;
   small?: boolean;
-}) => (
-  <span
-    className={`text-gray-500 whitespace-nowrap ${
-      small ? "text-[10px]" : "text-xs"
-    }`}
-  >
-    {formatCount(youtube.subscriberCount)} subscribers
-  </span>
-);
+}) => {
+  const t = useTranslations("editor");
+  return (
+    <span
+      className={`text-gray-500 whitespace-nowrap ${
+        small ? "text-[10px]" : "text-xs"
+      }`}
+    >
+      {formatCount(youtube.subscriberCount)} {t("subscribers")}
+    </span>
+  );
+};
 
 const Thumb = ({ video }: { video: YouTubeChannelData["videos"][number] }) => (
   <div className="relative flex-1 min-h-0 w-full overflow-hidden rounded-lg">
