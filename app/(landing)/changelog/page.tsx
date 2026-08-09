@@ -59,10 +59,10 @@ const page = async () => {
             <div className="flex flex-col gap-3">
               <p>
                 boxed.ink stays free forever, but there's now a Pro plan
-                (€4.99/mo) for people who want to go further - starting with a{" "}
+                (€4.99/mo) for people who want to go further - first up is a{" "}
                 <span className="font-semibold">custom domain</span> instead
-                of boxed.ink/yourname. More Pro features are on the way. You
-                can manage it anytime from your account menu.
+                of boxed.ink/yourname, coming soon. You can subscribe now from
+                your account menu and you'll be the first to get it.
               </p>
             </div>
           </div>

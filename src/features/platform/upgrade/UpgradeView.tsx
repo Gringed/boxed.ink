@@ -52,13 +52,13 @@ export const UpgradeView = ({ user, sidefolio }: UpgradeViewProps) => {
   return (
     <>
       <Section className="flex-1 py-16 lg:py-24">
-        <div className="mx-auto flex w-full max-w-3xl flex-col items-center gap-10 text-center">
+        <div className="mx-auto flex w-full max-w-3xl flex-col items-center gap-10 text-start">
           <div className="flex flex-col items-center gap-4">
             <div className="flex items-center gap-2 rounded-full bg-noir/5 px-4 py-1.5 text-sm font-bold text-noir">
               <Sparkles size={15} className="text-amber-500" />
               {t("eyebrow")}
             </div>
-            <h1 className="max-w-xl text-4xl font-black tracking-tight text-noir md:text-5xl">
+            <h1 className="max-w-xl text-center text-4xl font-black tracking-tight text-noir md:text-5xl">
               {t("title")}
             </h1>
             <p className="max-w-md text-base font-medium text-noir/70">
@@ -82,8 +82,11 @@ export const UpgradeView = ({ user, sidefolio }: UpgradeViewProps) => {
                   <Globe size={18} />
                 </div>
                 <div>
-                  <div className="font-bold text-noir">
+                  <div className="flex items-center gap-2 font-bold text-noir">
                     {t("featureTitle")}
+                    <span className="rounded-full bg-noir/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-noir/60">
+                      {t("comingSoonBadge")}
+                    </span>
                   </div>
                   <div className="text-sm text-foreground/60">
                     {t("featureDescription")}
@@ -123,21 +126,23 @@ export const UpgradeView = ({ user, sidefolio }: UpgradeViewProps) => {
                   </Button>
                 </div>
               ) : (
-                <Button
-                  className="h-12 w-full text-base font-bold"
-                  disabled={isPending}
-                  onClick={handleSubscribe}
-                >
-                  {t("cta")}
-                  <ArrowRight className="ml-2" size={18} />
-                </Button>
-              )}
-
-              {!isPremium && (
-                <p className="flex items-center gap-1.5 text-xs font-medium text-foreground/50">
-                  <Heart size={12} className="shrink-0 fill-primary/20 text-primary" />
-                  {t("supportNote")}
-                </p>
+                <div className="flex flex-col gap-3">
+                  <p className="flex items-start gap-2 rounded-lg bg-primary/5 p-3 text-sm font-medium text-noir/80">
+                    <Heart
+                      size={15}
+                      className="mt-0.5 shrink-0 fill-primary/20 text-primary"
+                    />
+                    {t("supportNote")}
+                  </p>
+                  <Button
+                    className="h-12 w-full text-base font-bold"
+                    disabled={isPending}
+                    onClick={handleSubscribe}
+                  >
+                    {t("cta")}
+                    <ArrowRight className="ml-2" size={18} />
+                  </Button>
+                </div>
               )}
             </div>
           </div>

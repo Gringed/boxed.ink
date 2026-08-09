@@ -34,10 +34,8 @@ import {
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
-import { AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { signOutAction } from "./auth.action";
-import { PageLoader } from "@/components/PageLoader";
 import {
   Popover,
   PopoverContent,
@@ -76,8 +74,6 @@ export const LoggedInDropdown = (props: any) => {
     field === sidefolio?.slug ? false : true
   );
   const [open, setOpen] = useState(false);
-  const [domain, setDomain] = useState<string>(sidefolio?.customDomain ?? "");
-  const [isSavingDomain, setIsSavingDomain] = useState(false);
   const handleVerifySlug = async (e: any) => {
     e.preventDefault();
     const value = e.target.value;
@@ -104,23 +100,6 @@ export const LoggedInDropdown = (props: any) => {
       toast.success("Public boxed.ink name updated successfully");
       router.refresh();
     } catch {
-    }
-  };
-  const handleUpdateDomain = async () => {
-    setIsSavingDomain(true);
-    try {
-      await updateSidefolioAction({
-        id: sidefolio.id,
-        data: {
-          customDomain: domain,
-        },
-      });
-      toast.success("Custom domain saved");
-      router.refresh();
-    } catch {
-      toast.error("Couldn't save this domain");
-    } finally {
-      setIsSavingDomain(false);
     }
   };
   const handleGoToUpgrade = () => {
@@ -224,6 +203,9 @@ export const LoggedInDropdown = (props: any) => {
             <div className="flex items-center gap-2">
               <Globe size={16} className="text-noir" />
               <span className="font-semibold text-sm">Custom domain</span>
+              <span className="flex items-center gap-1 rounded-full bg-noir/10 text-noir/60 text-xs font-bold px-2 py-0.5">
+                Coming soon
+              </span>
               {!isPremium && (
                 <span className="flex items-center gap-1 rounded-full bg-amber-400/15 text-amber-600 text-xs font-bold px-2 py-0.5">
                   <Sparkles size={11} />
@@ -233,29 +215,10 @@ export const LoggedInDropdown = (props: any) => {
             </div>
 
             {isPremium ? (
-              <>
-                <Input
-                  type="text"
-                  placeholder="yourdomain.com"
-                  value={domain}
-                  onChange={(e) => setDomain(e.target.value)}
-                  className="text-base"
-                />
-                <p className="text-xs text-muted-foreground">
-                  Point your domain's DNS to us once saved - we'll follow up
-                  with the exact records to add.
-                </p>
-                <Button
-                  size="sm"
-                  className="w-fit self-end"
-                  disabled={
-                    isSavingDomain || domain === (sidefolio?.customDomain ?? "")
-                  }
-                  onClick={handleUpdateDomain}
-                >
-                  Save domain
-                </Button>
-              </>
+              <p className="text-sm text-foreground/70">
+                We're still building this - as a Pro member, you'll be the
+                first to set one up once it's ready.
+              </p>
             ) : (
               <div className="flex items-center justify-between gap-3 rounded-lg bg-noir/5 p-3">
                 <p className="text-sm text-foreground/70">
@@ -269,7 +232,6 @@ export const LoggedInDropdown = (props: any) => {
           </div>
         </DialogContent>
       </DialogPortal>
-      <AnimatePresence>{isSavingDomain && <PageLoader />}</AnimatePresence>
     </Dialog>
   );
 };

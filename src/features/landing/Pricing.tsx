@@ -105,9 +105,12 @@ const Pricing = () => {
                   </li>
                 ))}
                 <li className="flex items-center gap-2.5">
-                  <Check size={18} className="shrink-0 text-noir" />
+                  <Sparkles size={18} className="shrink-0 text-noir" />
                   <span className="font-bold text-noir">
                     {t("premium.featureTitle")}
+                  </span>
+                  <span className="rounded-full bg-noir/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-noir/60">
+                    {t("premium.comingSoonBadge")}
                   </span>
                 </li>
                 <li className="flex items-center gap-2.5 opacity-50">

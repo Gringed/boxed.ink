@@ -75,6 +75,7 @@
       "priceNote": "par mois",
       "featureTitle": "Domaine personnalisé",
       "featureDescription": "Utilise ton propre domaine à la place de boxed.ink/tonpseudo.",
+      "comingSoonBadge": "Bientôt disponible",
       "comingSoon": "D'autres fonctionnalités Pro arrivent bientôt.",
       "cta": "Passer Pro"
     }
@@ -139,16 +140,17 @@
   "upgrade": {
     "eyebrow": "boxed.ink Pro",
     "title": "Fais de boxed.ink vraiment le tien",
-    "subtitle": "Commence par ton propre domaine - d'autres fonctionnalités Pro arrivent bientôt.",
+    "subtitle": "Les domaines personnalisés et d'autres fonctionnalités Pro arrivent bientôt. Pour l'instant, s'abonner sert surtout à soutenir le développement et te garantit un accès en avant-première dès leur sortie.",
     "backToEditor": "Retour à l'éditeur",
     "price": "4,99 €",
     "priceNote": "par mois, résiliable à tout moment",
     "featureTitle": "Domaine personnalisé",
     "featureDescription": "Pointe tondomaine.com vers ta page au lieu de boxed.ink/tonpseudo.",
+    "comingSoonBadge": "Bientôt disponible",
     "comingSoonTitle": "D'autres arrivent",
     "comingSoonDescription": "Pro ne fait que commencer - de nouvelles fonctionnalités se débloqueront ici au fil du temps.",
     "cta": "S'abonner - 4,99 €/mois",
-    "supportNote": "Ça aide aussi à garder boxed.ink gratuit pour tout le monde.",
+    "supportNote": "Pour l'instant, tu soutiens surtout le développement - et tu seras parmi les premiers à avoir le domaine personnalisé dès sa sortie.",
     "alreadyTitle": "Tu es Pro",
     "alreadyDescription": "Merci de soutenir boxed.ink - gère ton abonnement à tout moment.",
     "manageCta": "Gérer mon abonnement"

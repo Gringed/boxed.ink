@@ -75,6 +75,7 @@
       "priceNote": "per month",
       "featureTitle": "Custom domain",
       "featureDescription": "Use your own domain instead of boxed.ink/yourname.",
+      "comingSoonBadge": "Coming soon",
       "comingSoon": "More Pro features coming.",
       "cta": "Go Pro"
     }
@@ -139,16 +140,17 @@
   "upgrade": {
     "eyebrow": "boxed.ink Pro",
     "title": "Make boxed.ink truly yours",
-    "subtitle": "Start with your own domain - more Pro features are on the way.",
+    "subtitle": "Custom domains and more Pro features are on the way. For now, subscribing is mainly a way to support development and get early access the moment they ship.",
     "backToEditor": "Back to editor",
     "price": "€4.99",
     "priceNote": "per month, cancel anytime",
     "featureTitle": "Custom domain",
     "featureDescription": "Point yourdomain.com at your page instead of boxed.ink/yourname.",
+    "comingSoonBadge": "Coming soon",
     "comingSoonTitle": "More on the way",
     "comingSoonDescription": "Pro is just getting started - new features will unlock here as they ship.",
     "cta": "Subscribe - €4.99/mo",
-    "supportNote": "It also helps keep boxed.ink free for everyone else.",
+    "supportNote": "You're mainly supporting development for now - and you'll be first in line once custom domains ship.",
     "alreadyTitle": "You're Pro",
     "alreadyDescription": "Thanks for supporting boxed.ink - manage your subscription anytime.",
     "manageCta": "Manage subscription"
