@@ -184,19 +184,6 @@ export const HeroSection = ({ user }: HeroSectionProps) => {
                 <p className="text-sm font-medium text-noir/60">{t("tip")}</p>
               </div>
             )}
-
-            <a
-              href="https://www.producthunt.com/posts/sidepro?embed=true&utm_source=badge-featured&utm_medium=badge&utm_souce=badge-sidepro"
-              target="_blank"
-              className="w-fit"
-            >
-              <img
-                src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=463493&theme=light"
-                alt="boxed.ink - Create&#0032;and&#0032;publish&#0032;professional&#0032;Side&#0032;easily | Product Hunt"
-                width="300"
-                height="54"
-              />
-            </a>
           </div>
         </div>
         <AnimatedGridPattern

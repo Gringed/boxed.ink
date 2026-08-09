@@ -15,6 +15,7 @@ export const SignInButton = () => {
     <>
       <Button
         variant="default"
+        className="rounded-full"
         disabled={isPending}
         onClick={() => {
           startTransition(() => {
