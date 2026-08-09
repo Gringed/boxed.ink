@@ -11,10 +11,11 @@ import { getLocale, getMessages } from "next-intl/server";
 const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit" });
 
 export const metadata: Metadata = {
-  title: "boxed.ink",
-  description: "Build your boxed.ink - the next-level portfolio",
+  title: "boxed.ink — the bento-grid link in bio",
+  description:
+    "Drag-and-drop blocks, links, images, live Twitch/YouTube cards, into a bento grid instead of a list. Free forever.",
   icons: {
-    icon: ["/favicon.ico?v=5"],
+    icon: ["/favicon.ico?v=6"],
     apple: ["/apple-touch-icon.png?v=4"],
     shortcut: ["/apple-touch-icon.png"],
   },
