@@ -60,19 +60,21 @@ const Footer = ({ user }: FooterProps) => {
                     <ArrowRight className="ml-2" size={15} />
                   </Button>
                 ) : (
-                  <div className="flex h-12 w-full items-stretch overflow-hidden rounded-md border border-noir/10 bg-white shadow-sm">
-                    <span className="flex shrink-0 items-center bg-noir/5 pl-5 pr-3 font-medium text-noir/70">
-                      boxed.ink/
-                    </span>
-                    <Input
-                      type="text"
-                      placeholder={t("handlePlaceholder")}
-                      className="h-full min-w-[6rem] flex-1 rounded-none border-0 bg-white py-0 pl-3 text-base shadow-none focus-visible:ring-0"
-                      required
-                      onChange={(e) => setName(e.target.value)}
-                    />
+                  <div className="flex flex-col sm:h-12 w-full items-stretch overflow-hidden rounded-md border border-noir/10 bg-white shadow-sm sm:flex-row">
+                    <div className="flex h-12 min-w-0 sm:flex-1">
+                      <span className="flex shrink-0 items-center bg-noir/5 pl-5 pr-3 font-medium text-noir/70">
+                        boxed.ink/
+                      </span>
+                      <Input
+                        type="text"
+                        placeholder={t("handlePlaceholder")}
+                        className="h-full min-w-0 flex-1 rounded-none border-0 bg-white py-0 pl-3 text-base shadow-none focus-visible:ring-0"
+                        required
+                        onChange={(e) => setName(e.target.value)}
+                      />
+                    </div>
                     <Button
-                      className="h-full shrink-0 rounded-none px-6 text-base"
+                      className="h-12 w-full shrink-0 rounded-none px-6 text-base sm:h-full sm:w-auto"
                       disabled={!name || isPending}
                       onClick={() => {
                         startTransition(() => signInAction());
@@ -132,13 +134,6 @@ const Footer = ({ user }: FooterProps) => {
                   }
                 >
                   {t("contact")}
-                </Link>
-                <Link
-                  href="https://calendly.com/alexandre-guillome/premiere-impression"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {t("madeBy")}
                 </Link>
               </div>
             </div>

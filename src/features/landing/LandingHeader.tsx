@@ -60,6 +60,17 @@ export function LandingHeader({ user, sidefolio }: LandingHeaderProps) {
     }
   };
 
+  const handlePricingClick = (e: React.MouseEvent) => {
+    if (pathname === "/") {
+      // Next.js Link's built-in hash-scroll is unreliable on some mobile
+      // browsers — scroll manually instead of relying on it.
+      e.preventDefault();
+      document
+        .getElementById("pricing")
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
   return (
     <div className="relative h-[110px]">
       <header className="fixed z-20 inset-x-0 top-4 flex justify-center px-4">
@@ -77,6 +88,7 @@ export function LandingHeader({ user, sidefolio }: LandingHeaderProps) {
           <nav className="flex items-center gap-6 text-[11px] sm:text-sm font-medium text-white/70">
             <Link
               href="/#pricing"
+              onClick={handlePricingClick}
               className="hover:text-white transition-colors whitespace-nowrap"
             >
               {t("pricing")}
