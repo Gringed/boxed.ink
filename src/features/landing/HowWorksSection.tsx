@@ -21,7 +21,7 @@ const HowWorksSection = () => {
 
             <video
               className="mx-auto w-full max-w-4xl aspect-video rounded-xl border border-neutral-300 bg-gray-100 object-contain"
-              src="https://res.cloudinary.com/dhgoagdvr/video/upload/v1786115772/Sidepro/bentoh.me_hero_hfjrz8.mp4"
+              src="https://res.cloudinary.com/dhgoagdvr/video/upload/v1786373204/Sidepro/boxedink_f1agbm.mp4"
               autoPlay
               muted
               loop
