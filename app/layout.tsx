@@ -10,7 +10,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit" });
 
-const title = "boxed.ink — the bento-grid link in bio";
+const title = "boxed.ink - the bento-grid link in bio";
 const description =
   "Drag-and-drop blocks, links, images, live Twitch/YouTube cards, into a bento grid instead of a list. Free forever.";
 
