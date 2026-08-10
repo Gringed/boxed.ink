@@ -29,10 +29,22 @@ export const claimSidefolioSlugAction = userAction(
       throw new ActionError("This url is already taken");
     }
 
-    const updated = await prisma.sidefolio.update({
-      where: { id: input.id },
-      data: { slug, slugClaimed: true },
-    });
+    let updated;
+    try {
+      updated = await prisma.sidefolio.update({
+        where: { id: input.id },
+        data: { slug, slugClaimed: true },
+      });
+    } catch (err: any) {
+      // Race condition: someone else claimed this exact slug between our
+      // check above and this write — the @unique constraint on `slug`
+      // catches it (Prisma error code P2002). Surface it the same way as
+      // the check above instead of leaking a raw Prisma error.
+      if (err?.code === "P2002") {
+        throw new ActionError("This url is already taken");
+      }
+      throw err;
+    }
     revalidatePath("/dashboard");
     return updated;
   }

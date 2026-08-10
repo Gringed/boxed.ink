@@ -33,7 +33,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { signOutAction } from "./auth.action";
 import {
@@ -74,19 +74,37 @@ export const LoggedInDropdown = (props: any) => {
     field === sidefolio?.slug ? false : true
   );
   const [open, setOpen] = useState(false);
-  const handleVerifySlug = async (e: any) => {
-    e.preventDefault();
-    const value = e.target.value;
+  const latestFieldRef = useRef(field);
+  const checkTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  useEffect(() => {
+    return () => {
+      if (checkTimeoutRef.current) clearTimeout(checkTimeoutRef.current);
+    };
+  }, []);
 
-    setIsLoading(true);
-    setField(e.target.value);
+  const runVerifySlug = async (value: string) => {
     try {
       const available = await verifySlug({ value });
+      if (latestFieldRef.current !== value) return; // stale response, ignore
       setIsAvailable(available.data!);
     } catch {
     } finally {
-      setIsLoading(false);
+      if (latestFieldRef.current === value) setIsLoading(false);
     }
+  };
+
+  const handleVerifySlug = (e: any) => {
+    e.preventDefault();
+    const value = e.target.value;
+
+    setField(value);
+    latestFieldRef.current = value;
+
+    if (checkTimeoutRef.current) clearTimeout(checkTimeoutRef.current);
+
+    // Wait for a 0.5s pause in typing before actually checking.
+    setIsLoading(true);
+    checkTimeoutRef.current = setTimeout(() => runVerifySlug(value), 500);
   };
   const handleUpdateSidefolio = async () => {
     try {
