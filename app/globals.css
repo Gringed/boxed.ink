@@ -156,10 +156,6 @@
 .tooltip {
   @apply transition-all opacity-0 invisible absolute;
 }
-
-/* Block drag feedback: hide the hover-revealed action icons and give the
-   block itself a "picked up" lift while react-grid-layout is dragging it.
-   Targets react-draggable's own dragging class, no extra JS state needed. */
 .react-grid-item.react-draggable-dragging .block-action {
   opacity: 0 !important;
   pointer-events: none !important;
@@ -167,12 +163,8 @@
 .block-lift {
   transition: transform 150ms ease, box-shadow 150ms ease;
 }
-.react-grid-item.react-draggable-dragging .block-lift {
-  transform: scale(1.04) rotate(1deg);
-  box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.35);
-}
-.react-grid-item.react-draggable-dragging,
-.react-grid-item.react-draggable-dragging * {
+.react-grid-item.is-actively-dragging,
+.react-grid-item.is-actively-dragging * {
   cursor: grabbing !important;
 }
 

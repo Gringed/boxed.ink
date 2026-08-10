@@ -37,7 +37,7 @@ export const HeroSection = ({ user }: HeroSectionProps) => {
   const [isPending, startTransition] = useTransition();
   return (
     <>
-      <Section className="lg:py-20 py-10 h-full relative">
+      <Section className="mt-16 lg:mt-28 py-10 lg:py-20 h-full relative">
         <div className="flex w-full justify-center overflow-hidden h-full items-center">
           {/* floating mockups of real app blocks */}
           <motion.div
@@ -185,18 +185,18 @@ export const HeroSection = ({ user }: HeroSectionProps) => {
               </div>
             )}
           </div>
+          <AnimatedGridPattern
+            numSquares={30}
+            width={100}
+            maxOpacity={0.1}
+            duration={3}
+            repeatDelay={1}
+            className={cn(
+              "[mask-image:radial-gradient(900px_circle_at_center,white,transparent)]",
+              "inset-x-0 w-full -top-20  h-[100%] opacity-50 skew-y-6"
+            )}
+          />
         </div>
-        <AnimatedGridPattern
-          numSquares={30}
-          width={100}
-          maxOpacity={0.1}
-          duration={3}
-          repeatDelay={1}
-          className={cn(
-            "[mask-image:radial-gradient(900px_circle_at_center,white,transparent)]",
-            "inset-x-0 w-full -top-20  h-[100%] opacity-50 skew-y-6"
-          )}
-        />
       </Section>
       <AnimatePresence>{isPending && <PageLoader />}</AnimatePresence>
       <div className="h-[400px] my-5 w-full  overflow-hidden ">

@@ -48,8 +48,14 @@ export default async function RootLayout({
   const messages = await getMessages();
 
   return (
-    <html lang={locale} className="h-full">
-      <body className={cn(outfit.className, outfit.variable, "h-full")}>
+    <html lang={locale} className="h-full overflow-x-hidden">
+      <body
+        className={cn(
+          outfit.className,
+          outfit.variable,
+          "h-full overflow-x-hidden"
+        )}
+      >
         <NextIntlClientProvider locale={locale} messages={messages}>
           <InitialLoadOverlay />
           <Toaster position="top-center" />

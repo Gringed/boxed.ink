@@ -150,7 +150,6 @@ const Sections = ({
     gridMargin
   );
   const [isMobile, setIsMobile] = useState(false);
-  const [isFocus, setIsFocus] = useState(false);
   const [editingTextId, setEditingTextId] = useState<string | null>(null);
   const [isTouchDevice, setIsTouchDevice] = useState(false);
   useEffect(() => {
@@ -554,6 +553,11 @@ const Sections = ({
       const dy = event.clientY - dragPosRef.current.y;
       dragPosRef.current = { x: event.clientX, y: event.clientY };
 
+      // Only actual pointer movement counts as "dragging" for the cursor —
+      // react-grid-layout's own dragging class lands on mousedown, before
+      // any movement, which made a plain click show the closed-hand cursor.
+      element.classList.add("is-actively-dragging");
+
       const lift = element.querySelector<HTMLElement>(".block-lift");
       if (!lift) return;
 
@@ -575,6 +579,7 @@ const Sections = ({
       element: HTMLElement
     ) => {
       dragPosRef.current = null;
+      element.classList.remove("is-actively-dragging");
       const lift = element.querySelector<HTMLElement>(".block-lift");
       if (lift) {
         lift.style.transform = "";
@@ -583,6 +588,44 @@ const Sections = ({
     },
     []
   );
+
+  const handleInputDragHandoff = useCallback((e: React.MouseEvent) => {
+    const inputEl = e.currentTarget as HTMLElement;
+    e.stopPropagation();
+
+    if (document.activeElement === inputEl) return;
+
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const handle = inputEl.closest<HTMLElement>(".block-lift");
+
+    const cleanup = () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    };
+    const onMove = (moveEvent: MouseEvent) => {
+      const dx = moveEvent.clientX - startX;
+      const dy = moveEvent.clientY - startY;
+      if (Math.hypot(dx, dy) < 4) return;
+      cleanup();
+      window.getSelection()?.removeAllRanges();
+      inputEl.blur();
+      handle?.dispatchEvent(
+        new MouseEvent("mousedown", {
+          bubbles: true,
+          cancelable: true,
+          view: window,
+          clientX: moveEvent.clientX,
+          clientY: moveEvent.clientY,
+          button: 0,
+        })
+      );
+    };
+    const onUp = () => cleanup();
+
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+  }, []);
 
   const handleSideChange = useCallback((prev: any) => {
     setSide(prev);
@@ -1288,28 +1331,54 @@ const Sections = ({
                         "block-lift flex  w-full rounded-[22px] h-full items-start p-0.5 border border-transparent hover:border-gray-300/50 hover:shadow hover:bg-white transition-all"
                       }
                     >
-                      <div
-                        className={"absolute dragMe top-0 left-0 h-full w-full"}
-                      />
-
-                      <Input
-                        key={i}
-                        ref={textInputRef}
-                        onChange={(e) => handleChange(e, l)}
-                        name="title"
-                        onFocus={() => setIsFocus(true)}
-                        onBlur={() => setIsFocus(false)}
-                        style={{ color: l?.color ? `${l.color}` : "black" }}
-                        className={` ${
-                          !isFocus ? "dragMe select-none " : "select-text"
-                        } ${
-                          currentBreakpoint === "xs"
-                            ? "text-lg"
-                            : "text-sm lg:text-3xl"
-                        }  z-10 bg-transparent border-none text-left font-bold break-words hover:bg-slate-300/20 resize-none min-h-0 focus-visible:bg-slate-300/20 focus-visible:ring-0 shadow-none h-full  w-full p-0.5`}
-                        defaultValue={l.title}
-                        placeholder={t("addNewTitlePlaceholder")}
-                      />
+                      {(() => {
+                        const isEditingThis = editingTextId === l.i;
+                        return (
+                          <>
+                            <Input
+                              key={i}
+                              ref={textInputRef}
+                              onChange={(e) => handleChange(e, l)}
+                              name="title"
+                              onMouseDown={(e) => {
+                                if (!isEditingThis) {
+                                  e.preventDefault();
+                                } else {
+                                  // Already editing: this is a normal
+                                  // text-selection click/drag, not a grab —
+                                  // keep it from ever reaching RGL's drag
+                                  // start listener.
+                                  e.stopPropagation();
+                                }
+                              }}
+                              onDoubleClick={(e) => {
+                                setEditingTextId(l.i);
+                                (e.currentTarget as HTMLInputElement).focus();
+                              }}
+                              onBlur={() => setEditingTextId(null)}
+                              style={{ color: l?.color ? `${l.color}` : "black" }}
+                              className={`${
+                                isEditingThis
+                                  ? "select-text cursor-text"
+                                  : "dragMe select-none cursor-grab"
+                              } ${
+                                currentBreakpoint === "xs"
+                                  ? "text-lg"
+                                  : "text-sm lg:text-3xl"
+                              }  z-10 bg-transparent border-none text-left font-bold break-words hover:bg-slate-300/20 resize-none min-h-0 focus-visible:bg-slate-300/20 focus-visible:ring-0 shadow-none h-full  w-full p-0.5`}
+                              defaultValue={l.title}
+                              placeholder={t("addNewTitlePlaceholder")}
+                            />
+                            {!isEditingThis && (
+                              <span className="block-action absolute bottom-1 right-2 z-20 text-[10px] text-gray-400 opacity-0 group-hover/item:opacity-100 transition-all pointer-events-none select-none">
+                                {isTouchDevice
+                                  ? t("doubleTapToEdit")
+                                  : t("doubleClickToEdit")}
+                              </span>
+                            )}
+                          </>
+                        );
+                      })()}
                     </div>
                     <span
                       className="block-action absolute group/span opacity-0 group-focus-visible/item:opacity-100 group-hover/item:opacity-100 transition-all hover:bg-gray-50 hover:shadow-md -right-2 p-2 shadow -m-1 bg-white border rounded-full z-20 -top-2 cursor-pointer"
@@ -1412,32 +1481,6 @@ const Sections = ({
                         background: l?.background ? `${l.background}` : "white",
                       }}
                     >
-                      <div className="flex items-center justify-between gap-2 w-full shrink-0">
-                        <Avatar className="size-9 border shadow-md shrink-0 object-cover p-1.5">
-                          <AvatarFallback>{l.link?.title?.[0]}</AvatarFallback>
-                          <AvatarImage
-                            src={
-                              l?.link.url?.split("/")[2] === "read.cv"
-                                ? l.link?.favicons?.[1]?.href
-                                : `https://www.google.com/s2/favicons?sz=128&domain=${safeHostname(
-                                    l?.link?.url
-                                  )}`
-                            }
-                            draggable={false}
-                            className="object-cover select-none"
-                            alt={`${l?.link && l.link.title} picture`}
-                          />
-                        </Avatar>
-                        <a
-                          href={l?.link?.url || "#"}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="shrink-0 text-gray-400 hover:text-noir transition-colors"
-                          title={t("opensInNewTab")}
-                        >
-                          <ExternalLink size={15} />
-                        </a>
-                      </div>
                       {(() => {
                         const bp = currentBreakpoint as keyof typeof cols;
                         const currentItem = (effectiveLayouts[bp] || []).find(
@@ -1446,52 +1489,240 @@ const Sections = ({
                         const isRow =
                           (currentItem?.w ?? 2) === 4 &&
                           (currentItem?.h ?? 2) === 1;
+                        const isSquareImage =
+                          (currentItem?.w ?? 2) === 4 &&
+                          (currentItem?.h ?? 2) === 4;
+                        const isWideImage =
+                          (currentItem?.w ?? 2) === 4 &&
+                          (currentItem?.h ?? 2) === 2;
+                        const isTallImage =
+                          (currentItem?.w ?? 2) === 2 &&
+                          (currentItem?.h ?? 2) === 4;
+                        const previewImage =
+                          l?.link?.image ||
+                          l?.link?.["og:image"] ||
+                          l?.link?.["twitter:image"];
+
+                        const mutedColor = isLightColor(l?.background)
+                          ? "rgb(0 0 0 / 0.4)"
+                          : "rgb(255 255 255 / 0.55)";
+                        const logoBg = l?.background || "#ffffff";
+                        const logo = (
+                          <div
+                            className="relative size-11 shrink-0 rounded-md border shadow-md overflow-hidden flex items-center justify-center"
+                            style={{
+                              background: `linear-gradient(135deg, color-mix(in srgb, ${logoBg} 40%, white), color-mix(in srgb, ${logoBg} 75%, white))`,
+                            }}
+                          >
+                            <span className="text-xs font-medium">
+                              {l.link?.title?.[0]}
+                            </span>
+                            <img
+                              src={
+                                l?.link.url?.split("/")[2] === "read.cv"
+                                  ? l.link?.favicons?.[1]?.href
+                                  : `https://www.google.com/s2/favicons?sz=128&domain=${safeHostname(
+                                      l?.link?.url
+                                    )}`
+                              }
+                              draggable={false}
+                              className="absolute inset-0 h-full w-full object-contain p-2.5 select-none"
+                              alt={`${l?.link && l.link.title} picture`}
+                              onError={(e) => {
+                                (
+                                  e.currentTarget as HTMLImageElement
+                                ).style.display = "none";
+                              }}
+                            />
+                          </div>
+                        );
+
+                        const externalLink = (
+                          <a
+                            href={l?.link?.url || "#"}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="shrink-0 transition-colors hover:opacity-70"
+                            style={{ color: mutedColor }}
+                            title={t("opensInNewTab")}
+                          >
+                            <ExternalLink size={15} />
+                          </a>
+                        );
 
                         if (isRow) {
                           return (
-                            <Input
-                              name="linkTitle"
-                              onChange={(e) => handleLinkTitleChange(e, l)}
-                              style={{
-                                color: l?.color ? `${l.color}` : "black",
-                              }}
-                              className={`shrink-0 min-h-0 h-auto overflow-hidden border-none px-1.5 py-0.5 rounded-md truncate text-sm font-bold focus-visible:ring-0 shadow-none transition-colors ${editableFieldClass(
-                                l?.background
-                              )}`}
-                              defaultValue={l.link?.title}
-                              placeholder={t("addTitlePlaceholder")}
-                            />
+                            <div className="flex items-center gap-2 w-full h-full">
+                              {logo}
+                              <Input
+                                name="linkTitle"
+                                onMouseDown={handleInputDragHandoff}
+                                onChange={(e) => handleLinkTitleChange(e, l)}
+                                style={{
+                                  color: l?.color ? `${l.color}` : "black",
+                                }}
+                                className={`flex-1 min-w-0 min-h-0 h-auto overflow-hidden border-none p-0 rounded-none truncate text-sm font-bold focus-visible:ring-0 shadow-none transition-colors ${editableFieldClass(
+                                  l?.background
+                                )}`}
+                                defaultValue={l.link?.title}
+                                placeholder={t("addTitlePlaceholder")}
+                              />
+                              {externalLink}
+                            </div>
+                          );
+                        }
+
+                        const previewImageEl = previewImage && (
+                          <img
+                            src={previewImage}
+                            alt={l.link?.title}
+                            draggable={false}
+                            className="absolute inset-0 h-full w-full object-cover select-none"
+                            onError={(e) => {
+                              (
+                                e.currentTarget as HTMLImageElement
+                              ).style.display = "none";
+                            }}
+                          />
+                        );
+
+                        const titleInput = (extraClassName: string) => (
+                          <Input
+                            name="linkTitle"
+                            onMouseDown={handleInputDragHandoff}
+                            onChange={(e) => handleLinkTitleChange(e, l)}
+                            style={{
+                              color: l?.color ? `${l.color}` : "black",
+                            }}
+                            className={`min-h-0 h-auto overflow-hidden border-none p-0 rounded-none truncate text-sm font-bold focus-visible:ring-0 shadow-none transition-colors ${extraClassName} ${editableFieldClass(
+                              l?.background
+                            )}`}
+                            defaultValue={l.link?.title}
+                            placeholder={t("addTitlePlaceholder")}
+                          />
+                        );
+
+                        // Multiline but never scrollable — once the text
+                        // hits max-h the overflow is just clipped, no
+                        // scrollbar. The user is responsible for keeping
+                        // their title short enough to stay visible.
+                        const titleTextarea = (extraClassName: string) => (
+                          <Textarea
+                            name="linkTitle"
+                            rows={3}
+                            onMouseDown={handleInputDragHandoff}
+                            onChange={(e) => handleLinkTitleChange(e, l)}
+                            style={{
+                              color: l?.color ? `${l.color}` : "black",
+                              WebkitMaskImage:
+                                "linear-gradient(to bottom, black 75%, transparent 100%)",
+                              maskImage:
+                                "linear-gradient(to bottom, black 75%, transparent 100%)",
+                            }}
+                            className={`min-h-0 max-h-20 overflow-hidden border-none p-0 rounded-none resize-none break-words text-sm font-bold focus-visible:ring-0 shadow-none transition-colors ${extraClassName} ${editableFieldClass(
+                              l?.background
+                            )}`}
+                            defaultValue={l.link?.title}
+                            placeholder={t("addTitlePlaceholder")}
+                          />
+                        );
+
+                        const urlLine = (
+                          <span
+                            className="shrink-0 truncate text-xs"
+                            style={{ color: mutedColor }}
+                          >
+                            {l.link?.url}
+                          </span>
+                        );
+
+                        if (isSquareImage && previewImage) {
+                          return (
+                            <>
+                              <div className="flex items-center justify-between gap-2 w-full shrink-0">
+                                {logo}
+                                {externalLink}
+                              </div>
+                              <div className="relative w-full flex-1 min-h-0 overflow-hidden rounded-lg">
+                                {previewImageEl}
+                              </div>
+                              {titleInput("shrink-0")}
+                            </>
+                          );
+                        }
+
+                        if (isWideImage && previewImage) {
+                          return (
+                            <>
+                              <div className="flex items-center justify-between gap-2 w-full shrink-0">
+                                {logo}
+                                {externalLink}
+                              </div>
+                              <div className="flex min-h-0 flex-1 items-stretch gap-2">
+                                <div className="flex min-w-0 flex-1 flex-col justify-start gap-1">
+                                  {titleTextarea("w-full")}
+                                  {urlLine}
+                                </div>
+                                <div className="relative h-full aspect-square shrink-0 overflow-hidden rounded-lg">
+                                  {previewImageEl}
+                                </div>
+                              </div>
+                            </>
+                          );
+                        }
+
+                        if (isTallImage && previewImage) {
+                          return (
+                            <>
+                              <div className="flex items-center justify-between gap-2 w-full shrink-0">
+                                {logo}
+                                {externalLink}
+                              </div>
+                              <div className="flex shrink-0 flex-col gap-1">
+                                {titleTextarea("w-full")}
+                                {urlLine}
+                              </div>
+                              <div className="relative w-full flex-1 min-h-0 overflow-hidden rounded-lg">
+                                {previewImageEl}
+                              </div>
+                            </>
                           );
                         }
 
                         return (
                           <>
-                            <Textarea
-                              name="linkTitle"
-                              ref={(el) => {
-                                if (el) {
-                                  el.style.height = "auto";
-                                  el.style.height = `${el.scrollHeight}px`;
-                                }
-                              }}
-                              onInput={(e) => {
-                                const el = e.currentTarget;
-                                el.style.height = "auto";
-                                el.style.height = `${el.scrollHeight}px`;
-                              }}
-                              onChange={(e) => handleLinkTitleChange(e, l)}
-                              style={{
-                                color: l?.color ? `${l.color}` : "black",
-                              }}
-                              className={`shrink-0 min-h-0 overflow-hidden border-none px-1.5 py-0.5 rounded-md resize-none break-words text-sm font-bold focus-visible:ring-0 shadow-none transition-colors ${editableFieldClass(
-                                l?.background
-                              )}`}
-                              defaultValue={l.link?.title}
-                              placeholder={t("addTitlePlaceholder")}
-                            />
-                            <span className="text-xs text-gray-400 break-all">
-                              {l.link?.url}
-                            </span>
+                            <div className="flex items-center justify-between gap-2 w-full shrink-0">
+                              {logo}
+                              {externalLink}
+                            </div>
+                            <div className="flex min-h-0 flex-1 flex-col gap-1 overflow-hidden">
+                              <Textarea
+                                name="linkTitle"
+                                onMouseDown={handleInputDragHandoff}
+                                onChange={(e) => handleLinkTitleChange(e, l)}
+                                style={{
+                                  color: l?.color ? `${l.color}` : "black",
+                                  // line-clamp/ellipsis don't apply to form
+                                  // controls — fade the overflow out instead
+                                  // of a hard cut mid-line.
+                                  WebkitMaskImage:
+                                    "linear-gradient(to bottom, black 75%, transparent 100%)",
+                                  maskImage:
+                                    "linear-gradient(to bottom, black 75%, transparent 100%)",
+                                }}
+                                className={`min-h-0 flex-1 overflow-hidden border-none p-0 rounded-none resize-none break-words text-sm font-bold focus-visible:ring-0 shadow-none transition-colors ${editableFieldClass(
+                                  l?.background
+                                )}`}
+                                defaultValue={l.link?.title}
+                                placeholder={t("addTitlePlaceholder")}
+                              />
+                              <span
+                                className="shrink-0 truncate text-xs"
+                                style={{ color: mutedColor }}
+                              >
+                                {l.link?.url}
+                              </span>
+                            </div>
                           </>
                         );
                       })()}

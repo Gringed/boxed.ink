@@ -485,64 +485,222 @@ const PublishedSections = ({
                       const mutedColor = isLightColor(l?.background)
                         ? "rgb(0 0 0 / 0.4)"
                         : "rgb(255 255 255 / 0.55)";
+                      const bp = currentBreakpoint as keyof typeof cols;
+                      const currentItem = (layouts[bp] || []).find(
+                        (item: Layout) => item.i === l.i
+                      );
+                      const isRow =
+                        (currentItem?.w ?? 2) === 4 &&
+                        (currentItem?.h ?? 2) === 1;
+                      const isSquareImage =
+                        (currentItem?.w ?? 2) === 4 &&
+                        (currentItem?.h ?? 2) === 4;
+                      const isWideImage =
+                        (currentItem?.w ?? 2) === 4 &&
+                        (currentItem?.h ?? 2) === 2;
+                      const isTallImage =
+                        (currentItem?.w ?? 2) === 2 &&
+                        (currentItem?.h ?? 2) === 4;
+                      const previewImage =
+                        l?.link?.image ||
+                        l?.link?.["og:image"] ||
+                        l?.link?.["twitter:image"];
+
+                      // How many lines of title fit in this exact block
+                      // before the header row, gap and url line — so the
+                      // default (no-image) layout can line-clamp precisely
+                      // instead of scrolling or hard-clipping mid-line.
+                      const blockH = currentItem?.h ?? 2;
+                      const blockHeightPx =
+                        gridRowHeight * blockH + GRID_MARGIN * (blockH - 1);
+                      const titleLineClamp = Math.max(
+                        1,
+                        Math.floor((blockHeightPx - 24 - 44 - 8 - 16 - 4) / 20)
+                      );
+
+                      const logoBg = l?.background || "#ffffff";
+                      const logo = (
+                        <div
+                          className="relative size-11 shrink-0 rounded-md border shadow-md overflow-hidden flex items-center justify-center"
+                          style={{
+                            background: `linear-gradient(135deg, color-mix(in srgb, ${logoBg} 40%, white), color-mix(in srgb, ${logoBg} 75%, white))`,
+                          }}
+                        >
+                          <span className="text-xs font-medium">
+                            {l.link?.title[0]}
+                          </span>
+                          <img
+                            src={
+                              l?.link.url?.split("/")[2] === "read.cv"
+                                ? l.link?.favicons?.[1]?.href
+                                : `https://www.google.com/s2/favicons?sz=128&domain=${safeHostname(
+                                    l?.link?.url
+                                  )}`
+                            }
+                            draggable={false}
+                            className="absolute inset-0 h-full w-full object-contain p-2.5 select-none"
+                            alt={`${l?.link && l.link.title} picture`}
+                            onError={(e) => {
+                              (
+                                e.currentTarget as HTMLImageElement
+                              ).style.display = "none";
+                            }}
+                          />
+                        </div>
+                      );
+
+                      const externalLink = (
+                        <ExternalLink
+                          size={15}
+                          className="shrink-0"
+                          style={{ color: mutedColor }}
+                        />
+                      );
+
+                      if (isRow) {
+                        return (
+                          <div className="flex items-center gap-2 w-full h-full">
+                            {logo}
+                            <span
+                              className="flex-1 min-w-0 truncate text-sm font-bold"
+                              style={{
+                                color: l?.color ? `${l.color}` : "black",
+                              }}
+                            >
+                              {l.link?.title}
+                            </span>
+                            {externalLink}
+                          </div>
+                        );
+                      }
+
+                      const previewImageEl = previewImage && (
+                        <img
+                          src={previewImage}
+                          alt={l.link?.title}
+                          draggable={false}
+                          className="absolute inset-0 h-full w-full object-cover select-none"
+                          onError={(e) => {
+                            (e.currentTarget as HTMLImageElement).style.display =
+                              "none";
+                          }}
+                        />
+                      );
+
+                      const titleEl = (
+                        <span
+                          className="shrink-0 truncate text-sm font-bold"
+                          style={{
+                            color: l?.color ? `${l.color}` : "black",
+                          }}
+                        >
+                          {l.link?.title}
+                        </span>
+                      );
+
+                      // Multiline but never scrollable — line-clamp trims
+                      // the overflow once it hits max lines, no scrollbar.
+                      const titleMultilineEl = (
+                        <span
+                          className="line-clamp-3 shrink-0 break-words text-sm font-bold"
+                          style={{
+                            color: l?.color ? `${l.color}` : "black",
+                            whiteSpace: "pre-line",
+                          }}
+                        >
+                          {l.link?.title}
+                        </span>
+                      );
+
+                      const urlLine = (
+                        <span
+                          className="shrink-0 truncate text-xs"
+                          style={{ color: mutedColor }}
+                        >
+                          {l.link?.url}
+                        </span>
+                      );
+
+                      if (isSquareImage && previewImage) {
+                        return (
+                          <>
+                            <div className="flex items-center justify-between gap-2 w-full shrink-0">
+                              {logo}
+                              {externalLink}
+                            </div>
+                            <div className="relative w-full flex-1 min-h-0 overflow-hidden rounded-lg">
+                              {previewImageEl}
+                            </div>
+                            {titleEl}
+                          </>
+                        );
+                      }
+
+                      if (isWideImage && previewImage) {
+                        return (
+                          <>
+                            <div className="flex items-center justify-between gap-2 w-full shrink-0">
+                              {logo}
+                              {externalLink}
+                            </div>
+                            <div className="flex min-h-0 flex-1 items-stretch gap-2">
+                              <div className="flex min-w-0 flex-1 flex-col justify-start gap-1">
+                                {titleMultilineEl}
+                                {urlLine}
+                              </div>
+                              <div className="relative h-full aspect-square shrink-0 overflow-hidden rounded-lg">
+                                {previewImageEl}
+                              </div>
+                            </div>
+                          </>
+                        );
+                      }
+
+                      if (isTallImage && previewImage) {
+                        return (
+                          <>
+                            <div className="flex items-center justify-between gap-2 w-full shrink-0">
+                              {logo}
+                              {externalLink}
+                            </div>
+                            <div className="flex shrink-0 flex-col gap-1">
+                              {titleMultilineEl}
+                              {urlLine}
+                            </div>
+                            <div className="relative w-full flex-1 min-h-0 overflow-hidden rounded-lg">
+                              {previewImageEl}
+                            </div>
+                          </>
+                        );
+                      }
+
                       return (
                         <>
                           <div className="flex items-center justify-between gap-2 w-full shrink-0">
-                            <Avatar className="size-9 border shadow-md shrink-0 object-cover p-1.5">
-                              <AvatarFallback>
-                                {l.link?.title[0]}
-                              </AvatarFallback>
-                              <AvatarImage
-                                src={
-                                  l?.link.url?.split("/")[2] === "read.cv"
-                                    ? l.link?.favicons?.[1]?.href
-                                    : `https://www.google.com/s2/favicons?sz=128&domain=${safeHostname(
-                                        l?.link?.url
-                                      )}`
-                                }
-                                draggable={false}
-                                className="object-cover select-none"
-                                alt={`${l?.link && l.link.title} picture`}
-                              />
-                            </Avatar>
-                            <ExternalLink
-                              size={15}
-                              className="shrink-0"
-                              style={{ color: mutedColor }}
-                            />
+                            {logo}
+                            {externalLink}
                           </div>
-                          {(() => {
-                            const bp = currentBreakpoint as keyof typeof cols;
-                            const currentItem = (layouts[bp] || []).find(
-                              (item: Layout) => item.i === l.i
-                            );
-                            const isRow =
-                              (currentItem?.w ?? 2) === 4 &&
-                              (currentItem?.h ?? 2) === 1;
-
-                            return (
-                              <>
-                                <span
-                                  className={`text-sm font-bold ${
-                                    isRow ? "truncate" : "break-words"
-                                  }`}
-                                  style={{
-                                    color: l?.color ? `${l.color}` : "black",
-                                  }}
-                                >
-                                  {l.link?.title}
-                                </span>
-                                {!isRow && (
-                                  <span
-                                    className="text-xs break-all"
-                                    style={{ color: mutedColor }}
-                                  >
-                                    {l.link?.url}
-                                  </span>
-                                )}
-                              </>
-                            );
-                          })()}
+                          <div className="flex min-h-0 flex-1 flex-col gap-1 overflow-hidden">
+                            <span
+                              className="min-h-0 break-words text-sm font-bold"
+                              style={{
+                                color: l?.color ? `${l.color}` : "black",
+                                display: "-webkit-box",
+                                WebkitBoxOrient: "vertical",
+                                WebkitLineClamp: titleLineClamp,
+                                overflow: "hidden",
+                                whiteSpace: "pre-line",
+                              }}
+                            >
+                              {l.link?.title}
+                            </span>
+                            <span
+                              className="shrink-0 truncate text-xs"
+                              style={{ color: mutedColor }}
+                            >
+                              {l.link?.url}
+                            </span>
+                          </div>
                         </>
                       );
                     })()}
