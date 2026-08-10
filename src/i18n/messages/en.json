@@ -164,6 +164,7 @@
     "selectAtLeastOneLink": "Select at least one link to import",
     "importedLinks": "{count, plural, one {Imported # link} other {Imported # links}} out of {total} selected",
     "failedImport": "Failed to import the selected links",
+    "uploadImageFailed": "Failed to upload image. Try a smaller file (under {maxMB}MB).",
     "importFromLinktree": "Import from Linktree",
     "linktreeUrlPlaceholder": "linktr.ee/username or just username",
     "preview": "Preview",

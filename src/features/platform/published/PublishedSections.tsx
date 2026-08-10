@@ -725,18 +725,22 @@ const PublishedSections = ({
                           {l?.imageX ||
                           l?.imageY ||
                           l?.imageMobileX ||
-                          l?.imageMobileY ? (
+                          l?.imageMobileY ||
+                          l?.imageScale ||
+                          l?.imageMobileScale ? (
                             <img
                               draggable="false"
-                              className="absolute overflow-clip min-w-full min-h-full  rounded-3xl"
+                              className="absolute overflow-clip w-full h-full object-cover  rounded-3xl"
                               style={{
                                 transform: `translate(${
                                   !matches
                                     ? `${l?.imageMobileX}px, ${l?.imageMobileY}px`
                                     : `${l?.imageX}px, ${l?.imageY}px`
+                                }) scale(${
+                                  (!matches
+                                    ? l?.imageMobileScale
+                                    : l?.imageScale) || 1
                                 })`,
-                                maxWidth: "unset",
-                                maxHeight: "unset",
                               }}
                               src={l.imageUrl}
                               alt=""

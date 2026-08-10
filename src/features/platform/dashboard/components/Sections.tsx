@@ -42,6 +42,8 @@ import {
   Type,
   Upload,
   X,
+  ZoomIn,
+  ZoomOut,
 } from "lucide-react";
 
 import { revalidatePath } from "next/cache";
@@ -85,6 +87,9 @@ import { useSquareRowHeight } from "@/lib/hooks/useSquareRowHeight";
 import { YouTubeChannelCard } from "@/features/platform/shared/YouTubeChannelCard";
 import { TwitchChannelCard } from "@/features/platform/shared/TwitchChannelCard";
 const ResponsiveReactGridLayout = Responsive;
+
+const MAX_PROFILE_IMAGE_MB = 1;
+const MAX_PROFILE_IMAGE_BYTES = MAX_PROFILE_IMAGE_MB * 1024 * 1024;
 
 const safeHostname = (url?: string) => {
   if (!url) return "";
@@ -378,10 +383,12 @@ const Sections = ({
   };
 
   const handleDragImage = (l: any) => {
-    const position =
-      currentBreakpoint === "xs"
-        ? { x: l?.imageMobileX || 0, y: l?.imageMobileY || 0 }
-        : { x: l?.imageX || 0, y: l?.imageY || 0 };
+    const isMobile = currentBreakpoint === "xs";
+    imageTransformRef.current = {
+      x: (isMobile ? l?.imageMobileX : l?.imageX) || 0,
+      y: (isMobile ? l?.imageMobileY : l?.imageY) || 0,
+      scale: (isMobile ? l?.imageMobileScale : l?.imageScale) || 1,
+    };
     interact(".draggable").draggable({
       modifiers: [
         interact.modifiers.restrictRect({
@@ -392,26 +399,51 @@ const Sections = ({
       listeners: {
         start(event) {},
         move(event) {
-          position.x += event.dx;
-          position.y += event.dy;
+          const t = imageTransformRef.current;
+          t.x += event.dx;
+          t.y += event.dy;
 
-          event.target.style.transform = `translate(${position.x}px, ${position.y}px)`;
+          event.target.style.transform = `translate(${t.x}px, ${t.y}px) scale(${t.scale})`;
           if (timeoutRef.current) {
             clearTimeout(timeoutRef.current);
           }
 
           timeoutRef.current = setTimeout(() => {
-            if (currentBreakpoint === "xs") {
-              saveChanges("imageMobileX", position.x, l);
-              saveChanges("imageMobileY", position.y, l);
+            if (isMobile) {
+              saveChanges("imageMobileX", t.x, l);
+              saveChanges("imageMobileY", t.y, l);
             } else {
-              saveChanges("imageX", position.x, l);
-              saveChanges("imageY", position.y, l);
+              saveChanges("imageX", t.x, l);
+              saveChanges("imageY", t.y, l);
             }
           }, 1500);
         },
       },
     });
+  };
+
+  const handleImageScaleChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    l: any
+  ) => {
+    const scale = Number(e.target.value);
+    const t = imageTransformRef.current;
+    t.scale = scale;
+
+    if (cropImageRef.current) {
+      cropImageRef.current.style.transform = `translate(${t.x}px, ${t.y}px) scale(${t.scale})`;
+    }
+
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    timeoutRef.current = setTimeout(() => {
+      if (currentBreakpoint === "xs") {
+        saveChanges("imageMobileScale", scale, l);
+      } else {
+        saveChanges("imageScale", scale, l);
+      }
+    }, 300);
   };
 
   const [isSaving, setIsSaving] = useState<boolean>(false);
@@ -435,6 +467,8 @@ const Sections = ({
   const textInputRef = useRef<HTMLInputElement>(null);
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const profileImageRef = useRef<HTMLInputElement>(null);
+  const cropImageRef = useRef<HTMLImageElement>(null);
+  const imageTransformRef = useRef({ x: 0, y: 0, scale: 1 });
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const hasMountedLayout = useRef(false);
   const layoutSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -636,24 +670,30 @@ const Sections = ({
     });
   }, []);
   const handleUpdateProfileImage = async (file: any) => {
-    const res = await uplodadProfileImageAction({
-      sidefolio: sidefolio,
-      file,
-    });
-    if (res) {
+    try {
+      await uplodadProfileImageAction({
+        sidefolio: sidefolio,
+        file,
+      });
+    } catch {
+      toast.error(t("uploadImageFailed"));
+    } finally {
       setProfileImageLoading(false);
     }
   };
   const handleDeleteImageSidefolio = async () => {
     setProfileImageLoading(true);
-    const res = await uplodadProfileImageAction({
-      sidefolio: sidefolio,
-      file: "",
-      del: true,
-    });
-    if (res) {
-      setProfileImageLoading(false);
+    try {
+      await uplodadProfileImageAction({
+        sidefolio: sidefolio,
+        file: "",
+        del: true,
+      });
       toast.success(t("removedSuccess"));
+    } catch {
+      toast.error(t("uploadImageFailed"));
+    } finally {
+      setProfileImageLoading(false);
     }
   };
   const handleLayoutChange = useCallback(
@@ -1077,12 +1117,19 @@ const Sections = ({
                 ref={profileImageRef}
                 onChangeCapture={async (event) => {
                   event.preventDefault();
-                  setProfileImageLoading(true);
                   if (!profileImageRef.current?.files) {
                     throw new Error("No file selected");
                   }
 
                   const file = profileImageRef.current.files[0];
+                  if (file.size > MAX_PROFILE_IMAGE_BYTES) {
+                    toast.error(
+                      t("uploadImageFailed", { maxMB: MAX_PROFILE_IMAGE_MB })
+                    );
+                    if (profileImageRef.current) profileImageRef.current.value = "";
+                    return;
+                  }
+                  setProfileImageLoading(true);
                   const formData = new FormData();
                   formData.append("file", file);
                   handleUpdateProfileImage(formData);
@@ -1787,20 +1834,23 @@ const Sections = ({
                                 style={{ filter: "opacity(0.9)" }}
                               >
                                 <img
+                                  ref={cropImageRef}
                                   onMouseEnter={() => {
                                     handleDragImage(l);
                                   }}
-                                  className="absolute touch-none   !select-none pointer-events-auto draggable max-w-max !cursor-move min-w-full min-h-full   rounded-3xl"
+                                  className="absolute touch-none   !select-none pointer-events-auto draggable !cursor-move w-full h-full object-cover rounded-3xl"
                                   src={l.imageUrl}
                                   style={{
                                     transform: `translate(${
                                       currentBreakpoint === "xs"
                                         ? `${l?.imageMobileX}px, ${l?.imageMobileY}px`
                                         : `${l?.imageX}px, ${l?.imageY}px`
+                                    }) scale(${
+                                      (currentBreakpoint === "xs"
+                                        ? l?.imageMobileScale
+                                        : l?.imageScale) || 1
                                     })`,
                                     filter: "inherit",
-                                    maxWidth: "unset",
-                                    maxHeight: "unset",
                                   }}
                                   alt=""
                                 />
@@ -1808,18 +1858,22 @@ const Sections = ({
                             ) : l?.imageX ||
                               l?.imageY ||
                               l?.imageMobileX ||
-                              l?.imageMobileY ? (
+                              l?.imageMobileY ||
+                              l?.imageScale ||
+                              l?.imageMobileScale ? (
                               <img
                                 draggable="false"
-                                className="absolute overflow-clip  min-w-full min-h-full  rounded-3xl"
+                                className="absolute overflow-clip  w-full h-full object-cover  rounded-3xl"
                                 style={{
                                   transform: `translate(${
                                     currentBreakpoint === "xs"
                                       ? `${l?.imageMobileX}px, ${l?.imageMobileY}px`
                                       : `${l?.imageX}px, ${l?.imageY}px`
+                                  }) scale(${
+                                    (currentBreakpoint === "xs"
+                                      ? l?.imageMobileScale
+                                      : l?.imageScale) || 1
                                   })`,
-                                  maxWidth: "unset",
-                                  maxHeight: "unset",
                                 }}
                                 src={l.imageUrl}
                                 alt=""
@@ -1864,6 +1918,28 @@ const Sections = ({
                           strokeWidth={2}
                         />
                       </div>
+                      {isCrop === l?.i && (
+                        <div className="flex items-center gap-1.5 pr-1.5">
+                          <ZoomOut
+                            className="text-noir shrink-0"
+                            size={14}
+                          />
+                          <input
+                            type="range"
+                            min={1}
+                            max={3}
+                            step={0.05}
+                            defaultValue={
+                              (currentBreakpoint === "xs"
+                                ? l?.imageMobileScale
+                                : l?.imageScale) || 1
+                            }
+                            onChange={(e) => handleImageScaleChange(e, l)}
+                            className="w-20 accent-primary cursor-pointer"
+                          />
+                          <ZoomIn className="text-noir shrink-0" size={14} />
+                        </div>
+                      )}
                     </div>
                   </>
                 )}

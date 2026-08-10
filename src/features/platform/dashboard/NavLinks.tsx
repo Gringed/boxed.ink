@@ -67,6 +67,12 @@ import { del } from "@vercel/blob";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { FlagLanguageSwitcher } from "@/components/FlagLanguageSwitcher";
+
+const MAX_BLOCK_IMAGE_MB = 2;
+const MAX_BLOCK_IMAGE_BYTES = MAX_BLOCK_IMAGE_MB * 1024 * 1024;
+const MAX_BACKGROUND_IMAGE_MB = 2;
+const MAX_BACKGROUND_IMAGE_BYTES = MAX_BACKGROUND_IMAGE_MB * 1024 * 1024;
+
 const NavLinks = ({
   currentBreakpoint,
   setCurrentBreakpoint,
@@ -127,30 +133,38 @@ const NavLinks = ({
     });
   };
   const handleUploadImage = async (file: any) => {
-    const res = await uploadImageSection({
-      file,
-      data: {
-        title: "New image bloc",
-        slug: "",
-        type: "IMAGE",
-        description: "Add a new description",
-        sideId: sidefolio.id,
-        i: `n${makeid(40)}`,
-      },
-    });
-    if (res) {
-      setImageLoading(false);
-      startTransition(() => {
-        router.refresh();
+    try {
+      const res = await uploadImageSection({
+        file,
+        data: {
+          title: "New image bloc",
+          slug: "",
+          type: "IMAGE",
+          description: "Add a new description",
+          sideId: sidefolio.id,
+          i: `n${makeid(40)}`,
+        },
       });
+      if (res) {
+        startTransition(() => {
+          router.refresh();
+        });
+      }
+    } catch {
+      toast.error(t("uploadImageFailed"));
+    } finally {
+      setImageLoading(false);
     }
   };
   const handleUploadImageSidefolio = async (file: any) => {
-    const res = await uploadImageSidefolio({
-      id: sidefolio.id,
-      file,
-    });
-    if (res) {
+    try {
+      await uploadImageSidefolio({
+        id: sidefolio.id,
+        file,
+      });
+    } catch {
+      toast.error(t("uploadImageFailed"));
+    } finally {
       setImageSideLoading(false);
     }
   };
@@ -368,12 +382,19 @@ const NavLinks = ({
                     ref={inputFileRef}
                     onChangeCapture={async (event) => {
                       event.preventDefault();
-                      setImageLoading(true);
                       if (!inputFileRef.current?.files) {
                         throw new Error("No file selected");
                       }
 
                       const file = inputFileRef.current.files[0];
+                      if (file.size > MAX_BLOCK_IMAGE_BYTES) {
+                        toast.error(
+                          t("uploadImageFailed", { maxMB: MAX_BLOCK_IMAGE_MB })
+                        );
+                        if (inputFileRef.current) inputFileRef.current.value = "";
+                        return;
+                      }
+                      setImageLoading(true);
                       const formData = new FormData();
                       formData.append("file", file);
                       handleUploadImage(formData);
@@ -483,12 +504,22 @@ const NavLinks = ({
                     ref={inputFileSideRef}
                     onChangeCapture={async (event) => {
                       event.preventDefault();
-                      setImageSideLoading(true);
                       if (!inputFileSideRef.current?.files) {
                         throw new Error("No file selected");
                       }
 
                       const file = inputFileSideRef.current.files[0];
+                      if (file.size > MAX_BACKGROUND_IMAGE_BYTES) {
+                        toast.error(
+                          t("uploadImageFailed", {
+                            maxMB: MAX_BACKGROUND_IMAGE_MB,
+                          })
+                        );
+                        if (inputFileSideRef.current)
+                          inputFileSideRef.current.value = "";
+                        return;
+                      }
+                      setImageSideLoading(true);
                       const formData = new FormData();
                       formData.append("file", file);
                       handleUploadImageSidefolio(formData);

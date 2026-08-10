@@ -164,6 +164,7 @@
     "selectAtLeastOneLink": "Sélectionne au moins un lien à importer",
     "importedLinks": "{count, plural, one {# lien importé} other {# liens importés}} sur {total} sélectionnés",
     "failedImport": "Échec de l'import des liens sélectionnés",
+    "uploadImageFailed": "Échec de l'envoi de l'image. Essaie un fichier plus léger (moins de {maxMB} Mo).",
     "importFromLinktree": "Importer depuis Linktree",
     "linktreeUrlPlaceholder": "linktr.ee/pseudo ou juste le pseudo",
     "preview": "Aperçu",
