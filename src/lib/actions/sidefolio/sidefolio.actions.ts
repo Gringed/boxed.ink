@@ -8,6 +8,35 @@ import { UserSchema } from "../users/user.schema";
 import { revalidatePath } from "next/cache";
 import { del, put } from "@vercel/blob";
 import { geocodeLocation, searchLocations } from "@/lib/geocode";
+import { slugify } from "@/lib/slug";
+
+export const claimSidefolioSlugAction = userAction(
+  z.object({
+    id: z.string(),
+    slug: z.string().min(1),
+  }),
+  async (input, context) => {
+    const slug = slugify(input.slug);
+    if (!slug) {
+      throw new ActionError("Please enter a valid url");
+    }
+
+    const existing = await prisma.sidefolio.findFirst({
+      where: { slug, id: { not: input.id } },
+      select: { id: true },
+    });
+    if (existing) {
+      throw new ActionError("This url is already taken");
+    }
+
+    const updated = await prisma.sidefolio.update({
+      where: { id: input.id },
+      data: { slug, slugClaimed: true },
+    });
+    revalidatePath("/dashboard");
+    return updated;
+  }
+);
 
 export const updateSidefolioAction = userAction(
   z.object({

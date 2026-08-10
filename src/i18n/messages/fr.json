@@ -5,6 +5,14 @@
     "newUpdates": "✦ Nouveautés - voir les mises à jour",
     "enrollNow": "S'inscrire"
   },
+  "claimUrl": {
+    "title": "Choisis ton url",
+    "subtitle": "C'est ce que les gens taperont pour te trouver. Choisis quelque chose de court et mémorable.",
+    "handlePrompt": "Ton url boxed.ink :",
+    "cta": "Confirmer mon url",
+    "taken": "Cette url est déjà prise",
+    "invalid": "Merci d'entrer une url valide"
+  },
   "hero": {
     "titleLine1": "Ton portfolio.",
     "titleLine2Prefix": "En quelques",
@@ -135,7 +143,9 @@
     "or": "ou",
     "titleSuffix": "inscris-toi",
     "titleEnd": "pour continuer",
-    "google": "Continuer avec Google"
+    "google": "Continuer avec Google",
+    "cancelled": "Connexion annulée",
+    "error": "Un problème est survenu pendant la connexion, réessaie"
   },
   "upgrade": {
     "eyebrow": "boxed.ink Pro",

@@ -8,10 +8,21 @@ import { CopyrightIcon } from "lucide-react";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
+import { useSearchParams } from "next/navigation";
+import { useEffect } from "react";
+import { toast } from "sonner";
 
 export const SignInPageClient = () => {
   const t = useTranslations("signIn");
   const tFooter = useTranslations("footer");
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const error = searchParams.get("error");
+    if (!error) return;
+    toast.error(error === "AccessDenied" ? t("cancelled") : t("error"));
+  }, [searchParams, t]);
+
   return (
     <div className="flex h-full flex-col">
       <LandingHeader />

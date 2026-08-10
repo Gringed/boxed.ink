@@ -1,5 +1,6 @@
 import { currentUser } from "@/auth/current-user";
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
 import { SignInPageClient } from "@/features/auth/SignInPageClient";
 
 const page = async () => {
@@ -9,7 +10,11 @@ const page = async () => {
     redirect("/dashboard");
   }
 
-  return <SignInPageClient />;
+  return (
+    <Suspense>
+      <SignInPageClient />
+    </Suspense>
+  );
 };
 
 export default page;

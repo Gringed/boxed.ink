@@ -86,6 +86,7 @@ import CharacterCount from "@tiptap/extension-character-count";
 import { useSquareRowHeight } from "@/lib/hooks/useSquareRowHeight";
 import { YouTubeChannelCard } from "@/features/platform/shared/YouTubeChannelCard";
 import { TwitchChannelCard } from "@/features/platform/shared/TwitchChannelCard";
+import { ClaimUrlDialog } from "@/features/platform/dashboard/ClaimUrlDialog";
 const ResponsiveReactGridLayout = Responsive;
 
 const MAX_PROFILE_IMAGE_MB = 1;
@@ -911,7 +912,11 @@ const Sections = ({
       )
     : 0;
   return (
-    <div
+    <>
+      {sidefolio && !sidefolio.slugClaimed && (
+        <ClaimUrlDialog sidefolio={sidefolio} />
+      )}
+      <div
       style={{
         scrollbarWidth: "none",
         transition: "all .25s cubic-bezier(.427,.073,.105,.997) .1s",
@@ -1993,7 +1998,8 @@ const Sections = ({
           </div>
         </BlurFade>
       </div>
-    </div>
+      </div>
+    </>
   );
 };
 
