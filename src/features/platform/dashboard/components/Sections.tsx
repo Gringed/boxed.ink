@@ -36,6 +36,7 @@ import {
   Locate,
   Mail,
   MapPin,
+  Phone,
   MessageCircleWarning,
   PaintBucket,
   Trash,
@@ -1560,7 +1561,9 @@ const Sections = ({
                         const isMailto =
                           !!l?.link?.mailto ||
                           /^mailto:/i.test(l?.link?.url || "");
-                        const logoSrc = isMailto
+                        const isTel =
+                          !!l?.link?.tel || /^tel:/i.test(l?.link?.url || "");
+                        const logoSrc = isMailto || isTel
                           ? null
                           : l?.link.url?.split("/")[2] === "read.cv"
                           ? l.link?.favicons?.[1]?.href
@@ -1590,6 +1593,12 @@ const Sections = ({
                           >
                             {isMailto ? (
                               <Mail
+                                size={18}
+                                className="text-noir/70"
+                                strokeWidth={2}
+                              />
+                            ) : isTel ? (
+                              <Phone
                                 size={18}
                                 className="text-noir/70"
                                 strokeWidth={2}

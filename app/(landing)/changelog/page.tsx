@@ -20,6 +20,39 @@ const page = async () => {
           <div className="w-full">
             <div className="mb-5 flex gap-3 flex-col">
               <h1 className="text-2xl font-bold">
+                August 11, 2026 - Richer link cards
+              </h1>
+              <Separator />
+            </div>
+            <div className="flex flex-col gap-3">
+              <p>
+                Link blocks can do more now, especially in the bigger sizes:
+              </p>
+              <ul className="list-disc pl-6 flex flex-col gap-2">
+                <li>
+                  In the <span className="font-semibold">4x4, 4x2 and 2x4</span>{" "}
+                  formats, a link block now shows the page's actual preview
+                  image when it has one, not just a small favicon.
+                </li>
+                <li>
+                  <span className="font-semibold">Image blocks</span> can be
+                  cropped and zoomed now, not just repositioned - drag to pan,
+                  use the zoom control to get closer, the block size stays the
+                  floor so you can never zoom out past what actually fills it.
+                </li>
+                <li>
+                  You can drop a{" "}
+                  <span className="font-semibold">mailto: or tel: link</span>{" "}
+                  (or just paste an email address or phone number) straight
+                  into a link block - it shows a mail or phone icon instead
+                  of trying to fetch a favicon for it.
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div className="w-full">
+            <div className="mb-5 flex gap-3 flex-col">
+              <h1 className="text-2xl font-bold">
                 August 8, 2026 - A smoother editor
               </h1>
               <Separator />

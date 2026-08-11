@@ -5,7 +5,7 @@ import { Responsive, Layout, Layouts } from "react-grid-layout";
 import { useSquareRowHeight } from "@/lib/hooks/useSquareRowHeight";
 import { Input } from "@/components/ui/input";
 
-import { ExternalLink, Mail, MapPin } from "lucide-react";
+import { ExternalLink, Mail, MapPin, Phone } from "lucide-react";
 
 import { Textarea } from "@/components/ui/textarea";
 
@@ -510,7 +510,9 @@ const PublishedSections = ({
                       const isMailto =
                         !!l?.link?.mailto ||
                         /^mailto:/i.test(l?.link?.url || "");
-                      const logoSrc = isMailto
+                      const isTel =
+                        !!l?.link?.tel || /^tel:/i.test(l?.link?.url || "");
+                      const logoSrc = isMailto || isTel
                         ? null
                         : l?.link.url?.split("/")[2] === "read.cv"
                         ? l.link?.favicons?.[1]?.href
@@ -549,6 +551,8 @@ const PublishedSections = ({
                         >
                           {isMailto ? (
                             <Mail size={18} className="text-noir/70" strokeWidth={2} />
+                          ) : isTel ? (
+                            <Phone size={18} className="text-noir/70" strokeWidth={2} />
                           ) : (
                             <>
                               <span className="invisible text-xs font-medium">

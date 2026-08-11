@@ -74,11 +74,14 @@ export const createSectionAction = userAction(
 export const getPreview = userAction(
   SectionSchema,
   async (input, context): Promise<{ error: string } | Record<string, any>> => {
-  // mailto: links aren't real pages — there's nothing to scrape, and
+  // mailto:/tel: links aren't real pages — there's nothing to scrape, and
   // trying just wastes a request and fails. Handle them directly.
-  if (/^mailto:/i.test(input.title!)) {
-    const email = input.title!.replace(/^mailto:/i, "").split("?")[0];
-    const createLink = { title: email, url: input.title!, mailto: true };
+  if (/^(mailto|tel):/i.test(input.title!)) {
+    const isTel = /^tel:/i.test(input.title!);
+    const value = input.title!.replace(/^(mailto|tel):/i, "").split("?")[0];
+    const createLink = isTel
+      ? { title: value, url: input.title!, tel: true }
+      : { title: value, url: input.title!, mailto: true };
     try {
       await prisma.section.create({
         data: {

@@ -76,6 +76,12 @@ const MAX_BACKGROUND_IMAGE_BYTES = MAX_BACKGROUND_IMAGE_MB * 1024 * 1024;
 const isEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 const isMailtoOrEmail = (value: string) =>
   /^mailto:/i.test(value) || isEmail(value);
+// Loose match for a typed phone number: digits with optional +, spaces,
+// dashes, dots or parens, at least 6 digits so it doesn't catch stray short
+// numbers.
+const isPhone = (value: string) =>
+  /^\+?[\d\s().-]{6,}$/.test(value) && (value.match(/\d/g)?.length ?? 0) >= 6;
+const isTelOrPhone = (value: string) => /^tel:/i.test(value) || isPhone(value);
 
 const NavLinks = ({
   currentBreakpoint,
@@ -209,10 +215,12 @@ const NavLinks = ({
   const handleCreateLink = async () => {
     setIsLoading(true);
     let newUrl;
-    if (/^mailto:/i.test(url)) {
+    if (/^mailto:/i.test(url) || /^tel:/i.test(url)) {
       newUrl = url;
     } else if (isEmail(url)) {
       newUrl = `mailto:${url}`;
+    } else if (isPhone(url)) {
+      newUrl = `tel:${url.replace(/[\s().-]/g, "")}`;
     } else if (url.includes("https://")) {
       newUrl = url;
     } else {
@@ -460,6 +468,7 @@ const NavLinks = ({
                           size={"icon"}
                           disabled={
                             (!isMailtoOrEmail(url) &&
+                              !isTelOrPhone(url) &&
                               url.match(
                                 /[(http(s)?):\/\/(www\.)?a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/g
                               ) === null) ||
