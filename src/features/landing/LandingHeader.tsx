@@ -46,9 +46,21 @@ export function LandingHeader({ user, sidefolio }: LandingHeaderProps) {
   const pathname = usePathname();
 
   const handleLogoClick = () => {
-    if (pathname === "/") {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    } else {
+    // Clear any leftover #hash (e.g. from the Pricing link) — some browsers
+    // keep re-snapping scroll position to a hash still sitting in the
+    // address bar, which would fight the scrollTo below.
+    if (window.location.hash) {
+      window.history.replaceState(null, "", window.location.pathname);
+    }
+    // The page's actual scroll container isn't reliably <html>/<body> here
+    // (same reason the old window.scrollTo silently no-op'd) — scrollIntoView
+    // walks up from the target element to whatever ancestor really scrolls,
+    // same trick already used for the Pricing link below.
+    document
+      .getElementById("page-top")
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+
+    if (pathname !== "/") {
       startNavigation(() => router.push("/"));
     }
   };
@@ -72,7 +84,7 @@ export function LandingHeader({ user, sidefolio }: LandingHeaderProps) {
   };
 
   return (
-    <div className="relative h-[110px]">
+    <div id="page-top" className="relative h-[110px]">
       <header className="fixed z-20 inset-x-0 top-4 flex justify-center px-4">
         <div className="flex items-center gap-7 sm:gap-8 md:min-w-[560px] justify-between rounded-full bg-noir/95 backdrop-blur-md text-white pl-6 pr-5 py-2.5 sm:py-3 border-1.5 border-white shadow-[0px_0px_20px_10px_hsl(var(--noir)/0.35)] sm:pl-6 sm:pr-3">
           <div

@@ -34,6 +34,7 @@ import {
   Crop,
   ExternalLink,
   Locate,
+  Mail,
   MapPin,
   MessageCircleWarning,
   PaintBucket,
@@ -156,6 +157,12 @@ const Sections = ({
     gridMargin
   );
   const [isMobile, setIsMobile] = useState(false);
+  // Sections whose scraped preview image (og:image/twitter:image) 404'd or
+  // otherwise failed to load — falls back to the plain title/url layout
+  // instead of leaving an empty image area.
+  const [failedPreviewImages, setFailedPreviewImages] = useState<Set<string>>(
+    new Set()
+  );
   const [editingTextId, setEditingTextId] = useState<string | null>(null);
   const [isTouchDevice, setIsTouchDevice] = useState(false);
   useEffect(() => {
@@ -1550,10 +1557,25 @@ const Sections = ({
                         const isTallImage =
                           (currentItem?.w ?? 2) === 2 &&
                           (currentItem?.h ?? 2) === 4;
+                        const isMailto =
+                          !!l?.link?.mailto ||
+                          /^mailto:/i.test(l?.link?.url || "");
+                        const logoSrc = isMailto
+                          ? null
+                          : l?.link.url?.split("/")[2] === "read.cv"
+                          ? l.link?.favicons?.[1]?.href
+                          : `https://www.google.com/s2/favicons?sz=128&domain=${safeHostname(
+                              l?.link?.url
+                            )}`;
+                        // Only a real scraped preview photo earns the big
+                        // image layout. No image (or it 404'd) just falls
+                        // through to the plain title/url layout instead of
+                        // showing a fallback icon or leaving empty space.
                         const previewImage =
-                          l?.link?.image ||
-                          l?.link?.["og:image"] ||
-                          l?.link?.["twitter:image"];
+                          !failedPreviewImages.has(l.i) &&
+                          (l?.link?.image ||
+                            l?.link?.["og:image"] ||
+                            l?.link?.["twitter:image"]);
 
                         const mutedColor = isLightColor(l?.background)
                           ? "rgb(0 0 0 / 0.4)"
@@ -1566,26 +1588,34 @@ const Sections = ({
                               background: `linear-gradient(135deg, color-mix(in srgb, ${logoBg} 40%, white), color-mix(in srgb, ${logoBg} 75%, white))`,
                             }}
                           >
-                            <span className="text-xs font-medium">
-                              {l.link?.title?.[0]}
-                            </span>
-                            <img
-                              src={
-                                l?.link.url?.split("/")[2] === "read.cv"
-                                  ? l.link?.favicons?.[1]?.href
-                                  : `https://www.google.com/s2/favicons?sz=128&domain=${safeHostname(
-                                      l?.link?.url
-                                    )}`
-                              }
-                              draggable={false}
-                              className="absolute inset-0 h-full w-full object-contain p-2.5 select-none"
-                              alt={`${l?.link && l.link.title} picture`}
-                              onError={(e) => {
-                                (
-                                  e.currentTarget as HTMLImageElement
-                                ).style.display = "none";
-                              }}
-                            />
+                            {isMailto ? (
+                              <Mail
+                                size={18}
+                                className="text-noir/70"
+                                strokeWidth={2}
+                              />
+                            ) : (
+                              <>
+                                <span className="invisible text-xs font-medium">
+                                  {l.link?.title?.[0]}
+                                </span>
+                                <img
+                                  src={logoSrc}
+                                  draggable={false}
+                                  className="absolute inset-0 h-full w-full object-contain p-2.5 select-none"
+                                  alt={`${l?.link && l.link.title} picture`}
+                                  onError={(e) => {
+                                    const img =
+                                      e.currentTarget as HTMLImageElement;
+                                    img.style.display = "none";
+                                    const fallback =
+                                      img.previousElementSibling as HTMLElement | null;
+                                    if (fallback)
+                                      fallback.style.visibility = "visible";
+                                  }}
+                                />
+                              </>
+                            )}
                           </div>
                         );
 
@@ -1624,16 +1654,18 @@ const Sections = ({
                           );
                         }
 
-                        const previewImageEl = previewImage && (
+                        const previewImageEl = !previewImage ? null : (
                           <img
                             src={previewImage}
                             alt={l.link?.title}
                             draggable={false}
                             className="absolute inset-0 h-full w-full object-cover select-none"
-                            onError={(e) => {
-                              (
-                                e.currentTarget as HTMLImageElement
-                              ).style.display = "none";
+                            onError={() => {
+                              setFailedPreviewImages((prev) => {
+                                const next = new Set(prev);
+                                next.add(l.i);
+                                return next;
+                              });
                             }}
                           />
                         );

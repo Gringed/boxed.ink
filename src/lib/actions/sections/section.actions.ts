@@ -72,25 +72,62 @@ export const createSectionAction = userAction(
   }
 );
 export const getPreview = userAction(SectionSchema, async (input, context) => {
-  let createLink;
-  try {
-    createLink = await urlMetadata(input.title!);
-    const youtube = await fetchYouTubeChannelData(input.title!);
-    const twitch = youtube ? null : await fetchTwitchChannelData(input.title!);
-    if (createLink) {
+  // mailto: links aren't real pages — there's nothing to scrape, and
+  // trying just wastes a request and fails. Handle them directly.
+  if (/^mailto:/i.test(input.title!)) {
+    const email = input.title!.replace(/^mailto:/i, "").split("?")[0];
+    const createLink = { title: email, url: input.title!, mailto: true };
+    try {
       await prisma.section.create({
         data: {
           ...input,
-          link: youtube
-            ? { ...createLink, youtube }
-            : twitch
-            ? { ...createLink, twitch }
-            : createLink,
+          link: createLink,
           desktop: { create: { i: input.i, x: 0, y: NEW_ITEM_Y, h: 2, w: 2 } },
           mobile: { create: { i: input.i, x: 0, y: NEW_ITEM_Y, h: 2, w: 2 } },
         },
       });
+    } catch (err) {
+      return { error: "Failed to create." };
     }
+    revalidatePath("/dashboard");
+    return createLink;
+  }
+
+  // Some sites (LinkedIn profiles, Instagram, etc.) block scraping and make
+  // urlMetadata throw — that's not the same thing as an invalid URL, so it
+  // shouldn't block adding the link. Fall back to a minimal metadata object
+  // built from the URL itself instead of failing the whole action.
+  let createLink;
+  try {
+    createLink = await urlMetadata(input.title!);
+  } catch {
+    let hostname = input.title!;
+    try {
+      hostname = new URL(input.title!).hostname.replace(/^www\./, "");
+    } catch {}
+    createLink = { title: hostname, url: input.title! };
+  }
+
+  // urlMetadata follows redirects (e.g. twitch.com -> twitch.tv) and stores
+  // the resolved URL on `createLink.url` — detect the channel from that
+  // instead of the raw typed input, or a redirecting domain never matches.
+  const resolvedUrl = createLink?.url || input.title!;
+
+  try {
+    const youtube = await fetchYouTubeChannelData(resolvedUrl);
+    const twitch = youtube ? null : await fetchTwitchChannelData(resolvedUrl);
+    await prisma.section.create({
+      data: {
+        ...input,
+        link: youtube
+          ? { ...createLink, youtube }
+          : twitch
+          ? { ...createLink, twitch }
+          : createLink,
+        desktop: { create: { i: input.i, x: 0, y: NEW_ITEM_Y, h: 2, w: 2 } },
+        mobile: { create: { i: input.i, x: 0, y: NEW_ITEM_Y, h: 2, w: 2 } },
+      },
+    });
   } catch (err) {
     return {
       error: "Failed to create.",

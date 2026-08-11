@@ -18,7 +18,7 @@ export function InitialLoadOverlay() {
         <motion.div
           exit={{ opacity: 0 }}
           transition={{ duration: 0.3 }}
-          className="fixed inset-0 z-[200] flex flex-col items-center justify-center gap-4 bg-white"
+          className="pointer-events-none fixed inset-0 z-[200] flex flex-col items-center justify-center gap-4 bg-white"
         >
           <motion.div
             animate={{ scale: [1, 1.1, 1] }}

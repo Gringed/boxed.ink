@@ -73,6 +73,10 @@ const MAX_BLOCK_IMAGE_BYTES = MAX_BLOCK_IMAGE_MB * 1024 * 1024;
 const MAX_BACKGROUND_IMAGE_MB = 2;
 const MAX_BACKGROUND_IMAGE_BYTES = MAX_BACKGROUND_IMAGE_MB * 1024 * 1024;
 
+const isEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+const isMailtoOrEmail = (value: string) =>
+  /^mailto:/i.test(value) || isEmail(value);
+
 const NavLinks = ({
   currentBreakpoint,
   setCurrentBreakpoint,
@@ -204,9 +208,12 @@ const NavLinks = ({
   };
   const handleCreateLink = async () => {
     setIsLoading(true);
-    let urlFull = url.includes("https://");
     let newUrl;
-    if (urlFull) {
+    if (/^mailto:/i.test(url)) {
+      newUrl = url;
+    } else if (isEmail(url)) {
+      newUrl = `mailto:${url}`;
+    } else if (url.includes("https://")) {
       newUrl = url;
     } else {
       newUrl = "https://" + url;
@@ -452,9 +459,10 @@ const NavLinks = ({
                           className=" flex-1"
                           size={"icon"}
                           disabled={
-                            url.match(
-                              /[(http(s)?):\/\/(www\.)?a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/g
-                            ) === null ||
+                            (!isMailtoOrEmail(url) &&
+                              url.match(
+                                /[(http(s)?):\/\/(www\.)?a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/g
+                              ) === null) ||
                             isSaving ||
                             isLoading
                           }
