@@ -71,7 +71,9 @@ export const createSectionAction = userAction(
     return createSection;
   }
 );
-export const getPreview = userAction(SectionSchema, async (input, context) => {
+export const getPreview = userAction(
+  SectionSchema,
+  async (input, context): Promise<{ error: string } | Record<string, any>> => {
   // mailto: links aren't real pages — there's nothing to scrape, and
   // trying just wastes a request and fails. Handle them directly.
   if (/^mailto:/i.test(input.title!)) {
