@@ -80,9 +80,29 @@ export const exchangeInstagramCode = async (
     );
     return null;
   }
-  const shortLived = json?.access_token;
-  const userId = String(json?.user_id ?? json?.data?.[0]?.user_id ?? "");
-  if (!shortLived || !userId) return null;
+  // Newer responses wrap everything in `data[0]`; older ones are flat.
+  const payload = json?.data?.[0] ?? json;
+  const shortLived = payload?.access_token;
+  const userId = String(payload?.user_id ?? "");
+
+  // An Instagram-Login token starts with "IGAA"; a Facebook one with "EAA".
+  // Getting the latter here means the app's Facebook credentials were used
+  // instead of the Instagram ones, which is exactly what makes /me answer
+  // "Unsupported request" further down.
+  console.log(
+    "[instagram] token prefix:",
+    String(shortLived ?? "").slice(0, 4),
+    "| permissions:",
+    payload?.permissions ?? "(none returned)"
+  );
+
+  if (!shortLived || !userId) {
+    console.error(
+      "[instagram] exchange returned no token/user id. Keys:",
+      Object.keys(payload ?? {}).join(",")
+    );
+    return null;
+  }
 
   const longParams = new URLSearchParams({
     grant_type: "ig_exchange_token",
