@@ -22,6 +22,7 @@ import { TikTokProfileCard } from "@/features/platform/shared/TikTokProfileCard"
 import {
   SocialConnectButton,
   SocialConnectDialog,
+  SocialDisconnectButton,
   type SocialPlatformKey,
 } from "@/features/platform/shared/SocialConnectPrompt";
 import { TikTokVideosPlaceholder } from "@/features/platform/shared/TikTokVideosPlaceholder";
@@ -1606,12 +1607,16 @@ const Sections = ({
                         const currentItem = (effectiveLayouts[bp] || []).find(
                           (item: Layout) => item.i === l.i
                         );
+                        // interactive={false}: in the editor a block is for
+                        // arranging, not browsing — only its action buttons
+                        // respond, nothing navigates away.
                         return l?.link?.instagram ? (
                           <InstagramProfileCard
                             instagram={l.link.instagram}
                             color={l?.color}
                             w={currentItem?.w ?? 2}
                             h={currentItem?.h ?? 2}
+                            interactive={false}
                           />
                         ) : (
                           <TikTokProfileCard
@@ -1619,6 +1624,7 @@ const Sections = ({
                             color={l?.color}
                             w={currentItem?.w ?? 2}
                             h={currentItem?.h ?? 2}
+                            interactive={false}
                           />
                         );
                       })()}
@@ -1629,29 +1635,27 @@ const Sections = ({
                     >
                       <Trash className="text-noir" size={15} />
                     </span>
-                    <div className="block-action bg-white border shadow flex rounded-full gap-3 cursor-auto px-2 py-1 opacity-0 group-focus-visible/item:opacity-100 group-hover/item:opacity-100 absolute z-50 left-1/2 -translate-x-2/4 -bottom-4 transition-all items-center justify-center">
-                      <div className="flex items-center gap-1">
-                        <Type className="text-noir" size={15} />
-                        <Input
-                          name="color"
-                          type="color"
-                          defaultValue={l?.color}
-                          onChange={(e) => handleTextColorChange(e, l)}
-                          className="w-6 h-6 p-0 border-none"
-                        />
+                    <div className="block-action flex items-stretch gap-1 cursor-auto opacity-0 group-focus-visible/item:opacity-100 group-hover/item:opacity-100 absolute z-50 left-1/2 -translate-x-2/4 -bottom-4 transition-all">
+                      <div className="bg-white border shadow flex rounded-full gap-3 px-2 py-1 items-center justify-center">
+                        <div className="flex items-center gap-1">
+                          <Type className="text-noir" size={15} />
+                          <Input
+                            name="color"
+                            type="color"
+                            defaultValue={l?.color}
+                            onChange={(e) => handleTextColorChange(e, l)}
+                            className="w-6 h-6 p-0 border-none"
+                          />
+                        </div>
                       </div>
-                      <button
-                        type="button"
-                        onMouseDown={(e) => e.stopPropagation()}
+                      <SocialDisconnectButton
+                        platform={l?.link?.instagram ? "instagram" : "tiktok"}
                         onClick={() =>
                           handleDisconnectSocial(
                             l?.link?.instagram ? "instagram" : "tiktok"
                           )
                         }
-                        className="text-[10px] font-bold text-noir/40 transition-colors hover:text-noir/70"
-                      >
-                        {t("disconnect")}
-                      </button>
+                      />
                     </div>
                   </>
                 ) : l?.type === "LINK" && l?.link?.youtube ? (
@@ -1942,13 +1946,13 @@ const Sections = ({
                                 previews what connecting would put there —
                                 the 3 latest videos — instead of the generic
                                 "add image" prompt. */}
+                            {/* Inert on purpose: in the editor the only
+                                interactive things on a block are its action
+                                buttons, so a click here can't navigate or
+                                open a dialog. */}
                             {showPlaceholder &&
                               connectablePlatform(l) === "tiktok" && (
-                                <TikTokVideosPlaceholder
-                                  onClick={() =>
-                                    setConnectDialogPlatform("tiktok")
-                                  }
-                                />
+                                <TikTokVideosPlaceholder />
                               )}
                             {showPlaceholder &&
                               connectablePlatform(l) !== "tiktok" && (

@@ -59,14 +59,10 @@ const WatchButton = ({
   );
 };
 
-const ChannelAvatar = ({
-  twitch,
-  size = "size-9",
-}: {
-  twitch: TwitchChannelData;
-  size?: string;
-}) => (
-  <Avatar className={`${size} border shrink-0`}>
+// size-9 matches the logo on regular link blocks and the other channel
+// cards, so a Twitch block lines up with its neighbours at every size.
+const ChannelAvatar = ({ twitch }: { twitch: TwitchChannelData }) => (
+  <Avatar className="size-9 border shrink-0">
     <AvatarFallback>{twitch.title?.[0]}</AvatarFallback>
     <AvatarImage
       src={twitch.avatar}
@@ -171,10 +167,13 @@ export const TwitchChannelCard = ({
 }: TwitchChannelCardProps) => {
   const mode = getTwitchLayoutMode(w, h);
   const nameStyle = { color: color || "black" };
+  // p-3 / gap-1.5 mirrors the regular link block shell at every size, like
+  // the YouTube, Instagram and TikTok cards.
+  const shell = "relative z-10 flex h-full w-full p-3 gap-1.5";
 
   if (mode === "row") {
     return (
-      <div className="relative z-10 flex items-center h-full w-full p-2 gap-2">
+      <div className={`${shell} items-center`}>
         <ChannelAvatar twitch={twitch} />
         <span className="text-sm font-bold truncate flex-1" style={nameStyle}>
           {twitch.title}
@@ -187,10 +186,10 @@ export const TwitchChannelCard = ({
 
   if (mode === "split") {
     return (
-      <div className="relative z-10 flex flex-col h-full w-full p-2.5 gap-1.5">
-        <div className="flex items-center gap-2">
+      <div className={`${shell} flex-col`}>
+        <div className="flex items-center gap-1.5">
           <ChannelAvatar twitch={twitch} />
-          <div className="ml-auto flex items-center gap-2 mr-1">
+          <div className="ml-auto flex items-center gap-2">
             <LiveStatus twitch={twitch} />
             <WatchButton twitch={twitch} />
           </div>
@@ -207,10 +206,10 @@ export const TwitchChannelCard = ({
 
   if (mode === "full") {
     return (
-      <div className="relative z-10 flex flex-col h-full w-full p-3 gap-2">
-        <div className="flex items-center gap-2">
-          <ChannelAvatar twitch={twitch} size="size-10" />
-          <div className="ml-auto flex items-center gap-2 mr-1">
+      <div className={`${shell} flex-col`}>
+        <div className="flex items-center gap-1.5">
+          <ChannelAvatar twitch={twitch} />
+          <div className="ml-auto flex items-center gap-2">
             <LiveStatus twitch={twitch} />
             <WatchButton twitch={twitch} size="md" />
           </div>
@@ -230,10 +229,10 @@ export const TwitchChannelCard = ({
 
   if (mode === "tall") {
     return (
-      <div className="relative z-10 flex flex-col h-full w-full p-2 pr-2.5 gap-1">
-        <div className="flex items-start justify-between gap-2">
+      <div className={`${shell} flex-col`}>
+        <div className="flex items-start justify-between gap-1.5">
           <ChannelAvatar twitch={twitch} />
-          <div className="flex flex-col items-end gap-0.5 shrink-0 mr-0.5">
+          <div className="flex flex-col items-end gap-0.5 shrink-0">
             <LiveStatus twitch={twitch} small />
             <WatchButton twitch={twitch} size="xs" />
           </div>
@@ -250,10 +249,10 @@ export const TwitchChannelCard = ({
 
   // compact — 2x2
   return (
-    <div className="relative z-10 flex flex-col h-full w-full p-2 pr-2.5 gap-1">
-      <div className="flex items-start justify-between gap-2">
+    <div className={`${shell} flex-col`}>
+      <div className="flex items-start justify-between gap-1.5">
         <ChannelAvatar twitch={twitch} />
-        <div className="flex flex-col items-end gap-0.5 shrink-0 mr-0.5">
+        <div className="flex flex-col items-end gap-0.5 shrink-0">
           <LiveStatus twitch={twitch} small />
           <WatchButton twitch={twitch} size="xs" />
         </div>

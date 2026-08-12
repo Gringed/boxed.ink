@@ -108,3 +108,28 @@ export const SocialConnectButton = ({
     </button>
   );
 };
+
+// Same pill as the connect button so the two read as one control that
+// toggles state, rather than a prominent "connect" and a barely-there
+// "disconnect".
+export const SocialDisconnectButton = ({
+  platform,
+  onClick,
+}: {
+  platform: SocialPlatformKey;
+  onClick: () => void;
+}) => {
+  const t = useTranslations("editor");
+  return (
+    <button
+      type="button"
+      onMouseDown={(e) => e.stopPropagation()}
+      onClick={onClick}
+      title={t("disconnect")}
+      className="flex shrink-0 items-center gap-1.5 rounded-full border bg-white px-3 text-xs font-bold text-noir/60 whitespace-nowrap shadow transition-colors hover:bg-gray-50 hover:text-noir"
+    >
+      <PlatformLogo platform={platform} className="size-4" />
+      {t("disconnect")}
+    </button>
+  );
+};

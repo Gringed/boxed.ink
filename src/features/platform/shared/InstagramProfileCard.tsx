@@ -20,6 +20,8 @@ interface InstagramProfileCardProps {
   color?: string;
   w: number;
   h: number;
+  // False in the editor, where only the block action buttons may react.
+  interactive?: boolean;
 }
 
 const InstagramLogo = ({ className }: { className?: string }) => (
@@ -80,23 +82,41 @@ const ProfileAvatar = ({ instagram }: { instagram: InstagramProfileData }) => (
   </Avatar>
 );
 
-const Post = ({ post }: { post: InstagramProfileData["posts"][number] }) => (
-  <a
-    href={post.permalink}
-    target="_blank"
-    rel="noopener noreferrer"
-    onClick={(e) => e.stopPropagation()}
-    onMouseDown={(e) => e.stopPropagation()}
-    className="relative min-h-0 min-w-0 overflow-hidden rounded-lg bg-noir/5"
-  >
+// In the editor the thumbnails are plain images: making them links would
+// hijack a click meant to select the block, and swallow the drag.
+const Post = ({
+  post,
+  interactive,
+}: {
+  post: InstagramProfileData["posts"][number];
+  interactive: boolean;
+}) => {
+  const image = (
     <img
       src={post.thumbnail}
       alt={post.caption || ""}
       draggable={false}
       className="absolute inset-0 h-full w-full object-cover select-none"
     />
-  </a>
-);
+  );
+  const className =
+    "relative min-h-0 min-w-0 overflow-hidden rounded-lg bg-noir/5";
+
+  if (!interactive) return <div className={className}>{image}</div>;
+
+  return (
+    <a
+      href={post.permalink}
+      target="_blank"
+      rel="noopener noreferrer"
+      onClick={(e) => e.stopPropagation()}
+      onMouseDown={(e) => e.stopPropagation()}
+      className={className}
+    >
+      {image}
+    </a>
+  );
+};
 
 // 2x2 wall of the 4 latest posts, mirroring the YouTube card so the two read
 // as the same family of block.
@@ -104,17 +124,19 @@ const PostGrid = ({
   posts,
   gap = "gap-1",
   className = "flex-1 min-h-0",
+  interactive,
 }: {
   posts: InstagramProfileData["posts"];
   gap?: string;
   className?: string;
+  interactive: boolean;
 }) => {
   const shown = (posts || []).slice(0, 4);
   if (shown.length === 0) return null;
   return (
     <div className={`grid grid-cols-2 grid-rows-2 ${gap} ${className}`}>
       {shown.map((p) => (
-        <Post key={p.id} post={p} />
+        <Post key={p.id} post={p} interactive={interactive} />
       ))}
     </div>
   );
@@ -125,6 +147,7 @@ export const InstagramProfileCard = ({
   color,
   w,
   h,
+  interactive = true,
 }: InstagramProfileCardProps) => {
   const mode = getLayoutMode(w, h);
   const nameStyle = { color: color || "black" };
@@ -159,6 +182,7 @@ export const InstagramProfileCard = ({
           posts={instagram.posts}
           gap="gap-1.5"
           className="h-full w-1/2 shrink-0"
+          interactive={interactive}
         />
       </div>
     );
@@ -176,7 +200,7 @@ export const InstagramProfileCard = ({
         <span className="text-base font-bold truncate w-full" style={nameStyle}>
           {name}
         </span>
-        <PostGrid posts={instagram.posts} gap="gap-1.5" />
+        <PostGrid posts={instagram.posts} gap="gap-1.5" interactive={interactive} />
       </div>
     );
   }
@@ -190,7 +214,7 @@ export const InstagramProfileCard = ({
       <span className="text-sm font-bold truncate w-full" style={nameStyle}>
         {name}
       </span>
-      <PostGrid posts={instagram.posts} gap="gap-1" />
+      <PostGrid posts={instagram.posts} gap="gap-1" interactive={interactive} />
     </div>
   );
 };

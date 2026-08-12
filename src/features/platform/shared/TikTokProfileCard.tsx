@@ -20,6 +20,8 @@ interface TikTokProfileCardProps {
   color?: string;
   w: number;
   h: number;
+  // False in the editor, where only the block action buttons may react.
+  interactive?: boolean;
 }
 
 const TikTokLogo = ({ className }: { className?: string }) => (
@@ -92,9 +94,11 @@ const STACK_STYLES = [
 const VideoStack = ({
   videos,
   className = "flex-1 min-h-0",
+  interactive,
 }: {
   videos: TikTokVideo[];
   className?: string;
+  interactive: boolean;
 }) => {
   const shown = (videos || []).slice(0, 3);
   if (shown.length === 0) return null;
@@ -106,6 +110,32 @@ const VideoStack = ({
       {[...shown].reverse().map((video) => {
         const index = shown.indexOf(video);
         const style = STACK_STYLES[index] ?? STACK_STYLES[2];
+        const cardStyle = {
+          zIndex: style.z,
+          boxShadow: style.shadow,
+          transform: `translate(-50%, -50%) translateX(${style.translateX}) rotate(${style.rotate}deg) scale(${style.scale})`,
+        };
+        const cardClass =
+          "absolute left-1/2 top-1/2 h-full aspect-[9/16] overflow-hidden rounded-xl border-2 border-white bg-noir/5";
+        const cover = (
+          <img
+            src={video.cover}
+            alt={video.title || ""}
+            draggable={false}
+            className="absolute inset-0 h-full w-full object-cover select-none"
+          />
+        );
+
+        // In the editor these are plain images: a link here would hijack a
+        // click meant to select the block, and swallow the drag.
+        if (!interactive) {
+          return (
+            <div key={video.id} style={cardStyle} className={cardClass}>
+              {cover}
+            </div>
+          );
+        }
+
         return (
           <a
             key={video.id}
@@ -114,19 +144,10 @@ const VideoStack = ({
             rel="noopener noreferrer"
             onClick={(e) => e.stopPropagation()}
             onMouseDown={(e) => e.stopPropagation()}
-            style={{
-              zIndex: style.z,
-              boxShadow: style.shadow,
-              transform: `translate(-50%, -50%) translateX(${style.translateX}) rotate(${style.rotate}deg) scale(${style.scale})`,
-            }}
-            className="absolute left-1/2 top-1/2 h-full aspect-[9/16] overflow-hidden rounded-xl border-2 border-white bg-noir/5"
+            style={cardStyle}
+            className={cardClass}
           >
-            <img
-              src={video.cover}
-              alt={video.title || ""}
-              draggable={false}
-              className="absolute inset-0 h-full w-full object-cover select-none"
-            />
+            {cover}
           </a>
         );
       })}
@@ -139,6 +160,7 @@ export const TikTokProfileCard = ({
   color,
   w,
   h,
+  interactive = true,
 }: TikTokProfileCardProps) => {
   const mode = getLayoutMode(w, h);
   const nameStyle = { color: color || "black" };
@@ -172,6 +194,7 @@ export const TikTokProfileCard = ({
         <VideoStack
           videos={tiktok.videos}
           className="h-full w-1/2 shrink-0"
+          interactive={interactive}
         />
       </div>
     );
@@ -189,7 +212,7 @@ export const TikTokProfileCard = ({
         <span className="text-base font-bold truncate w-full" style={nameStyle}>
           {name}
         </span>
-        <VideoStack videos={tiktok.videos} />
+        <VideoStack videos={tiktok.videos} interactive={interactive} />
       </div>
     );
   }
@@ -203,7 +226,7 @@ export const TikTokProfileCard = ({
       <span className="text-sm font-bold truncate w-full" style={nameStyle}>
         {name}
       </span>
-      <VideoStack videos={tiktok.videos} />
+      <VideoStack videos={tiktok.videos} interactive={interactive} />
     </div>
   );
 };
