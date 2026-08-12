@@ -8,7 +8,12 @@
 
 const AUTH_BASE = "https://www.instagram.com/oauth/authorize";
 const TOKEN_URL = "https://api.instagram.com/oauth/access_token";
-const GRAPH_BASE = "https://graph.instagram.com";
+// Token exchange/refresh live at the unversioned root; the data endpoints
+// need an explicit version. Calling /me unversioned falls back to a version
+// that predates Instagram Login and answers "Unsupported request".
+const GRAPH_ROOT = "https://graph.instagram.com";
+const GRAPH_VERSION = process.env.INSTAGRAM_API_VERSION || "v21.0";
+const GRAPH_BASE = `${GRAPH_ROOT}/${GRAPH_VERSION}`;
 
 const SCOPES = [
   "instagram_business_basic",
@@ -84,7 +89,7 @@ export const exchangeInstagramCode = async (
     client_secret: process.env.INSTAGRAM_APP_SECRET || "",
     access_token: shortLived,
   });
-  const longRes = await fetch(`${GRAPH_BASE}/access_token?${longParams}`);
+  const longRes = await fetch(`${GRAPH_ROOT}/access_token?${longParams}`);
   if (!longRes.ok) {
     return { accessToken: shortLived, userId, expiresAt: null };
   }
@@ -108,7 +113,7 @@ export const refreshInstagramToken = async (
     grant_type: "ig_refresh_token",
     access_token: accessToken,
   });
-  const res = await fetch(`${GRAPH_BASE}/refresh_access_token?${params}`);
+  const res = await fetch(`${GRAPH_ROOT}/refresh_access_token?${params}`);
   if (!res.ok) return null;
   const json = await res.json();
   if (!json?.access_token) return null;
