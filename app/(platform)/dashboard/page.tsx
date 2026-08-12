@@ -2,7 +2,8 @@ import { currentUser } from "@/auth/current-user";
 
 import { redirect } from "next/navigation";
 
-import React from "react";
+import React, { Suspense } from "react";
+import { SocialConnectToast } from "@/features/platform/dashboard/SocialConnectToast";
 
 import { PageParams } from "@/lib/types/next";
 
@@ -98,6 +99,9 @@ const Home = async (props: PageParams<{}>) => {
 
   return (
     <div className="flex justify-center h-full">
+      <Suspense fallback={null}>
+        <SocialConnectToast />
+      </Suspense>
       <Sections
         sidefolio={sidefolio}
         desktop={desktop}

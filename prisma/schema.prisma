@@ -122,8 +122,36 @@ model User {
   sidefolio        Sidefolio[]
   Account          Account[]
   Session          Session[]
+  socialConnection SocialConnection[]
   createdAt        DateTime    @default(now())
   updatedAt        DateTime    @updatedAt
+}
+
+enum SocialProvider {
+  INSTAGRAM
+  TIKTOK
+}
+
+// An OAuth connection to a platform whose public content isn't reachable
+// without the creator's own consent (Instagram, TikTok). Tokens are stored
+// encrypted — see lib/crypto.ts. One connection per provider per user.
+model SocialConnection {
+  id             String         @id @default(auto()) @map("_id") @db.ObjectId
+  userId         String         @db.ObjectId
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider       SocialProvider
+  providerUserId String
+  username       String?
+  accessToken    String         @db.String
+  refreshToken   String?        @db.String
+  // Long-lived tokens still expire (Instagram ~60 days, TikTok ~1 year for
+  // the refresh token) — the cron renews them before this date.
+  expiresAt      DateTime?
+  scope          String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  @@unique([userId, provider])
 }
 
 model Account {

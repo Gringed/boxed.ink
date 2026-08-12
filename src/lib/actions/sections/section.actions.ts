@@ -12,7 +12,13 @@ import urlMetadata from "url-metadata";
 import { del, put } from "@vercel/blob";
 import { toast } from "sonner";
 import { fetchYouTubeChannelData } from "@/lib/youtube";
+import { disconnectProvider } from "@/lib/socialConnection";
 import { fetchTwitchChannelData } from "@/lib/twitch";
+import {
+  detectSocialProfile,
+  fetchGithubFollowerCount,
+  type SocialProfile,
+} from "@/lib/socialProfile";
 
 const verifyUserPlan = async (user: User) => {
   if (user.plan === "PREMIUM_ONE") {
@@ -30,6 +36,36 @@ const verifyUserPlan = async (user: User) => {
       "You need to upgrade to premium to create more products"
     );
   }
+};
+
+// Sites sometimes ship an og:image/twitter:image pointing at their own dev
+// machine (e.g. http://localhost:3000/logo.png) — never loadable by a real
+// visitor. Strip those out at scrape time so the block falls back to the
+// no-image placeholder instead of showing a permanently broken image.
+const isUnusableImageUrl = (url: unknown): boolean => {
+  if (typeof url !== "string" || !url) return true;
+  try {
+    const { hostname } = new URL(url);
+    return (
+      hostname === "localhost" ||
+      hostname === "0.0.0.0" ||
+      hostname === "::1" ||
+      /^127\./.test(hostname) ||
+      /^10\./.test(hostname) ||
+      /^192\.168\./.test(hostname) ||
+      /^172\.(1[6-9]|2\d|3[0-1])\./.test(hostname)
+    );
+  } catch {
+    return true;
+  }
+};
+
+const sanitizeScrapedImages = <T extends Record<string, any>>(meta: T): T => {
+  const clean = { ...meta };
+  for (const key of ["image", "og:image", "twitter:image"]) {
+    if (isUnusableImageUrl(clean[key])) delete clean[key];
+  }
+  return clean;
 };
 
 const DESKTOP_COLS = 8;
@@ -104,7 +140,7 @@ export const getPreview = userAction(
   // built from the URL itself instead of failing the whole action.
   let createLink;
   try {
-    createLink = await urlMetadata(input.title!);
+    createLink = sanitizeScrapedImages(await urlMetadata(input.title!));
   } catch {
     let hostname = input.title!;
     try {
@@ -121,25 +157,48 @@ export const getPreview = userAction(
   try {
     const youtube = await fetchYouTubeChannelData(resolvedUrl);
     const twitch = youtube ? null : await fetchTwitchChannelData(resolvedUrl);
+
+    // Twitch/YouTube already get a much richer dedicated card above — only
+    // look for a Follow/Support-able social profile when neither matched.
+    let socialProfile: (SocialProfile & { followerCount?: number }) | null =
+      null;
+    if (!youtube && !twitch) {
+      const detected = detectSocialProfile(resolvedUrl);
+      if (detected) {
+        socialProfile = { ...detected };
+        if (detected.platform === "github") {
+          const count = await fetchGithubFollowerCount(detected.handle);
+          if (count !== null) socialProfile.followerCount = count;
+        }
+      }
+    }
+
+    // Built once and both stored and returned — returning the bare
+    // `createLink` instead would drop socialProfile/youtube/twitch, and the
+    // caller needs the detected platform to offer the OAuth connection.
+    const linkData = youtube
+      ? { ...createLink, youtube }
+      : twitch
+      ? { ...createLink, twitch }
+      : socialProfile
+      ? { ...createLink, socialProfile }
+      : createLink;
+
     await prisma.section.create({
       data: {
         ...input,
-        link: youtube
-          ? { ...createLink, youtube }
-          : twitch
-          ? { ...createLink, twitch }
-          : createLink,
+        link: linkData,
         desktop: { create: { i: input.i, x: 0, y: NEW_ITEM_Y, h: 2, w: 2 } },
         mobile: { create: { i: input.i, x: 0, y: NEW_ITEM_Y, h: 2, w: 2 } },
       },
     });
+    revalidatePath("/dashboard");
+    return linkData;
   } catch (err) {
     return {
       error: "Failed to create.",
     };
   }
-  revalidatePath("/dashboard");
-  return createLink;
 });
 
 const MAX_IMPORTED_LINKS = 15;
@@ -252,10 +311,12 @@ export const importLinktreeAction = userAction(
 
     const results = await Promise.allSettled(
       entries.map(async (entry: { url: string; title?: string }, index: number) => {
-        const metadata = await urlMetadata(entry.url).catch(() => ({
-          title: entry.title || entry.url,
-          url: entry.url,
-        }));
+        const metadata = sanitizeScrapedImages(
+          await urlMetadata(entry.url).catch(() => ({
+            title: entry.title || entry.url,
+            url: entry.url,
+          }))
+        );
         const i = `n${Date.now().toString(36)}${index}${Math.random()
           .toString(36)
           .slice(2, 8)}`;
@@ -405,6 +466,68 @@ export const updateSectionAction = userAction(
   }
 );
 
+// Lets the user override a link block's image (scraped og:image, or none at
+// all) with their own upload. Stored on `link.customImage`, which takes
+// priority over the scraped image everywhere it's rendered.
+export const uploadLinkImageAction = userAction(
+  z.object({
+    id: z.string(),
+    file: z.any(),
+    link: z.any(),
+  }),
+  async (input, context) => {
+    const file = input.file.get("file") as File;
+    const fileName = file.name;
+    const blob = await put(fileName, file, { access: "public" });
+
+    const previousCustomImage = input.link?.customImage;
+    const updated = await prisma.section.update({
+      where: { id: input.id },
+      data: { link: { ...input.link, customImage: blob.url } },
+    });
+    if (previousCustomImage) {
+      try {
+        await del(previousCustomImage);
+      } catch {}
+    }
+    revalidatePath("/dashboard");
+    return updated;
+  }
+);
+
+export const disconnectSocialAction = userAction(
+  z.object({ platform: z.enum(["instagram", "tiktok"]) }),
+  async (input, context) => {
+    await disconnectProvider(
+      context.user.id,
+      input.platform === "instagram" ? "INSTAGRAM" : "TIKTOK"
+    );
+    revalidatePath("/dashboard");
+    return { ok: true };
+  }
+);
+
+export const removeLinkImageAction = userAction(
+  z.object({
+    id: z.string(),
+    link: z.any(),
+  }),
+  async (input, context) => {
+    const { customImage, ...rest } = input.link || {};
+    if (customImage) {
+      try {
+        await del(customImage);
+      } catch {}
+    }
+    const updated = await prisma.section.update({
+      where: { id: input.id },
+      data: { link: rest },
+    });
+    revalidatePath("/dashboard");
+    return updated;
+  }
+);
+
 export const uploadImageSection = userAction(
   z.object({
     file: z.any(),
@@ -456,16 +579,18 @@ export const removeSectionAction = userAction(
       await del(input.image);
     }
 
-    const avatarUrls = [
+    const blobUrls = [
       (section?.link as any)?.youtube?.avatar,
       (section?.link as any)?.twitch?.avatar,
+      // A link block's user-uploaded image — orphaned in storage otherwise.
+      (section?.link as any)?.customImage,
     ].filter((url) => url?.includes("blob.vercel-storage.com"));
 
-    for (const avatarUrl of avatarUrls) {
+    for (const blobUrl of blobUrls) {
       try {
-        await del(avatarUrl);
+        await del(blobUrl);
       } catch {
-        // avatar blob already gone or unreachable — nothing to clean up
+        // blob already gone or unreachable — nothing to clean up
       }
     }
   }

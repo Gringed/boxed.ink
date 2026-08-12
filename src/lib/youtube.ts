@@ -77,6 +77,8 @@ const mirrorAvatarToBlob = async (
   }
 };
 
+const MAX_VIDEOS = 4;
+
 const fetchLatestVideos = async (
   playlistId: string,
   apiKey: string
@@ -84,7 +86,7 @@ const fetchLatestVideos = async (
   const videosParams = new URLSearchParams({
     part: "snippet",
     playlistId,
-    maxResults: "4",
+    maxResults: String(MAX_VIDEOS),
     key: apiKey,
   });
   const videosRes = await fetch(
@@ -96,10 +98,12 @@ const fetchLatestVideos = async (
     .map((item: any) => ({
       id: item?.snippet?.resourceId?.videoId,
       title: item?.snippet?.title,
+      // `high`/`default` are 4:3 crops with black bars baked around the 16:9
+      // frame — `maxres` and `medium` are true 16:9, so they fill a
+      // widescreen thumbnail cleanly.
       thumbnail:
-        item?.snippet?.thumbnails?.high?.url ||
-        item?.snippet?.thumbnails?.medium?.url ||
-        item?.snippet?.thumbnails?.default?.url,
+        item?.snippet?.thumbnails?.maxres?.url ||
+        item?.snippet?.thumbnails?.medium?.url,
     }))
     .filter((v: any) => v.id && v.thumbnail);
 };

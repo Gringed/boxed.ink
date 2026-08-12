@@ -15,6 +15,10 @@ import {
 } from "@/lib/actions/sections/section.actions";
 import { cn } from "@/lib/utils";
 import {
+  SocialConnectDialog,
+  type SocialPlatformKey,
+} from "@/features/platform/shared/SocialConnectPrompt";
+import {
   Check,
   Contact,
   Heading,
@@ -97,6 +101,8 @@ const NavLinks = ({
   const t = useTranslations("editor");
   const [url, setURL] = useState("");
   const [openLink, setOpenLink] = useState(false);
+  const [connectDialogPlatform, setConnectDialogPlatform] =
+    useState<SocialPlatformKey | null>(null);
   const [openAdd, setOpenAdd] = useState(false);
   const [imageLoading, setImageLoading] = useState<boolean>(false);
   const [imageSideLoading, setImageSideLoading] = useState<boolean>(false);
@@ -243,6 +249,15 @@ const NavLinks = ({
       startTransition(() => {
         router.refresh();
       });
+      // Adding an Instagram/TikTok profile is the natural moment to offer
+      // the connection — declining just leaves an ordinary link block.
+      // Opened only once the add-link dialog has finished closing: two Radix
+      // dialogs overlapping fight over focus and the scroll lock, which
+      // showed up as the first one flashing back open.
+      const platform = (res.data as any)?.socialProfile?.platform;
+      if (platform === "instagram" || platform === "tiktok") {
+        setTimeout(() => setConnectDialogPlatform(platform), 250);
+      }
     }
   };
   const shareButtonRef = useRef<HTMLButtonElement>(null);
@@ -293,6 +308,11 @@ const NavLinks = ({
   };
   return (
     <nav className={cn("flex items-center gap-2 ")}>
+      <SocialConnectDialog
+        platform={connectDialogPlatform}
+        open={!!connectDialogPlatform}
+        onOpenChange={(open) => !open && setConnectDialogPlatform(null)}
+      />
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>

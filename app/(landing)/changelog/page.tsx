@@ -20,6 +20,40 @@ const page = async () => {
           <div className="w-full">
             <div className="mb-5 flex gap-3 flex-col">
               <h1 className="text-2xl font-bold">
+                August 11, 2026 - Follow buttons and custom link images
+              </h1>
+              <Separator />
+            </div>
+            <div className="flex flex-col gap-3">
+              <p>
+                More control over what a link block shows, and a new way for
+                people to act on it:
+              </p>
+              <ul className="list-disc pl-6 flex flex-col gap-2">
+                <li>
+                  Link to your{" "}
+                  <span className="font-semibold">
+                    Twitter/X, Instagram, TikTok, GitHub, Patreon, Ko-fi or Buy
+                    Me a Coffee
+                  </span>{" "}
+                  profile and the block now shows a Follow or Support button -
+                  only on an actual profile page, not a random post. GitHub
+                  also shows a live follower count.
+                </li>
+                <li>
+                  In the <span className="font-semibold">4x4, 4x2 and 2x4</span>{" "}
+                  formats, you can now upload your own image for a link block
+                  instead of relying on the scraped preview - change or remove
+                  it anytime, with a placeholder prompting you to add one
+                  whenever there's nothing to show (no image, or a broken
+                  one).
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div className="w-full">
+            <div className="mb-5 flex gap-3 flex-col">
+              <h1 className="text-2xl font-bold">
                 August 11, 2026 - Richer link cards
               </h1>
               <Separator />

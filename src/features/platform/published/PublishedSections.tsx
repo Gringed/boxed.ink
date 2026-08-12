@@ -5,13 +5,17 @@ import { Responsive, Layout, Layouts } from "react-grid-layout";
 import { useSquareRowHeight } from "@/lib/hooks/useSquareRowHeight";
 import { Input } from "@/components/ui/input";
 
-import { ExternalLink, Mail, MapPin, Phone } from "lucide-react";
+import { ImageOff, Mail, MapPin, Phone } from "lucide-react";
 
 import { Textarea } from "@/components/ui/textarea";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-import { isLightColor } from "@/lib/utils";
+import { isLightColor, isUsableImageUrl } from "@/lib/utils";
+import { SOCIAL_BRAND } from "@/lib/socialProfile";
+import { InstagramProfileCard } from "@/features/platform/shared/InstagramProfileCard";
+import { TikTokProfileCard } from "@/features/platform/shared/TikTokProfileCard";
+import { TikTokVideosPlaceholder } from "@/features/platform/shared/TikTokVideosPlaceholder";
 import BlurFade from "@/components/magicui/blur-fade";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
@@ -19,6 +23,7 @@ import Placeholder from "@tiptap/extension-placeholder";
 import CharacterCount from "@tiptap/extension-character-count";
 import { YouTubeChannelCard } from "@/features/platform/shared/YouTubeChannelCard";
 import { TwitchChannelCard } from "@/features/platform/shared/TwitchChannelCard";
+import { formatCount } from "@/lib/youtube";
 import dynamic from "next/dynamic";
 const LocationMap = dynamic(
   () =>
@@ -71,6 +76,12 @@ const PublishedSections = ({
   // otherwise failed to load — falls back to the plain title/url layout
   // instead of leaving an empty image area.
   const [failedPreviewImages, setFailedPreviewImages] = useState<Set<string>>(
+    new Set()
+  );
+  // Sections whose preview image has actually finished loading — the
+  // placeholder stays the visible layer until this flips, so a 404/broken
+  // image never shows the browser's torn-icon while it's still resolving.
+  const [loadedPreviewImages, setLoadedPreviewImages] = useState<Set<string>>(
     new Set()
   );
   const [layouts, setLayouts] = useState<Layouts>({
@@ -420,6 +431,43 @@ const PublishedSections = ({
                     </div>
                   </div>
                 </>
+              ) : l?.type === "LINK" &&
+                (l?.link?.instagram || l?.link?.tiktok) ? (
+                <>
+                  <div
+                    className="relative w-full h-full rounded-3xl bg-white cursor-pointer"
+                    onClick={() =>
+                      window.open(
+                        l.link.instagram?.profileUrl ||
+                          l.link.tiktok?.profileUrl,
+                        "_blank",
+                        "noopener,noreferrer"
+                      )
+                    }
+                  >
+                    {(() => {
+                      const bp = currentBreakpoint as keyof typeof cols;
+                      const currentItem = (layouts[bp] || []).find(
+                        (item: Layout) => item.i === l.i
+                      );
+                      return l?.link?.instagram ? (
+                        <InstagramProfileCard
+                          instagram={l.link.instagram}
+                          color={l?.color}
+                          w={currentItem?.w ?? 2}
+                          h={currentItem?.h ?? 2}
+                        />
+                      ) : (
+                        <TikTokProfileCard
+                          tiktok={l.link.tiktok}
+                          color={l?.color}
+                          w={currentItem?.w ?? 2}
+                          h={currentItem?.h ?? 2}
+                        />
+                      );
+                    })()}
+                  </div>
+                </>
               ) : l?.type === "LINK" && l?.link?.youtube ? (
                 <>
                   <div
@@ -519,36 +567,48 @@ const PublishedSections = ({
                         : `https://www.google.com/s2/favicons?sz=128&domain=${safeHostname(
                             l?.link?.url
                           )}`;
-                      // Only a real scraped preview photo earns the big image
-                      // layout. No image (or it 404'd) just falls through to
-                      // the plain title/url layout instead of showing a
-                      // fallback icon or leaving empty space.
+                      // A custom-uploaded image always wins. Otherwise only a
+                      // real scraped preview photo earns the big image
+                      // layout — no image (or it 404'd) just falls through to
+                      // the plain title/url layout instead of leaving an
+                      // empty block (no upload affordance here, this is the
+                      // read-only public page).
+                      // Load/failure is tracked per image URL, not per block,
+                      // so a block whose scraped image 404'd doesn't stay
+                      // marked as broken once a working image replaces it.
+                      const previewImageCandidate = [
+                        l?.link?.customImage,
+                        l?.link?.image,
+                        l?.link?.["og:image"],
+                        l?.link?.["twitter:image"],
+                      ].find(isUsableImageUrl);
                       const previewImage =
-                        !failedPreviewImages.has(l.i) &&
-                        (l?.link?.image ||
-                          l?.link?.["og:image"] ||
-                          l?.link?.["twitter:image"]);
+                        previewImageCandidate &&
+                        !failedPreviewImages.has(previewImageCandidate)
+                          ? previewImageCandidate
+                          : undefined;
 
                       // How many lines of title fit in this exact block
-                      // before the header row, gap and url line — so the
-                      // default (no-image) layout can line-clamp precisely
-                      // instead of scrolling or hard-clipping mid-line.
+                      // before the header row (36px logo), gap and url line —
+                      // so the default (no-image) layout can line-clamp
+                      // precisely instead of scrolling or hard-clipping
+                      // mid-line.
                       const blockH = currentItem?.h ?? 2;
                       const blockHeightPx =
                         gridRowHeight * blockH + GRID_MARGIN * (blockH - 1);
                       const titleLineClamp = Math.max(
                         1,
-                        Math.floor((blockHeightPx - 24 - 44 - 8 - 16 - 4) / 20)
+                        Math.floor((blockHeightPx - 24 - 36 - 8 - 16 - 4) / 20)
                       );
 
-                      const logoBg = l?.background || "#ffffff";
+                      // No frame around the logo — just the mark itself.
+                      // rounded-md still clips it, so a logo that ships its
+                      // own background doesn't show hard square corners.
+                      // The box is square but logos often aren't: the small
+                      // padding keeps a wide/tall one off the clipped edges
+                      // instead of running flush into them.
                       const logo = (
-                        <div
-                          className="relative size-11 shrink-0 rounded-md border shadow-md overflow-hidden flex items-center justify-center"
-                          style={{
-                            background: `linear-gradient(135deg, color-mix(in srgb, ${logoBg} 40%, white), color-mix(in srgb, ${logoBg} 75%, white))`,
-                          }}
-                        >
+                        <div className="relative size-9 shrink-0 rounded-md overflow-hidden flex items-center justify-center">
                           {isMailto ? (
                             <Mail size={18} className="text-noir/70" strokeWidth={2} />
                           ) : isTel ? (
@@ -561,7 +621,7 @@ const PublishedSections = ({
                               <img
                                 src={logoSrc}
                                 draggable={false}
-                                className="absolute inset-0 h-full w-full object-contain p-2.5 select-none"
+                                className="absolute inset-0 h-full w-full object-contain p-0.5 select-none"
                                 alt={`${l?.link && l.link.title} picture`}
                                 onError={(e) => {
                                   const img = e.currentTarget as HTMLImageElement;
@@ -577,12 +637,34 @@ const PublishedSections = ({
                         </div>
                       );
 
-                      const externalLink = (
-                        <ExternalLink
-                          size={15}
-                          className="shrink-0"
-                          style={{ color: mutedColor }}
-                        />
+                      // Only shown on a creator's own profile/channel page
+                      // (see detectSocialProfile) — a plain post/tweet/video
+                      // link never gets this.
+                      const socialProfile = l?.link?.socialProfile;
+                      const brand =
+                        SOCIAL_BRAND[
+                          socialProfile?.platform as keyof typeof SOCIAL_BRAND
+                        ];
+                      const followButton = socialProfile && brand && (
+                        <a
+                          href={l?.link?.url || "#"}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          style={{
+                            color: brand.color,
+                            borderColor: brand.color,
+                            backgroundColor: brand.background,
+                          }}
+                          className="shrink-0 inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-bold whitespace-nowrap transition-opacity hover:opacity-80"
+                        >
+                          {socialProfile.label}
+                          {typeof socialProfile.followerCount === "number" && (
+                            <span className="opacity-70">
+                              · {formatCount(socialProfile.followerCount)}
+                            </span>
+                          )}
+                        </a>
                       );
 
                       if (isRow) {
@@ -597,25 +679,76 @@ const PublishedSections = ({
                             >
                               {l.link?.title}
                             </span>
-                            {externalLink}
+                            {followButton}
                           </div>
                         );
                       }
 
+                      const isImageLoaded =
+                        !!previewImage && loadedPreviewImages.has(previewImage);
+                      // Not loaded yet (still fetching, 404'd, or just
+                      // doesn't exist) — the empty-state icon is the base
+                      // layer in all of those cases, so nothing ever shows
+                      // the browser's broken-image icon.
+                      const showImagePlaceholder = !previewImage || !isImageLoaded;
+
+                      const markImageLoaded = () =>
+                        setLoadedPreviewImages((prev) =>
+                          !previewImage || prev.has(previewImage)
+                            ? prev
+                            : new Set(prev).add(previewImage)
+                        );
+                      const markImageFailed = () =>
+                        setFailedPreviewImages((prev) =>
+                          !previewImage || prev.has(previewImage)
+                            ? prev
+                            : new Set(prev).add(previewImage)
+                        );
+
                       const previewImageEl = !previewImage ? null : (
                         <img
                           src={previewImage}
-                          alt={l.link?.title}
+                          alt=""
                           draggable={false}
-                          className="absolute inset-0 h-full w-full object-cover select-none"
-                          onError={() => {
-                            setFailedPreviewImages((prev) => {
-                              const next = new Set(prev);
-                              next.add(l.i);
-                              return next;
-                            });
+                          style={{ opacity: isImageLoaded ? 1 : 0 }}
+                          className="pointer-events-none absolute inset-0 h-full w-full object-cover select-none"
+                          // A cached image can finish loading before React
+                          // attaches onLoad, so that event never fires —
+                          // check the already-settled state on mount too.
+                          ref={(node) => {
+                            if (!node || !node.complete) return;
+                            if (node.naturalWidth > 0) markImageLoaded();
+                            else markImageFailed();
                           }}
+                          onLoad={markImageLoaded}
+                          onError={markImageFailed}
                         />
+                      );
+
+                      // Empty-state icon as the base layer, with the real
+                      // image fading in on top only once it has actually
+                      // loaded — no image, a 404, or a broken one all just
+                      // keep showing the icon instead of a broken picture.
+                      // A TikTok profile link the owner hasn't connected gets
+                      // the video-stack stand-in rather than the generic
+                      // "no image" icon — same visual as the editor, minus
+                      // the connect action, which means nothing to a visitor.
+                      const isUnconnectedTikTok =
+                        l?.link?.socialProfile?.platform === "tiktok" &&
+                        !l?.link?.tiktok;
+
+                      const imageArea = (
+                        <>
+                          {showImagePlaceholder &&
+                            (isUnconnectedTikTok ? (
+                              <TikTokVideosPlaceholder />
+                            ) : (
+                              <div className="absolute inset-0 flex items-center justify-center rounded-lg border border-dashed border-noir/15 bg-noir/[0.02] text-noir/25">
+                                <ImageOff size={20} />
+                              </div>
+                            ))}
+                          {previewImageEl}
+                        </>
                       );
 
                       const titleEl = (
@@ -643,6 +776,15 @@ const PublishedSections = ({
                         </span>
                       );
 
+                      // Sits at the very bottom of whichever column used to
+                      // carry the url line. mt-auto pins it there however
+                      // tall the title above it ends up.
+                      const bottomFollow = followButton && (
+                        <div className="mt-auto flex shrink-0 pt-1">
+                          {followButton}
+                        </div>
+                      );
+
                       const urlLine = (
                         <span
                           className="shrink-0 truncate text-xs"
@@ -652,55 +794,53 @@ const PublishedSections = ({
                         </span>
                       );
 
-                      if (isSquareImage && previewImage) {
+                      if (isSquareImage) {
                         return (
                           <>
                             <div className="flex items-center justify-between gap-2 w-full shrink-0">
                               {logo}
-                              {externalLink}
+                              {followButton}
                             </div>
                             <div className="relative w-full flex-1 min-h-0 overflow-hidden rounded-lg">
-                              {previewImageEl}
+                              {imageArea}
                             </div>
                             {titleEl}
                           </>
                         );
                       }
 
-                      if (isWideImage && previewImage) {
+                      if (isWideImage) {
                         return (
-                          <>
-                            <div className="flex items-center justify-between gap-2 w-full shrink-0">
+                          <div className="flex min-h-0 flex-1 items-stretch gap-2">
+                            <div className="flex min-w-0 flex-1 flex-col justify-start gap-1">
                               {logo}
-                              {externalLink}
+                              {titleMultilineEl}
+                              {/* A social profile shows its Follow pill
+                                  instead — the url would be redundant next
+                                  to it. */}
+                              {!socialProfile && urlLine}
+                              {bottomFollow}
                             </div>
-                            <div className="flex min-h-0 flex-1 items-stretch gap-2">
-                              <div className="flex min-w-0 flex-1 flex-col justify-start gap-1">
-                                {titleMultilineEl}
-                                {urlLine}
-                              </div>
-                              <div className="relative h-full aspect-square shrink-0 overflow-hidden rounded-lg">
-                                {previewImageEl}
-                              </div>
+                            <div className="relative h-full aspect-square shrink-0 overflow-hidden rounded-lg">
+                              {imageArea}
                             </div>
-                          </>
+                          </div>
                         );
                       }
 
-                      if (isTallImage && previewImage) {
+                      if (isTallImage) {
                         return (
                           <>
                             <div className="flex items-center justify-between gap-2 w-full shrink-0">
                               {logo}
-                              {externalLink}
                             </div>
                             <div className="flex shrink-0 flex-col gap-1">
                               {titleMultilineEl}
-                              {urlLine}
                             </div>
                             <div className="relative w-full flex-1 min-h-0 overflow-hidden rounded-lg">
-                              {previewImageEl}
+                              {imageArea}
                             </div>
+                            {bottomFollow}
                           </>
                         );
                       }
@@ -709,7 +849,6 @@ const PublishedSections = ({
                         <>
                           <div className="flex items-center justify-between gap-2 w-full shrink-0">
                             {logo}
-                            {externalLink}
                           </div>
                           <div className="flex min-h-0 flex-1 flex-col gap-1 overflow-hidden">
                             <span
@@ -725,12 +864,7 @@ const PublishedSections = ({
                             >
                               {l.link?.title}
                             </span>
-                            <span
-                              className="shrink-0 truncate text-xs"
-                              style={{ color: mutedColor }}
-                            >
-                              {l.link?.url}
-                            </span>
+                            {bottomFollow}
                           </div>
                         </>
                       );

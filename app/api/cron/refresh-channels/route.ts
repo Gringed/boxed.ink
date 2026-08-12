@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/prisma";
 import { refreshTwitchChannelData } from "@/lib/twitch";
 import { refreshYouTubeChannelData } from "@/lib/youtube";
+import {
+  fetchProfileForConnection,
+  syncProfileToSections,
+} from "@/lib/socialConnection";
 
 // Hobby plan caps cron jobs at once a day (see vercel.json) — this refreshes
 // every Twitch/YouTube channel card's live status/category/subscriber count
@@ -52,7 +56,39 @@ export async function GET(request: NextRequest) {
     })
   );
 
-  const summary = { checked: sections.length, updated: 0, failed: 0, skipped: 0 };
+  // Instagram/TikTok are keyed off the user's OAuth connection rather than a
+  // url on the block, so they're refreshed per connection and fanned out to
+  // that user's blocks — and the token gets renewed in the same pass.
+  const connections = await prisma.socialConnection.findMany();
+  let socialUpdated = 0;
+  let socialFailed = 0;
+  for (const connection of connections) {
+    try {
+      const profile = await fetchProfileForConnection(connection);
+      if (!profile) {
+        socialFailed++;
+        continue;
+      }
+      await syncProfileToSections(
+        connection.userId,
+        connection.provider,
+        profile
+      );
+      socialUpdated++;
+    } catch {
+      socialFailed++;
+    }
+  }
+
+  const summary = {
+    checked: sections.length,
+    updated: 0,
+    failed: 0,
+    skipped: 0,
+    socialConnections: connections.length,
+    socialUpdated,
+    socialFailed,
+  };
   for (const result of results) {
     if (result.status === "fulfilled") {
       summary[result.value as "updated" | "failed" | "skipped"]++;

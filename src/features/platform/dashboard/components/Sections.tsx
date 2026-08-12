@@ -15,15 +15,27 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useLocale, useTranslations } from "next-intl";
 import { PageLoader } from "@/components/PageLoader";
 import { Input } from "@/components/ui/input";
-import { isLightColor } from "@/lib/utils";
+import { isLightColor, isUsableImageUrl } from "@/lib/utils";
+import { SOCIAL_BRAND } from "@/lib/socialProfile";
+import { InstagramProfileCard } from "@/features/platform/shared/InstagramProfileCard";
+import { TikTokProfileCard } from "@/features/platform/shared/TikTokProfileCard";
+import {
+  SocialConnectButton,
+  SocialConnectDialog,
+  type SocialPlatformKey,
+} from "@/features/platform/shared/SocialConnectPrompt";
+import { TikTokVideosPlaceholder } from "@/features/platform/shared/TikTokVideosPlaceholder";
+import { disconnectSocialAction } from "@/lib/actions/sections/section.actions";
 import {
   getPreview,
   importLinktreeAction,
   previewLinktreeAction,
+  removeLinkImageAction,
   removeSectionAction,
   updateOrderDesktopSection,
   updateOrderMobileSection,
   updateSectionAction,
+  uploadLinkImageAction,
 } from "@/lib/actions/sections/section.actions";
 
 import { Button } from "@/components/ui/button";
@@ -32,13 +44,15 @@ import NavLinks from "../NavLinks";
 import { LoggedInButton } from "@/features/auth/LoggedInButton";
 import {
   Crop,
-  ExternalLink,
+  ImagePlus,
+  Loader2,
   Locate,
   Mail,
   MapPin,
   Phone,
   MessageCircleWarning,
   PaintBucket,
+  Pencil,
   Trash,
   Trash2,
   Type,
@@ -88,11 +102,14 @@ import CharacterCount from "@tiptap/extension-character-count";
 import { useSquareRowHeight } from "@/lib/hooks/useSquareRowHeight";
 import { YouTubeChannelCard } from "@/features/platform/shared/YouTubeChannelCard";
 import { TwitchChannelCard } from "@/features/platform/shared/TwitchChannelCard";
+import { formatCount } from "@/lib/youtube";
 import { ClaimUrlDialog } from "@/features/platform/dashboard/ClaimUrlDialog";
 const ResponsiveReactGridLayout = Responsive;
 
 const MAX_PROFILE_IMAGE_MB = 1;
 const MAX_PROFILE_IMAGE_BYTES = MAX_PROFILE_IMAGE_MB * 1024 * 1024;
+const MAX_BLOCK_IMAGE_MB = 2;
+const MAX_BLOCK_IMAGE_BYTES = MAX_BLOCK_IMAGE_MB * 1024 * 1024;
 
 const safeHostname = (url?: string) => {
   if (!url) return "";
@@ -162,6 +179,12 @@ const Sections = ({
   // otherwise failed to load — falls back to the plain title/url layout
   // instead of leaving an empty image area.
   const [failedPreviewImages, setFailedPreviewImages] = useState<Set<string>>(
+    new Set()
+  );
+  // Sections whose preview image has actually finished loading — the
+  // placeholder stays the visible layer until this flips, so a 404/broken
+  // image never shows the browser's torn-icon while it's still resolving.
+  const [loadedPreviewImages, setLoadedPreviewImages] = useState<Set<string>>(
     new Set()
   );
   const [editingTextId, setEditingTextId] = useState<string | null>(null);
@@ -453,6 +476,109 @@ const Sections = ({
         saveChanges("imageScale", scale, l);
       }
     }, 300);
+  };
+
+  // Custom image upload for link blocks (4x4/4x2/2x4 formats only, where the
+  // image is actually visible) — a single shared hidden input, reused for
+  // whichever block's "change image" control was clicked last.
+  const linkImageInputRef = useRef<HTMLInputElement>(null);
+  const linkImageTargetRef = useRef<any>(null);
+  const [linkImageUploadingId, setLinkImageUploadingId] = useState<
+    string | null
+  >(null);
+  const triggerLinkImageUpload = (l: any) => {
+    linkImageTargetRef.current = l;
+    linkImageInputRef.current?.click();
+  };
+  const uploadLinkImage = async (file: File, target: any) => {
+    if (!file || !target) return;
+    if (file.size > MAX_BLOCK_IMAGE_BYTES) {
+      toast.error(t("uploadImageFailed", { maxMB: MAX_BLOCK_IMAGE_MB }));
+      return;
+    }
+    setLinkImageUploadingId(target.i);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      await uploadLinkImageAction({
+        id: target.id,
+        file: formData,
+        link: target.link,
+      });
+      router.refresh();
+    } catch {
+      toast.error(t("uploadImageFailed", { maxMB: MAX_BLOCK_IMAGE_MB }));
+    } finally {
+      setLinkImageUploadingId(null);
+    }
+  };
+  const handleLinkImageChange = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = e.target.files?.[0];
+    const target = linkImageTargetRef.current;
+    e.target.value = "";
+    if (!file) return;
+    await uploadLinkImage(file, target);
+  };
+  // Drop an image file straight onto a link block's image area, as an
+  // alternative to going through the file picker.
+  const [dragOverLinkImageId, setDragOverLinkImageId] = useState<string | null>(
+    null
+  );
+  const linkImageDropProps = (l: any) => ({
+    onDragOver: (e: React.DragEvent) => {
+      if (!Array.from(e.dataTransfer.types).includes("Files")) return;
+      e.preventDefault();
+      e.stopPropagation();
+      e.dataTransfer.dropEffect = "copy";
+      setDragOverLinkImageId(l.i);
+    },
+    onDragLeave: (e: React.DragEvent) => {
+      // Ignore the leave events fired when moving between child elements.
+      if (e.currentTarget.contains(e.relatedTarget as Node | null)) return;
+      setDragOverLinkImageId((prev) => (prev === l.i ? null : prev));
+    },
+    onDrop: (e: React.DragEvent) => {
+      const file = e.dataTransfer.files?.[0];
+      if (!file) return;
+      e.preventDefault();
+      e.stopPropagation();
+      setDragOverLinkImageId(null);
+      if (!file.type.startsWith("image/")) {
+        toast.error(t("uploadImageFailed", { maxMB: MAX_BLOCK_IMAGE_MB }));
+        return;
+      }
+      void uploadLinkImage(file, l);
+    },
+  });
+  const [connectDialogPlatform, setConnectDialogPlatform] =
+    useState<SocialPlatformKey | null>(null);
+  // An Instagram/TikTok profile link is "connectable" only while there's no
+  // fetched profile on it yet — once connected the block renders the rich
+  // card instead and this control is gone.
+  const connectablePlatform = (l: any): SocialPlatformKey | null => {
+    const platform = l?.link?.socialProfile?.platform;
+    if (platform !== "instagram" && platform !== "tiktok") return null;
+    if (l?.link?.instagram || l?.link?.tiktok) return null;
+    return platform;
+  };
+  // Revokes the stored connection and strips the cached profile from every
+  // block of that platform, so nothing keeps rendering content the user
+  // just disconnected.
+  const handleDisconnectSocial = async (
+    platform: "instagram" | "tiktok"
+  ) => {
+    await disconnectSocialAction({ platform });
+    router.refresh();
+  };
+  const handleRemoveLinkImage = async (l: any) => {
+    try {
+      await removeLinkImageAction({ id: l.id, link: l.link });
+      router.refresh();
+    } catch {
+      toast.error(t("uploadImageFailed", { maxMB: MAX_BLOCK_IMAGE_MB }));
+    }
   };
 
   const [isSaving, setIsSaving] = useState<boolean>(false);
@@ -924,6 +1050,18 @@ const Sections = ({
       {sidefolio && !sidefolio.slugClaimed && (
         <ClaimUrlDialog sidefolio={sidefolio} />
       )}
+      <input
+        type="file"
+        accept="image/*"
+        hidden
+        ref={linkImageInputRef}
+        onChange={handleLinkImageChange}
+      />
+      <SocialConnectDialog
+        platform={connectDialogPlatform}
+        open={!!connectDialogPlatform}
+        onOpenChange={(open) => !open && setConnectDialogPlatform(null)}
+      />
       <div
       style={{
         scrollbarWidth: "none",
@@ -1459,6 +1597,63 @@ const Sections = ({
                       </div>
                     </div>
                   </>
+                ) : l?.type === "LINK" &&
+                  (l?.link?.instagram || l?.link?.tiktok) ? (
+                  <>
+                    <div className="block-lift dragMe relative w-full h-full rounded-3xl bg-white cursor-grab border border-gray-300/50 shadow hover:shadow-md">
+                      {(() => {
+                        const bp = currentBreakpoint as keyof typeof cols;
+                        const currentItem = (effectiveLayouts[bp] || []).find(
+                          (item: Layout) => item.i === l.i
+                        );
+                        return l?.link?.instagram ? (
+                          <InstagramProfileCard
+                            instagram={l.link.instagram}
+                            color={l?.color}
+                            w={currentItem?.w ?? 2}
+                            h={currentItem?.h ?? 2}
+                          />
+                        ) : (
+                          <TikTokProfileCard
+                            tiktok={l.link.tiktok}
+                            color={l?.color}
+                            w={currentItem?.w ?? 2}
+                            h={currentItem?.h ?? 2}
+                          />
+                        );
+                      })()}
+                    </div>
+                    <span
+                      className="block-action absolute group/span opacity-0 group-focus-visible/item:opacity-100 group-hover/item:opacity-100 transition-all hover:bg-gray-50 hover:shadow-md -right-2 p-2 shadow -m-1 bg-white border rounded-full z-20 -top-2 cursor-pointer"
+                      onClick={() => onRemoveItem(l.i, l.image)}
+                    >
+                      <Trash className="text-noir" size={15} />
+                    </span>
+                    <div className="block-action bg-white border shadow flex rounded-full gap-3 cursor-auto px-2 py-1 opacity-0 group-focus-visible/item:opacity-100 group-hover/item:opacity-100 absolute z-50 left-1/2 -translate-x-2/4 -bottom-4 transition-all items-center justify-center">
+                      <div className="flex items-center gap-1">
+                        <Type className="text-noir" size={15} />
+                        <Input
+                          name="color"
+                          type="color"
+                          defaultValue={l?.color}
+                          onChange={(e) => handleTextColorChange(e, l)}
+                          className="w-6 h-6 p-0 border-none"
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onMouseDown={(e) => e.stopPropagation()}
+                        onClick={() =>
+                          handleDisconnectSocial(
+                            l?.link?.instagram ? "instagram" : "tiktok"
+                          )
+                        }
+                        className="text-[10px] font-bold text-noir/40 transition-colors hover:text-noir/70"
+                      >
+                        {t("disconnect")}
+                      </button>
+                    </div>
+                  </>
                 ) : l?.type === "LINK" && l?.link?.youtube ? (
                   <>
                     <div className="block-lift dragMe relative w-full h-full rounded-3xl bg-white cursor-grab border border-gray-300/50 shadow hover:shadow-md">
@@ -1570,27 +1765,38 @@ const Sections = ({
                           : `https://www.google.com/s2/favicons?sz=128&domain=${safeHostname(
                               l?.link?.url
                             )}`;
-                        // Only a real scraped preview photo earns the big
-                        // image layout. No image (or it 404'd) just falls
-                        // through to the plain title/url layout instead of
-                        // showing a fallback icon or leaving empty space.
+                        // A user-uploaded image always wins over whatever
+                        // got scraped. Otherwise a real scraped preview photo
+                        // earns the big image layout — no image (or it
+                        // 404'd) shows the "add image" placeholder instead.
+                        // Load/failure is tracked per image URL, not per
+                        // block: keyed by block, a block whose scraped image
+                        // 404'd would stay marked as broken even after the
+                        // user uploads a working image over it.
+                        const previewImageCandidate = [
+                          l?.link?.customImage,
+                          l?.link?.image,
+                          l?.link?.["og:image"],
+                          l?.link?.["twitter:image"],
+                        ].find(isUsableImageUrl);
                         const previewImage =
-                          !failedPreviewImages.has(l.i) &&
-                          (l?.link?.image ||
-                            l?.link?.["og:image"] ||
-                            l?.link?.["twitter:image"]);
+                          previewImageCandidate &&
+                          !failedPreviewImages.has(previewImageCandidate)
+                            ? previewImageCandidate
+                            : undefined;
+                        const isUploadingImage = linkImageUploadingId === l.i;
 
                         const mutedColor = isLightColor(l?.background)
                           ? "rgb(0 0 0 / 0.4)"
                           : "rgb(255 255 255 / 0.55)";
-                        const logoBg = l?.background || "#ffffff";
+                        // No frame around the logo — just the mark itself.
+                        // rounded-md still clips it, so a logo that ships its
+                        // own background doesn't show hard square corners.
+                        // The box is square but logos often aren't: the small
+                        // padding keeps a wide/tall one off the clipped edges
+                        // instead of running flush into them.
                         const logo = (
-                          <div
-                            className="relative size-11 shrink-0 rounded-md border shadow-md overflow-hidden flex items-center justify-center"
-                            style={{
-                              background: `linear-gradient(135deg, color-mix(in srgb, ${logoBg} 40%, white), color-mix(in srgb, ${logoBg} 75%, white))`,
-                            }}
-                          >
+                          <div className="relative size-9 shrink-0 rounded-md overflow-hidden flex items-center justify-center">
                             {isMailto ? (
                               <Mail
                                 size={18}
@@ -1611,7 +1817,7 @@ const Sections = ({
                                 <img
                                   src={logoSrc}
                                   draggable={false}
-                                  className="absolute inset-0 h-full w-full object-contain p-2.5 select-none"
+                                  className="absolute inset-0 h-full w-full object-contain p-0.5 select-none"
                                   alt={`${l?.link && l.link.title} picture`}
                                   onError={(e) => {
                                     const img =
@@ -1628,16 +1834,33 @@ const Sections = ({
                           </div>
                         );
 
-                        const externalLink = (
+                        // Only shown on a creator's own profile/channel page
+                        // (see detectSocialProfile) — a plain post/tweet/video
+                        // link never gets this.
+                        const socialProfile = l?.link?.socialProfile;
+                        const brand =
+                          SOCIAL_BRAND[
+                            socialProfile?.platform as keyof typeof SOCIAL_BRAND
+                          ];
+                        const followButton = socialProfile && brand && (
                           <a
                             href={l?.link?.url || "#"}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="shrink-0 transition-colors hover:opacity-70"
-                            style={{ color: mutedColor }}
-                            title={t("opensInNewTab")}
+                            onMouseDown={(e) => e.stopPropagation()}
+                            style={{
+                              color: brand.color,
+                              borderColor: brand.color,
+                              backgroundColor: brand.background,
+                            }}
+                            className="shrink-0 inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-bold whitespace-nowrap transition-opacity hover:opacity-80"
                           >
-                            <ExternalLink size={15} />
+                            {socialProfile.label}
+                            {typeof socialProfile.followerCount === "number" && (
+                              <span className="opacity-70">
+                                · {formatCount(socialProfile.followerCount)}
+                              </span>
+                            )}
                           </a>
                         );
 
@@ -1658,25 +1881,138 @@ const Sections = ({
                                 defaultValue={l.link?.title}
                                 placeholder={t("addTitlePlaceholder")}
                               />
-                              {externalLink}
+                              {followButton}
                             </div>
                           );
                         }
 
+                        const isImageLoaded =
+                          !!previewImage && loadedPreviewImages.has(previewImage);
+                        // Not loaded yet (still fetching, 404'd, or just
+                        // doesn't exist) — the placeholder is the base layer
+                        // in all of those cases, so nothing ever shows the
+                        // browser's broken-image icon.
+                        const showPlaceholder = !previewImage || !isImageLoaded;
+                        const isDragOverImage = dragOverLinkImageId === l.i;
+
+                        const markImageLoaded = () =>
+                          setLoadedPreviewImages((prev) =>
+                            !previewImage || prev.has(previewImage)
+                              ? prev
+                              : new Set(prev).add(previewImage)
+                          );
+                        const markImageFailed = () =>
+                          setFailedPreviewImages((prev) =>
+                            !previewImage || prev.has(previewImage)
+                              ? prev
+                              : new Set(prev).add(previewImage)
+                          );
+
                         const previewImageEl = !previewImage ? null : (
                           <img
                             src={previewImage}
-                            alt={l.link?.title}
+                            alt=""
                             draggable={false}
-                            className="absolute inset-0 h-full w-full object-cover select-none"
-                            onError={() => {
-                              setFailedPreviewImages((prev) => {
-                                const next = new Set(prev);
-                                next.add(l.i);
-                                return next;
-                              });
+                            style={{ opacity: isImageLoaded ? 1 : 0 }}
+                            // pointer-events-none: while it's still
+                            // transparent it must not sit on top of the
+                            // placeholder and swallow its clicks.
+                            className="pointer-events-none absolute inset-0 h-full w-full object-cover select-none"
+                            // A cached image can finish loading before React
+                            // attaches onLoad, so that event never fires —
+                            // check the already-settled state on mount too.
+                            ref={(node) => {
+                              if (!node || !node.complete) return;
+                              if (node.naturalWidth > 0) markImageLoaded();
+                              else markImageFailed();
                             }}
+                            onLoad={markImageLoaded}
+                            onError={markImageFailed}
                           />
+                        );
+
+                        // The whole image area: an empty-state placeholder as
+                        // the base layer, with the real/custom image fading
+                        // in on top only once it has actually loaded — no
+                        // image, a 404, or a broken one all just keep showing
+                        // the placeholder.
+                        const imageArea = (
+                          <>
+                            {/* On an unconnected TikTok profile link the slot
+                                previews what connecting would put there —
+                                the 3 latest videos — instead of the generic
+                                "add image" prompt. */}
+                            {showPlaceholder &&
+                              connectablePlatform(l) === "tiktok" && (
+                                <TikTokVideosPlaceholder
+                                  onClick={() =>
+                                    setConnectDialogPlatform("tiktok")
+                                  }
+                                />
+                              )}
+                            {showPlaceholder &&
+                              connectablePlatform(l) !== "tiktok" && (
+                              <button
+                                type="button"
+                                onMouseDown={(e) => e.stopPropagation()}
+                                onClick={() => triggerLinkImageUpload(l)}
+                                disabled={isUploadingImage}
+                                className={`absolute inset-0 flex flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed bg-noir/[0.02] transition-colors ${
+                                  isDragOverImage
+                                    ? "border-primary text-primary"
+                                    : "border-noir/15 text-noir/40 hover:border-noir/30 hover:text-noir/60"
+                                }`}
+                              >
+                                {isUploadingImage ? (
+                                  <Loader2 size={20} className="animate-spin" />
+                                ) : (
+                                  <>
+                                    <ImagePlus size={20} />
+                                    <span className="text-[10px] font-medium">
+                                      {t("addImage")}
+                                    </span>
+                                  </>
+                                )}
+                              </button>
+                            )}
+                            {previewImageEl}
+                            {previewImage && isImageLoaded && (
+                              <div className="absolute inset-0 flex items-start justify-end gap-1 p-1.5 opacity-0 transition-opacity group-hover/item:opacity-100">
+                                <button
+                                  type="button"
+                                  onMouseDown={(e) => e.stopPropagation()}
+                                  onClick={() => triggerLinkImageUpload(l)}
+                                  disabled={isUploadingImage}
+                                  title={t("changeImage")}
+                                  className="rounded-full bg-white/90 p-1.5 shadow hover:bg-white"
+                                >
+                                  {isUploadingImage ? (
+                                    <Loader2 size={12} className="animate-spin text-noir" />
+                                  ) : (
+                                    <Pencil size={12} className="text-noir" />
+                                  )}
+                                </button>
+                                {l?.link?.customImage && (
+                                  <button
+                                    type="button"
+                                    onMouseDown={(e) => e.stopPropagation()}
+                                    onClick={() => handleRemoveLinkImage(l)}
+                                    title={t("removeImage")}
+                                    className="rounded-full bg-white/90 p-1.5 shadow hover:bg-white"
+                                  >
+                                    <Trash2 size={12} className="text-noir" />
+                                  </button>
+                                )}
+                              </div>
+                            )}
+                            {/* Drop hint over an image that's already set —
+                                the placeholder shows its own highlight. */}
+                            {isDragOverImage && !showPlaceholder && (
+                              <div className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-lg border-2 border-dashed border-primary bg-white/70 text-primary">
+                                <ImagePlus size={20} />
+                              </div>
+                            )}
+                          </>
                         );
 
                         const titleInput = (extraClassName: string) => (
@@ -1720,6 +2056,15 @@ const Sections = ({
                           />
                         );
 
+                        // Sits at the very bottom of whichever column used to
+                        // carry the url line. mt-auto pins it there however
+                        // tall the title above it ends up.
+                        const bottomFollow = followButton && (
+                          <div className="mt-auto flex shrink-0 pt-1">
+                            {followButton}
+                          </div>
+                        );
+
                         const urlLine = (
                           <span
                             className="shrink-0 truncate text-xs"
@@ -1729,55 +2074,64 @@ const Sections = ({
                           </span>
                         );
 
-                        if (isSquareImage && previewImage) {
+                        if (isSquareImage) {
                           return (
                             <>
                               <div className="flex items-center justify-between gap-2 w-full shrink-0">
                                 {logo}
-                                {externalLink}
+                                {followButton}
                               </div>
-                              <div className="relative w-full flex-1 min-h-0 overflow-hidden rounded-lg">
-                                {previewImageEl}
+                              <div
+                                {...linkImageDropProps(l)}
+                                className="relative w-full flex-1 min-h-0 overflow-hidden rounded-lg"
+                              >
+                                {imageArea}
                               </div>
                               {titleInput("shrink-0")}
                             </>
                           );
                         }
 
-                        if (isWideImage && previewImage) {
+                        if (isWideImage) {
                           return (
                             <>
-                              <div className="flex items-center justify-between gap-2 w-full shrink-0">
-                                {logo}
-                                {externalLink}
-                              </div>
                               <div className="flex min-h-0 flex-1 items-stretch gap-2">
                                 <div className="flex min-w-0 flex-1 flex-col justify-start gap-1">
+                                  {logo}
                                   {titleTextarea("w-full")}
-                                  {urlLine}
+                                  {/* A social profile shows its Follow pill
+                                      instead — the url would be redundant
+                                      next to it. */}
+                                  {!socialProfile && urlLine}
+                                  {bottomFollow}
                                 </div>
-                                <div className="relative h-full aspect-square shrink-0 overflow-hidden rounded-lg">
-                                  {previewImageEl}
+                                <div
+                                  {...linkImageDropProps(l)}
+                                  className="relative h-full aspect-square shrink-0 overflow-hidden rounded-lg"
+                                >
+                                  {imageArea}
                                 </div>
                               </div>
                             </>
                           );
                         }
 
-                        if (isTallImage && previewImage) {
+                        if (isTallImage) {
                           return (
                             <>
                               <div className="flex items-center justify-between gap-2 w-full shrink-0">
                                 {logo}
-                                {externalLink}
                               </div>
                               <div className="flex shrink-0 flex-col gap-1">
                                 {titleTextarea("w-full")}
-                                {urlLine}
                               </div>
-                              <div className="relative w-full flex-1 min-h-0 overflow-hidden rounded-lg">
-                                {previewImageEl}
+                              <div
+                                {...linkImageDropProps(l)}
+                                className="relative w-full flex-1 min-h-0 overflow-hidden rounded-lg"
+                              >
+                                {imageArea}
                               </div>
+                              {bottomFollow}
                             </>
                           );
                         }
@@ -1786,7 +2140,6 @@ const Sections = ({
                           <>
                             <div className="flex items-center justify-between gap-2 w-full shrink-0">
                               {logo}
-                              {externalLink}
                             </div>
                             <div className="flex min-h-0 flex-1 flex-col gap-1 overflow-hidden">
                               <Textarea
@@ -1809,12 +2162,7 @@ const Sections = ({
                                 defaultValue={l.link?.title}
                                 placeholder={t("addTitlePlaceholder")}
                               />
-                              <span
-                                className="shrink-0 truncate text-xs"
-                                style={{ color: mutedColor }}
-                              >
-                                {l.link?.url}
-                              </span>
+                              {bottomFollow}
                             </div>
                           </>
                         );
@@ -1826,27 +2174,43 @@ const Sections = ({
                     >
                       <Trash className="text-noir" size={15} />
                     </span>
-                    <div className="block-action bg-white border shadow flex rounded-full gap-3 cursor-auto px-2 py-1 opacity-0 group-focus-visible/item:opacity-100 group-hover/item:opacity-100 absolute z-50 left-1/2 -translate-x-2/4 -bottom-4 transition-all items-center justify-center">
-                      <div className="flex items-center gap-1">
-                        <Type className="text-noir" size={15} />
-                        <Input
-                          name="color"
-                          type="color"
-                          defaultValue={l?.color}
-                          onChange={(e) => handleTextColorChange(e, l)}
-                          className="w-6 h-6 p-0 border-none"
-                        />
+                    {/* items-stretch so the connect pill takes its height
+                        from the colour pill instead of its own text. */}
+                    <div className="block-action flex items-stretch gap-1 cursor-auto opacity-0 group-focus-visible/item:opacity-100 group-hover/item:opacity-100 absolute z-50 left-1/2 -translate-x-2/4 -bottom-4 transition-all">
+                      <div className="bg-white border shadow flex rounded-full gap-3 px-2 py-1 items-center justify-center">
+                        <div className="flex items-center gap-1">
+                          <Type className="text-noir" size={15} />
+                          <Input
+                            name="color"
+                            type="color"
+                            defaultValue={l?.color}
+                            onChange={(e) => handleTextColorChange(e, l)}
+                            className="w-6 h-6 p-0 border-none"
+                          />
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <PaintBucket className="text-noir" size={15} />
+                          <Input
+                            name="background"
+                            type="color"
+                            defaultValue={l?.background || "#FFFFFF"}
+                            onChange={(e) => handleBackgroundColorChange(e, l)}
+                            className="w-6 h-6 p-0 border-none"
+                          />
+                        </div>
                       </div>
-                      <div className="flex items-center gap-1">
-                        <PaintBucket className="text-noir" size={15} />
-                        <Input
-                          name="background"
-                          type="color"
-                          defaultValue={l?.background || "#FFFFFF"}
-                          onChange={(e) => handleBackgroundColorChange(e, l)}
-                          className="w-6 h-6 p-0 border-none"
+                      {/* Its own pill beside the colour controls rather than
+                          a cramped slot inside them — an unconnected
+                          Instagram/TikTok block otherwise looked identical to
+                          any other link block. */}
+                      {connectablePlatform(l) && (
+                        <SocialConnectButton
+                          platform={connectablePlatform(l)!}
+                          onClick={() =>
+                            setConnectDialogPlatform(connectablePlatform(l)!)
+                          }
                         />
-                      </div>
+                      )}
                     </div>
                   </>
                 ) : (
