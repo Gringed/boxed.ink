@@ -31,10 +31,7 @@ export async function GET(request: NextRequest) {
   const tokens = await exchangeInstagramCode(code, instagramRedirectUri());
   if (!tokens) return back("error");
 
-  const result = await fetchInstagramProfileResult(
-    tokens.accessToken,
-    tokens.userId
-  );
+  const result = await fetchInstagramProfileResult(tokens.accessToken);
   if (!result.ok) {
     // Only Instagram saying "PERSONAL" earns the account-type message —
     // anything else is a real failure and gets logged with its own reason,

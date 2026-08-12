@@ -109,7 +109,6 @@ export const getValidAccessToken = async (connection: {
 export const fetchProfileForConnection = async (connection: {
   id: string;
   provider: SocialProvider;
-  providerUserId: string;
   accessToken: string;
   refreshToken: string | null;
   expiresAt: Date | null;
@@ -117,9 +116,7 @@ export const fetchProfileForConnection = async (connection: {
   const token = await getValidAccessToken(connection);
   if (!token) return null;
   return connection.provider === "INSTAGRAM"
-    ? // Some tokens resolve the account by id but not via /me, so the stored
-      // id is passed as a fallback node.
-      fetchInstagramProfile(token, connection.providerUserId)
+    ? fetchInstagramProfile(token)
     : fetchTikTokProfile(token);
 };
 

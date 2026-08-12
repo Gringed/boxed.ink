@@ -85,17 +85,6 @@ export const exchangeInstagramCode = async (
   const shortLived = payload?.access_token;
   const userId = String(payload?.user_id ?? "");
 
-  // An Instagram-Login token starts with "IGAA"; a Facebook one with "EAA".
-  // Getting the latter here means the app's Facebook credentials were used
-  // instead of the Instagram ones, which is exactly what makes /me answer
-  // "Unsupported request" further down.
-  console.log(
-    "[instagram] token prefix:",
-    String(shortLived ?? "").slice(0, 4),
-    "| permissions:",
-    payload?.permissions ?? "(none returned)"
-  );
-
   if (!shortLived || !userId) {
     console.error(
       "[instagram] exchange returned no token/user id. Keys:",
@@ -155,100 +144,32 @@ export type InstagramFetchResult =
 const FULL_PROFILE_FIELDS =
   "user_id,username,account_type,followers_count,media_count,profile_picture_url";
 
+const call = async (accessToken: string, node: string, fields: string) => {
+  const params = new URLSearchParams({ fields, access_token: accessToken });
+  const res = await fetch(`${GRAPH_BASE}/${node}?${params}`);
+  const json = await res.json().catch(() => null);
+  return { res, json };
+};
+
 export const fetchInstagramProfileResult = async (
-  accessToken: string,
-  igUserId?: string
+  accessToken: string
 ): Promise<InstagramFetchResult> => {
   try {
-    // "Unsupported request" is Meta's catch-all: it covers a wrong API
-    // version, an unroutable node, and a token that can't resolve /me alike.
-    // Probe the plausible combinations with a minimal field set — a request
-    // that fails on the node itself would also fail on the fields, so a
-    // narrow probe isolates the variable — then re-query the winner for the
-    // full profile.
-    const versions = Array.from(new Set([GRAPH_VERSION, ""]));
-    const nodes = igUserId ? ["me", igUserId] : ["me"];
-    // Meta takes the token as a query param on some endpoints and only as an
-    // Authorization header on others; both are tried before concluding the
-    // node itself is at fault.
-    const authModes: ("query" | "header")[] = ["query", "header"];
-    const attempts: {
-      base: string;
-      node: string;
-      auth: "query" | "header";
-    }[] = [];
-    for (const node of nodes) {
-      for (const version of versions) {
-        for (const auth of authModes) {
-          attempts.push({
-            base: version ? `${GRAPH_ROOT}/${version}` : GRAPH_ROOT,
-            node,
-            auth,
-          });
-        }
-      }
-    }
+    const { res, json: profile } = await call(
+      accessToken,
+      "me",
+      FULL_PROFILE_FIELDS
+    );
 
-    const call = async (
-      base: string,
-      node: string,
-      auth: "query" | "header",
-      fields: string
-    ) => {
-      const params = new URLSearchParams({ fields });
-      if (auth === "query") params.set("access_token", accessToken);
-      const res = await fetch(`${base}/${node}?${params}`, {
-        headers:
-          auth === "header"
-            ? { Authorization: `Bearer ${accessToken}` }
-            : undefined,
-      });
-      const json = await res.json().catch(() => null);
-      return { res, json };
-    };
-
-    let profile: any = null;
-    let workingBase = GRAPH_BASE;
-    let workingNode = "me";
-    let workingAuth: "query" | "header" = "query";
-    let lastMessage = "No response";
-    for (const attempt of attempts) {
-      const label =
-        `${attempt.base.replace(GRAPH_ROOT, "") || "/"}` +
-        `/${attempt.node === "me" ? "me" : "<id>"} [${attempt.auth}]`;
-      const { res, json } = await call(
-        attempt.base,
-        attempt.node,
-        attempt.auth,
-        "username"
-      );
-      if (res.ok && json && !json.error) {
-        workingBase = attempt.base;
-        workingNode = attempt.node;
-        workingAuth = attempt.auth;
-
-        const full = await call(
-          workingBase,
-          workingNode,
-          workingAuth,
-          FULL_PROFILE_FIELDS
-        );
-        // Falling back to the probe payload keeps the connection usable even
-        // if one of the richer fields is rejected.
-        profile =
-          full.res.ok && full.json && !full.json.error ? full.json : json;
-        console.log("[instagram] profile ok via", label);
-        break;
-      }
-      lastMessage = json?.error?.message || `HTTP ${res.status}`;
-      console.error(
-        `[instagram] probe failed (${label}):`,
-        JSON.stringify(json?.error ?? json)?.slice(0, 200)
-      );
-    }
-
-    if (!profile) {
-      return { ok: false, reason: "error", message: lastMessage };
+    if (!res.ok || !profile || profile.error) {
+      // Meta answers "Unsupported request" here when the Instagram account
+      // isn't actually linked to the app — the consent screen still hands
+      // out a valid-looking token, so the failure only surfaces at this
+      // call. Linking is done from the app dashboard, Instagram > add
+      // account.
+      const message =
+        profile?.error?.message || `Instagram returned ${res.status}`;
+      return { ok: false, reason: "error", message };
     }
 
     const userId = profile?.user_id ?? profile?.id;
@@ -262,12 +183,11 @@ export const fetchInstagramProfileResult = async (
       return { ok: false, reason: "personal_account" };
     }
 
-    // Same base, node and auth style that answered for the profile — mixing
-    // them is what made the profile call fail in the first place.
+    // Media failing shouldn't cost the whole connection — the card still
+    // works with a profile and no posts.
     const media = await call(
-      workingBase,
-      `${workingNode}/media`,
-      workingAuth,
+      accessToken,
+      "me/media",
       "id,media_type,media_url,thumbnail_url,permalink,caption,timestamp"
     );
     const mediaJson = media.res.ok ? media.json : { data: [] };
@@ -310,9 +230,8 @@ export const fetchInstagramProfileResult = async (
 // Thin wrapper for callers that only care whether it worked (the refresh
 // cron), keeping the richer result for the OAuth callback.
 export const fetchInstagramProfile = async (
-  accessToken: string,
-  igUserId?: string
+  accessToken: string
 ): Promise<InstagramProfileData | null> => {
-  const result = await fetchInstagramProfileResult(accessToken, igUserId);
+  const result = await fetchInstagramProfileResult(accessToken);
   return result.ok ? result.profile : null;
 };
