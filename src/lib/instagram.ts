@@ -152,51 +152,73 @@ export type InstagramFetchResult =
   // token isn't mislabelled as an account-type problem.
   | { ok: false; reason: "personal_account" | "error"; message?: string };
 
+const FULL_PROFILE_FIELDS =
+  "user_id,username,account_type,followers_count,media_count,profile_picture_url";
+
 export const fetchInstagramProfileResult = async (
-  accessToken: string
+  accessToken: string,
+  igUserId?: string
 ): Promise<InstagramFetchResult> => {
   try {
-    // Field sets and hosts have shifted between the old Basic Display API
-    // and Instagram Login, and an unsupported field or path answers with the
-    // same opaque "Unsupported request" either way. Try the documented
-    // combinations in order and keep the first that answers, logging each
-    // rejection so a future break says which variant died.
-    const attempts = [
-      {
-        base: GRAPH_BASE,
-        fields:
-          "user_id,username,account_type,followers_count,media_count,profile_picture_url",
-      },
-      { base: GRAPH_BASE, fields: "user_id,username" },
-      {
-        base: GRAPH_ROOT,
-        fields:
-          "id,username,account_type,followers_count,media_count,profile_picture_url",
-      },
-      { base: GRAPH_ROOT, fields: "id,username" },
-    ];
+    // "Unsupported request" is Meta's catch-all: it covers a wrong API
+    // version, an unroutable node, and a token that can't resolve /me alike.
+    // Probe the plausible combinations with a minimal field set — a request
+    // that fails on the node itself would also fail on the fields, so a
+    // narrow probe isolates the variable — then re-query the winner for the
+    // full profile.
+    const versions = Array.from(
+      new Set([GRAPH_VERSION, "v23.0", "v22.0", ""])
+    );
+    const nodes = igUserId ? ["me", igUserId] : ["me"];
+    const attempts: { base: string; node: string }[] = [];
+    for (const node of nodes) {
+      for (const version of versions) {
+        attempts.push({
+          base: version ? `${GRAPH_ROOT}/${version}` : GRAPH_ROOT,
+          node,
+        });
+      }
+    }
 
     let profile: any = null;
     let workingBase = GRAPH_BASE;
+    let workingNode = "me";
     let lastMessage = "No response";
     for (const attempt of attempts) {
-      const profileParams = new URLSearchParams({
-        fields: attempt.fields,
+      const probeParams = new URLSearchParams({
+        fields: "username",
         access_token: accessToken,
       });
-      const res = await fetch(`${attempt.base}/me?${profileParams}`);
+      const res = await fetch(
+        `${attempt.base}/${attempt.node}?${probeParams}`
+      );
       const json = await res.json().catch(() => null);
       if (res.ok && json && !json.error) {
-        profile = json;
         workingBase = attempt.base;
+        workingNode = attempt.node;
+
+        const fullParams = new URLSearchParams({
+          fields: FULL_PROFILE_FIELDS,
+          access_token: accessToken,
+        });
+        const fullRes = await fetch(
+          `${workingBase}/${workingNode}?${fullParams}`
+        );
+        const fullJson = await fullRes.json().catch(() => null);
+        // Falling back to the probe payload keeps the connection usable even
+        // if one of the richer fields is rejected.
+        profile = fullRes.ok && fullJson && !fullJson.error ? fullJson : json;
+        console.log(
+          "[instagram] profile ok via",
+          `${attempt.base.replace(GRAPH_ROOT, "") || "/"}/${attempt.node === "me" ? "me" : "<id>"}`
+        );
         break;
       }
-      lastMessage =
-        json?.error?.message || `HTTP ${res.status}`;
+      lastMessage = json?.error?.message || `HTTP ${res.status}`;
       console.error(
-        `[instagram] /me failed (${attempt.base.replace(GRAPH_ROOT, "")}` +
-          ` fields=${attempt.fields.split(",")[0]}…):`,
-        JSON.stringify(json?.error ?? json)?.slice(0, 300)
+        `[instagram] probe failed (${attempt.base.replace(GRAPH_ROOT, "") || "/"}` +
+          `/${attempt.node === "me" ? "me" : "<id>"}):`,
+        JSON.stringify(json?.error ?? json)?.slice(0, 200)
       );
     }
 
@@ -223,7 +245,9 @@ export const fetchInstagramProfileResult = async (
     });
     // Same base that answered for the profile — mixing versioned and
     // unversioned hosts with one token is what broke the profile call.
-    const mediaRes = await fetch(`${workingBase}/me/media?${mediaParams}`);
+    const mediaRes = await fetch(
+      `${workingBase}/${workingNode}/media?${mediaParams}`
+    );
     const mediaJson = mediaRes.ok ? await mediaRes.json() : { data: [] };
 
     const posts: InstagramPost[] = (mediaJson?.data ?? [])
@@ -264,8 +288,9 @@ export const fetchInstagramProfileResult = async (
 // Thin wrapper for callers that only care whether it worked (the refresh
 // cron), keeping the richer result for the OAuth callback.
 export const fetchInstagramProfile = async (
-  accessToken: string
+  accessToken: string,
+  igUserId?: string
 ): Promise<InstagramProfileData | null> => {
-  const result = await fetchInstagramProfileResult(accessToken);
+  const result = await fetchInstagramProfileResult(accessToken, igUserId);
   return result.ok ? result.profile : null;
 };
