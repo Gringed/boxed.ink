@@ -234,6 +234,97 @@
     "reload": "Reload the page",
     "retry": "Try again"
   },
+  "changelog": {
+    "entries": [
+      {
+        "id": "social-connect",
+        "date": "August 12, 2026",
+        "title": "Instagram and TikTok, connected",
+        "intro": "Your social blocks can now show real content instead of just a link:",
+        "items": [
+          "**Connect your Instagram** and the block turns into a card with your **4 latest posts** and your follower count. Connecting is optional - decline and it stays an ordinary link block.",
+          "**Connect your TikTok** to show your **3 latest videos**, stacked vertically with the newest in front, plus your follower count.",
+          "**Follow and Support buttons** now use each platform's own colours - X, Instagram, TikTok, GitHub, Patreon, Ko-fi and Buy Me a Coffee.",
+          "You can now **drag and drop an image** straight onto a link block, without going through the file picker.",
+          "Link blocks lost the external-link icon and the url line - the space goes to the title and the image, with the Follow button sitting at the bottom."
+        ]
+      },
+      {
+        "id": "follow-buttons",
+        "date": "August 11, 2026",
+        "title": "Follow buttons and custom link images",
+        "intro": "More control over what a link block shows, and a new way for people to act on it:",
+        "items": [
+          "Link to your **Twitter/X, Instagram, TikTok, GitHub, Patreon, Ko-fi or Buy Me a Coffee** profile and the block now shows a Follow or Support button - only on an actual profile page, not a random post. GitHub also shows a live follower count.",
+          "In the **4x4, 4x2 and 2x4** formats, you can now upload your own image for a link block instead of relying on the scraped preview - change or remove it anytime, with a placeholder prompting you to add one whenever there's nothing to show (no image, or a broken one)."
+        ]
+      },
+      {
+        "id": "richer-link-cards",
+        "date": "August 11, 2026",
+        "title": "Richer link cards",
+        "intro": "Link blocks can do more now, especially in the bigger sizes:",
+        "items": [
+          "In the **4x4, 4x2 and 2x4** formats, a link block now shows the page's actual preview image when it has one, not just a small favicon.",
+          "**Image blocks** can be cropped and zoomed now, not just repositioned - drag to pan, use the zoom control to get closer, the block size stays the floor so you can never zoom out past what actually fills it.",
+          "You can drop a **mailto: or tel: link** (or just paste an email address or phone number) straight into a link block - it shows a mail or phone icon instead of trying to fetch a favicon for it."
+        ]
+      },
+      {
+        "id": "smoother-editor",
+        "date": "August 8, 2026",
+        "title": "A smoother editor",
+        "intro": "A pass on how the editor *feels* to use, not just what it does:",
+        "items": [
+          "**Dragging a block** now has some weight to it - it tilts and lifts in the direction you're moving it, and the little edit icons get out of the way while you drag instead of cluttering the view.",
+          "**Saving** no longer spams you with a toast every few seconds - the share button just does a quick checkmark pulse when your change lands.",
+          "Every loading state in the app - dashboard, your page, sign-in - now uses the same clean logo animation instead of a mix of different spinners."
+        ]
+      },
+      {
+        "id": "pro",
+        "date": "August 8, 2026",
+        "title": "Introducing boxed.ink Pro",
+        "intro": "boxed.ink stays free forever, but there's now a Pro plan (€4.99/mo) for people who want to go further - first up is a **custom domain** instead of boxed.ink/yourname, coming soon. You can subscribe now from your account menu and you'll be the first to get it."
+      },
+      {
+        "id": "languages",
+        "date": "August 8, 2026",
+        "title": "Speak your language",
+        "intro": "boxed.ink is now available in **English and French** - the landing page, the editor, your published page and this changelog all follow whichever you pick. Switch anytime with the flag in the top corner."
+      },
+      {
+        "id": "rename-boxed",
+        "date": "August 8, 2026",
+        "title": "bentoh.me is now boxed.ink",
+        "intro": "Another rename - this one's the last for a while. bentoh.me is now boxed.ink. Nothing about the product changes, your pages and data are untouched, just a new name and a domain that's easier to hold onto long-term."
+      },
+      {
+        "id": "block-polish",
+        "date": "August 7, 2026",
+        "title": "Block polish, all around",
+        "intro": "A round of quality-of-life improvements across most block types:",
+        "items": [
+          "**Link blocks** got a redesign - edit the title directly on the block instead of being stuck with whatever the page's metadata gave you, the full URL now shows below it, the whole block is clickable and opens in a new tab, and colors auto-adjust for readability whatever background you pick.",
+          "**Image blocks** are centered and auto-fitted to the block by default now, instead of needing a manual crop every time - you can still drag to crop manually if you want a specific framing.",
+          "**Text blocks** no longer jump into edit mode on a single click while you're rearranging your page - double-click (or double-tap on mobile) to edit, click away to go back to normal.",
+          "Your **location** is now shown on a real interactive map (search-as-you-type, zoomable) instead of just as text."
+        ]
+      },
+      {
+        "id": "channel-blocks",
+        "date": "August 6, 2026",
+        "title": "Twitch and YouTube channel blocks",
+        "intro": "You can now drop a Twitch or YouTube channel link straight into your page. We automatically fetch the channel's avatar, name and live status (or category for Twitch), and turn it into a proper card with a Watch button - no manual setup needed."
+      },
+      {
+        "id": "new-name",
+        "date": "August 5, 2026",
+        "title": "A new name, a fresh start",
+        "intro": "Before today, bentoh was known as SidePro. This whole rebuild started because bento.me shut down and got bought out by Linktree - we didn't want that idea to just die, so we decided to take it back into our own hands. Same mission - help you show off your work - but rethought completely, from the name to the design."
+      }
+    ]
+  },
   "published": {
     "myBoxedInk": "My boxed.ink",
     "createMyBoxedInk": "Create my boxed.ink",

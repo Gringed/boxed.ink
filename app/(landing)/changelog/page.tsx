@@ -5,6 +5,23 @@ import Footer from "@/features/landing/Footer";
 import React from "react";
 import { currentUser } from "@/auth/current-user";
 import { prisma } from "@/prisma";
+import { getTranslations } from "next-intl/server";
+import { ChangelogText } from "@/features/landing/ChangelogText";
+
+interface ChangelogEntry {
+  id: string;
+  date: string;
+  title: string;
+  intro?: string;
+  items?: string[];
+}
+
+const ENTRY_VIDEOS: Record<string, string[]> = {
+  "channel-blocks": [
+    "https://res.cloudinary.com/dhgoagdvr/video/upload/v1786116355/Sidepro/bentoh.me_twitch_uwwac9.mp4",
+    "https://res.cloudinary.com/dhgoagdvr/video/upload/v1786116355/Sidepro/bentoh.me_yt_e7tthq.mp4",
+  ],
+};
 
 const page = async () => {
   const user = await currentUser();
@@ -12,255 +29,58 @@ const page = async () => {
     ? await prisma.sidefolio.findFirst({ where: { authorId: user.id } })
     : null;
 
+  const t = await getTranslations("changelog");
+  const entries = t.raw("entries") as ChangelogEntry[];
+
   return (
     <>
       <LandingHeader user={user} sidefolio={sidefolio} />
       <div className="flex flex-col w-full">
         <Section className="flex flex-col items-start text-medium text-justify py-10 w-full gap-10">
-          <div className="w-full">
-            <div className="mb-5 flex gap-3 flex-col">
-              <h1 className="text-2xl font-bold">
-                August 11, 2026 - Follow buttons and custom link images
-              </h1>
-              <Separator />
-            </div>
-            <div className="flex flex-col gap-3">
-              <p>
-                More control over what a link block shows, and a new way for
-                people to act on it:
-              </p>
-              <ul className="list-disc pl-6 flex flex-col gap-2">
-                <li>
-                  Link to your{" "}
-                  <span className="font-semibold">
-                    Twitter/X, Instagram, TikTok, GitHub, Patreon, Ko-fi or Buy
-                    Me a Coffee
-                  </span>{" "}
-                  profile and the block now shows a Follow or Support button -
-                  only on an actual profile page, not a random post. GitHub
-                  also shows a live follower count.
-                </li>
-                <li>
-                  In the <span className="font-semibold">4x4, 4x2 and 2x4</span>{" "}
-                  formats, you can now upload your own image for a link block
-                  instead of relying on the scraped preview - change or remove
-                  it anytime, with a placeholder prompting you to add one
-                  whenever there's nothing to show (no image, or a broken
-                  one).
-                </li>
-              </ul>
-            </div>
-          </div>
-          <div className="w-full">
-            <div className="mb-5 flex gap-3 flex-col">
-              <h1 className="text-2xl font-bold">
-                August 11, 2026 - Richer link cards
-              </h1>
-              <Separator />
-            </div>
-            <div className="flex flex-col gap-3">
-              <p>
-                Link blocks can do more now, especially in the bigger sizes:
-              </p>
-              <ul className="list-disc pl-6 flex flex-col gap-2">
-                <li>
-                  In the <span className="font-semibold">4x4, 4x2 and 2x4</span>{" "}
-                  formats, a link block now shows the page's actual preview
-                  image when it has one, not just a small favicon.
-                </li>
-                <li>
-                  <span className="font-semibold">Image blocks</span> can be
-                  cropped and zoomed now, not just repositioned - drag to pan,
-                  use the zoom control to get closer, the block size stays the
-                  floor so you can never zoom out past what actually fills it.
-                </li>
-                <li>
-                  You can drop a{" "}
-                  <span className="font-semibold">mailto: or tel: link</span>{" "}
-                  (or just paste an email address or phone number) straight
-                  into a link block - it shows a mail or phone icon instead
-                  of trying to fetch a favicon for it.
-                </li>
-              </ul>
-            </div>
-          </div>
-          <div className="w-full">
-            <div className="mb-5 flex gap-3 flex-col">
-              <h1 className="text-2xl font-bold">
-                August 8, 2026 - A smoother editor
-              </h1>
-              <Separator />
-            </div>
-            <div className="flex flex-col gap-3">
-              <p>
-                A pass on how the editor <i>feels</i> to use, not just what it
-                does:
-              </p>
-              <ul className="list-disc pl-6 flex flex-col gap-2">
-                <li>
-                  <span className="font-semibold">Dragging a block</span> now
-                  has some weight to it - it tilts and lifts in the direction
-                  you're moving it, and the little edit icons get out of the
-                  way while you drag instead of cluttering the view.
-                </li>
-                <li>
-                  <span className="font-semibold">Saving</span> no longer
-                  spams you with a toast every few seconds - the share button
-                  just does a quick checkmark pulse when your change lands.
-                </li>
-                <li>
-                  Every loading state in the app - dashboard, your page,
-                  sign-in - now uses the same clean logo animation instead of
-                  a mix of different spinners.
-                </li>
-              </ul>
-            </div>
-          </div>
-          <div className="w-full">
-            <div className="mb-5 flex gap-3 flex-col">
-              <h1 className="text-2xl font-bold">
-                August 8, 2026 - Introducing boxed.ink Pro
-              </h1>
-              <Separator />
-            </div>
-            <div className="flex flex-col gap-3">
-              <p>
-                boxed.ink stays free forever, but there's now a Pro plan
-                (€4.99/mo) for people who want to go further - first up is a{" "}
-                <span className="font-semibold">custom domain</span> instead
-                of boxed.ink/yourname, coming soon. You can subscribe now from
-                your account menu and you'll be the first to get it.
-              </p>
-            </div>
-          </div>
-          <div className="w-full">
-            <div className="mb-5 flex gap-3 flex-col">
-              <h1 className="text-2xl font-bold">
-                August 8, 2026 - Speak your language
-              </h1>
-              <Separator />
-            </div>
-            <div className="flex flex-col gap-3">
-              <p>
-                boxed.ink is now available in{" "}
-                <span className="font-semibold">English and French</span> -
-                the landing page, the editor, your published page and this
-                changelog all follow whichever you pick. Switch anytime with
-                the flag in the top corner.
-              </p>
-            </div>
-          </div>
-          <div className="w-full">
-            <div className="mb-5 flex gap-3 flex-col">
-              <h1 className="text-2xl font-bold">
-                August 8, 2026 - bentoh.me is now boxed.ink
-              </h1>
-              <Separator />
-            </div>
-            <div>
-              <p>
-                Another rename - this one's the last for a while. bentoh.me
-                is now boxed.ink. Nothing about the product changes, your
-                pages and data are untouched, just a new name and a domain
-                that's easier to hold onto long-term.
-              </p>
-            </div>
-          </div>
-          <div className="w-full">
-            <div className="mb-5 flex gap-3 flex-col">
-              <h1 className="text-2xl font-bold">
-                August 7, 2026 - Block polish, all around
-              </h1>
-              <Separator />
-            </div>
-            <div className="flex flex-col gap-3">
-              <p>
-                A round of quality-of-life improvements across most block
-                types:
-              </p>
-              <ul className="list-disc pl-6 flex flex-col gap-2">
-                <li>
-                  <span className="font-semibold">Link blocks</span> got a
-                  redesign - edit the title directly on the block instead of
-                  being stuck with whatever the page's metadata gave you, the
-                  full URL now shows below it, the whole block is clickable
-                  and opens in a new tab, and colors auto-adjust for
-                  readability whatever background you pick.
-                </li>
-                <li>
-                  <span className="font-semibold">Image blocks</span> are
-                  centered and auto-fitted to the block by default now,
-                  instead of needing a manual crop every time - you can still
-                  drag to crop manually if you want a specific framing.
-                </li>
-                <li>
-                  <span className="font-semibold">Text blocks</span> no
-                  longer jump into edit mode on a single click while you're
-                  rearranging your page - double-click (or double-tap on
-                  mobile) to edit, click away to go back to normal.
-                </li>
-                <li>
-                  Your{" "}
-                  <span className="font-semibold">location</span> is now
-                  shown on a real interactive map (search-as-you-type,
-                  zoomable) instead of just as text.
-                </li>
-              </ul>
-            </div>
-          </div>
-          <div className="w-full">
-            <div className="mb-5 flex gap-3 flex-col">
-              <h1 className="text-2xl font-bold">
-                August 6, 2026 - Twitch and YouTube channel blocks
-              </h1>
-              <Separator />
-            </div>
-            <div className="flex flex-col gap-4">
-              <p>
-                You can now drop a Twitch or YouTube channel link straight
-                into your page. We automatically fetch the channel's avatar,
-                name and live status (or category for Twitch), and turn it
-                into a proper card with a Watch button - no manual setup
-                needed.
-              </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
-                <video
-                  className="aspect-video w-full rounded-xl border border-neutral-300 bg-gray-100 object-contain"
-                  src="https://res.cloudinary.com/dhgoagdvr/video/upload/v1786116355/Sidepro/bentoh.me_twitch_uwwac9.mp4"
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
-                />
-                <video
-                  className="aspect-video w-full rounded-xl border border-neutral-300 bg-gray-100 object-contain"
-                  src="https://res.cloudinary.com/dhgoagdvr/video/upload/v1786116355/Sidepro/bentoh.me_yt_e7tthq.mp4"
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
-                />
+          {entries.map((entry) => {
+            const videos = ENTRY_VIDEOS[entry.id];
+            return (
+              <div className="w-full" key={entry.id}>
+                <div className="mb-5 flex gap-3 flex-col">
+                  <h1 className="text-2xl font-bold">
+                    {entry.date} - {entry.title}
+                  </h1>
+                  <Separator />
+                </div>
+                <div className="flex flex-col gap-4">
+                  {entry.intro && (
+                    <p>
+                      <ChangelogText>{entry.intro}</ChangelogText>
+                    </p>
+                  )}
+                  {entry.items && (
+                    <ul className="list-disc pl-6 flex flex-col gap-2">
+                      {entry.items.map((item, index) => (
+                        <li key={index}>
+                          <ChangelogText>{item}</ChangelogText>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  {videos && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
+                      {videos.map((src) => (
+                        <video
+                          key={src}
+                          className="aspect-video w-full rounded-xl border border-neutral-300 bg-gray-100 object-contain"
+                          src={src}
+                          autoPlay
+                          muted
+                          loop
+                          playsInline
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          </div>
-          <div className="w-full">
-            <div className="mb-5 flex gap-3 flex-col">
-              <h1 className="text-2xl font-bold">
-                August 5, 2026 - A new name, a fresh start
-              </h1>
-              <Separator />
-            </div>
-            <div>
-              <p>
-                Before today, bentoh was known as SidePro. This whole rebuild
-                started because bento.me shut down and got bought out by
-                Linktree - we didn't want that idea to just die, so we
-                decided to take it back into our own hands. Same mission -
-                help you show off your work - but rethought completely, from
-                the name to the design.
-              </p>
-            </div>
-          </div>
+            );
+          })}
         </Section>
       </div>
       <Footer user={user} />

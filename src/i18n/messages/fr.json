@@ -234,6 +234,97 @@
     "reload": "Recharger la page",
     "retry": "Réessayer"
   },
+  "changelog": {
+    "entries": [
+      {
+        "id": "social-connect",
+        "date": "12 août 2026",
+        "title": "Instagram et TikTok, connectés",
+        "intro": "Tes blocs sociaux peuvent désormais afficher du vrai contenu, et plus seulement un lien :",
+        "items": [
+          "**Connecte ton Instagram** et le bloc devient une carte avec tes **4 derniers posts** et ton nombre d'abonnés. La connexion est facultative : si tu la refuses, le bloc reste un lien classique.",
+          "**Connecte ton TikTok** pour afficher tes **3 dernières vidéos**, empilées à la verticale avec la plus récente au premier plan, et ton nombre d'abonnés.",
+          "**Les boutons Suivre et Soutenir** reprennent maintenant les couleurs de chaque plateforme : X, Instagram, TikTok, GitHub, Patreon, Ko-fi et Buy Me a Coffee.",
+          "Tu peux désormais **glisser-déposer une image** directement sur un bloc lien, sans passer par le sélecteur de fichiers.",
+          "Les blocs liens perdent l'icône de lien sortant et la ligne d'url : la place revient au titre et à l'image, le bouton Suivre se plaçant en bas."
+        ]
+      },
+      {
+        "id": "follow-buttons",
+        "date": "11 août 2026",
+        "title": "Boutons de suivi et images personnalisées",
+        "intro": "Plus de contrôle sur ce qu'affiche un bloc lien, et une nouvelle façon d'agir dessus :",
+        "items": [
+          "Ajoute un lien vers ton profil **Twitter/X, Instagram, TikTok, GitHub, Patreon, Ko-fi ou Buy Me a Coffee** et le bloc affiche un bouton Suivre ou Soutenir - uniquement sur une vraie page de profil, pas sur une publication isolée. GitHub affiche en plus le nombre d'abonnés en direct.",
+          "Dans les formats **4x4, 4x2 et 2x4**, tu peux maintenant envoyer ta propre image pour un bloc lien plutôt que de dépendre de l'aperçu récupéré - modifiable ou supprimable à tout moment, avec un emplacement qui t'invite à en ajouter une dès qu'il n'y a rien à montrer (pas d'image, ou une image cassée)."
+        ]
+      },
+      {
+        "id": "richer-link-cards",
+        "date": "11 août 2026",
+        "title": "Des blocs liens plus riches",
+        "intro": "Les blocs liens en font plus, surtout dans les grands formats :",
+        "items": [
+          "Dans les formats **4x4, 4x2 et 2x4**, un bloc lien affiche la véritable image d'aperçu de la page quand elle existe, et plus seulement un petit favicon.",
+          "**Les blocs image** peuvent être recadrés et zoomés, et plus seulement repositionnés - fais glisser pour déplacer, utilise le zoom pour t'approcher ; la taille du bloc reste le plancher, impossible donc de dézoomer au-delà de ce qui le remplit.",
+          "Tu peux déposer un **lien mailto: ou tel:** (ou simplement coller une adresse e-mail ou un numéro) directement dans un bloc lien - il affiche une icône d'enveloppe ou de téléphone au lieu de chercher un favicon."
+        ]
+      },
+      {
+        "id": "smoother-editor",
+        "date": "8 août 2026",
+        "title": "Un éditeur plus fluide",
+        "intro": "Un travail sur la *sensation* d'utilisation de l'éditeur, pas seulement sur ce qu'il fait :",
+        "items": [
+          "**Déplacer un bloc** a maintenant du poids - il s'incline et se soulève dans la direction du mouvement, et les petites icônes d'édition s'effacent pendant le déplacement au lieu d'encombrer la vue.",
+          "**La sauvegarde** ne t'inonde plus de notifications toutes les quelques secondes - le bouton de partage fait simplement pulser une coche quand ta modification est enregistrée.",
+          "Tous les écrans de chargement - tableau de bord, ta page, connexion - utilisent désormais la même animation du logo au lieu d'un mélange d'indicateurs différents."
+        ]
+      },
+      {
+        "id": "pro",
+        "date": "8 août 2026",
+        "title": "Voici boxed.ink Pro",
+        "intro": "boxed.ink reste gratuit à vie, mais il existe désormais une offre Pro (4,99 €/mois) pour ceux qui veulent aller plus loin - à commencer par un **domaine personnalisé** à la place de boxed.ink/tonpseudo, bientôt disponible. Tu peux t'abonner dès maintenant depuis ton menu de compte et tu seras parmi les premiers à l'avoir."
+      },
+      {
+        "id": "languages",
+        "date": "8 août 2026",
+        "title": "Parle ta langue",
+        "intro": "boxed.ink est maintenant disponible en **anglais et en français** - la page d'accueil, l'éditeur, ta page publiée et ces nouveautés suivent la langue que tu choisis. Change quand tu veux avec le drapeau en haut."
+      },
+      {
+        "id": "rename-boxed",
+        "date": "8 août 2026",
+        "title": "bentoh.me devient boxed.ink",
+        "intro": "Encore un changement de nom - ce sera le dernier avant un moment. bentoh.me devient boxed.ink. Rien ne change dans le produit, tes pages et tes données sont intactes : juste un nouveau nom et un domaine plus facile à garder sur la durée."
+      },
+      {
+        "id": "block-polish",
+        "date": "7 août 2026",
+        "title": "Des blocs peaufinés, partout",
+        "intro": "Une série d'améliorations du quotidien sur la plupart des types de blocs :",
+        "items": [
+          "**Les blocs liens** ont été repensés - modifie le titre directement sur le bloc au lieu de subir celui des métadonnées, l'url complète s'affiche en dessous, le bloc entier est cliquable et s'ouvre dans un nouvel onglet, et les couleurs s'ajustent pour rester lisibles quel que soit le fond choisi.",
+          "**Les blocs image** sont désormais centrés et ajustés automatiquement au bloc, au lieu d'exiger un recadrage manuel à chaque fois - tu peux toujours faire glisser pour recadrer si tu veux un cadrage précis.",
+          "**Les blocs texte** ne passent plus en édition au moindre clic pendant que tu réorganises ta page - double-clique (ou double-tape sur mobile) pour modifier, clique ailleurs pour revenir à la normale.",
+          "**Ta localisation** s'affiche maintenant sur une vraie carte interactive (recherche au fil de la frappe, zoom) au lieu d'un simple texte."
+        ]
+      },
+      {
+        "id": "channel-blocks",
+        "date": "6 août 2026",
+        "title": "Blocs de chaîne Twitch et YouTube",
+        "intro": "Tu peux désormais déposer un lien de chaîne Twitch ou YouTube directement dans ta page. On récupère automatiquement l'avatar, le nom et le statut en direct de la chaîne (ou la catégorie pour Twitch), et on en fait une vraie carte avec un bouton Regarder - aucune configuration nécessaire."
+      },
+      {
+        "id": "new-name",
+        "date": "5 août 2026",
+        "title": "Un nouveau nom, un nouveau départ",
+        "intro": "Avant aujourd'hui, bentoh s'appelait SidePro. Toute cette refonte est née de la fermeture de bento.me, racheté par Linktree - on ne voulait pas voir cette idée disparaître, alors on a décidé de la reprendre en main. Même mission - t'aider à montrer ton travail - mais entièrement repensée, du nom au design."
+      }
+    ]
+  },
   "published": {
     "myBoxedInk": "Mon boxed.ink",
     "createMyBoxedInk": "Créer mon boxed.ink",
