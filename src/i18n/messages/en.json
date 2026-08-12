@@ -228,6 +228,12 @@
     "playingPrefix": "Playing",
     "lastPlayedPrefix": "Last played"
   },
+  "error": {
+    "title": "Something went wrong",
+    "description": "This page hit an unexpected error. Reloading usually fixes it - your page and blocks are safe.",
+    "reload": "Reload the page",
+    "retry": "Try again"
+  },
   "published": {
     "myBoxedInk": "My boxed.ink",
     "createMyBoxedInk": "Create my boxed.ink",

@@ -7,7 +7,18 @@ const nextConfig = {
   experimental: {
     serverActions: {
       bodySizeLimit: "2mb",
+      allowedOrigins: ["boxed.ink", "www.boxed.ink"],
     },
+  },
+  async redirects() {
+    return [
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "www.boxed.ink" }],
+        destination: "https://boxed.ink/:path*",
+        permanent: true,
+      },
+    ];
   },
   async headers() {
     return [

@@ -228,6 +228,12 @@
     "playingPrefix": "Joue à",
     "lastPlayedPrefix": "A joué à"
   },
+  "error": {
+    "title": "Un problème est survenu",
+    "description": "Cette page a rencontré une erreur inattendue. Un rechargement suffit généralement - ta page et tes blocs sont intacts.",
+    "reload": "Recharger la page",
+    "retry": "Réessayer"
+  },
   "published": {
     "myBoxedInk": "Mon boxed.ink",
     "createMyBoxedInk": "Créer mon boxed.ink",
