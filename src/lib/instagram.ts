@@ -166,58 +166,83 @@ export const fetchInstagramProfileResult = async (
     // that fails on the node itself would also fail on the fields, so a
     // narrow probe isolates the variable — then re-query the winner for the
     // full profile.
-    const versions = Array.from(
-      new Set([GRAPH_VERSION, "v23.0", "v22.0", ""])
-    );
+    const versions = Array.from(new Set([GRAPH_VERSION, ""]));
     const nodes = igUserId ? ["me", igUserId] : ["me"];
-    const attempts: { base: string; node: string }[] = [];
+    // Meta takes the token as a query param on some endpoints and only as an
+    // Authorization header on others; both are tried before concluding the
+    // node itself is at fault.
+    const authModes: ("query" | "header")[] = ["query", "header"];
+    const attempts: {
+      base: string;
+      node: string;
+      auth: "query" | "header";
+    }[] = [];
     for (const node of nodes) {
       for (const version of versions) {
-        attempts.push({
-          base: version ? `${GRAPH_ROOT}/${version}` : GRAPH_ROOT,
-          node,
-        });
+        for (const auth of authModes) {
+          attempts.push({
+            base: version ? `${GRAPH_ROOT}/${version}` : GRAPH_ROOT,
+            node,
+            auth,
+          });
+        }
       }
     }
+
+    const call = async (
+      base: string,
+      node: string,
+      auth: "query" | "header",
+      fields: string
+    ) => {
+      const params = new URLSearchParams({ fields });
+      if (auth === "query") params.set("access_token", accessToken);
+      const res = await fetch(`${base}/${node}?${params}`, {
+        headers:
+          auth === "header"
+            ? { Authorization: `Bearer ${accessToken}` }
+            : undefined,
+      });
+      const json = await res.json().catch(() => null);
+      return { res, json };
+    };
 
     let profile: any = null;
     let workingBase = GRAPH_BASE;
     let workingNode = "me";
+    let workingAuth: "query" | "header" = "query";
     let lastMessage = "No response";
     for (const attempt of attempts) {
-      const probeParams = new URLSearchParams({
-        fields: "username",
-        access_token: accessToken,
-      });
-      const res = await fetch(
-        `${attempt.base}/${attempt.node}?${probeParams}`
+      const label =
+        `${attempt.base.replace(GRAPH_ROOT, "") || "/"}` +
+        `/${attempt.node === "me" ? "me" : "<id>"} [${attempt.auth}]`;
+      const { res, json } = await call(
+        attempt.base,
+        attempt.node,
+        attempt.auth,
+        "username"
       );
-      const json = await res.json().catch(() => null);
       if (res.ok && json && !json.error) {
         workingBase = attempt.base;
         workingNode = attempt.node;
+        workingAuth = attempt.auth;
 
-        const fullParams = new URLSearchParams({
-          fields: FULL_PROFILE_FIELDS,
-          access_token: accessToken,
-        });
-        const fullRes = await fetch(
-          `${workingBase}/${workingNode}?${fullParams}`
+        const full = await call(
+          workingBase,
+          workingNode,
+          workingAuth,
+          FULL_PROFILE_FIELDS
         );
-        const fullJson = await fullRes.json().catch(() => null);
         // Falling back to the probe payload keeps the connection usable even
         // if one of the richer fields is rejected.
-        profile = fullRes.ok && fullJson && !fullJson.error ? fullJson : json;
-        console.log(
-          "[instagram] profile ok via",
-          `${attempt.base.replace(GRAPH_ROOT, "") || "/"}/${attempt.node === "me" ? "me" : "<id>"}`
-        );
+        profile =
+          full.res.ok && full.json && !full.json.error ? full.json : json;
+        console.log("[instagram] profile ok via", label);
         break;
       }
       lastMessage = json?.error?.message || `HTTP ${res.status}`;
       console.error(
-        `[instagram] probe failed (${attempt.base.replace(GRAPH_ROOT, "") || "/"}` +
-          `/${attempt.node === "me" ? "me" : "<id>"}):`,
+        `[instagram] probe failed (${label}):`,
         JSON.stringify(json?.error ?? json)?.slice(0, 200)
       );
     }
@@ -237,18 +262,15 @@ export const fetchInstagramProfileResult = async (
       return { ok: false, reason: "personal_account" };
     }
 
-    const mediaParams = new URLSearchParams({
-      fields:
-        "id,media_type,media_url,thumbnail_url,permalink,caption,timestamp",
-      limit: String(MAX_INSTAGRAM_POSTS),
-      access_token: accessToken,
-    });
-    // Same base that answered for the profile — mixing versioned and
-    // unversioned hosts with one token is what broke the profile call.
-    const mediaRes = await fetch(
-      `${workingBase}/${workingNode}/media?${mediaParams}`
+    // Same base, node and auth style that answered for the profile — mixing
+    // them is what made the profile call fail in the first place.
+    const media = await call(
+      workingBase,
+      `${workingNode}/media`,
+      workingAuth,
+      "id,media_type,media_url,thumbnail_url,permalink,caption,timestamp"
     );
-    const mediaJson = mediaRes.ok ? await mediaRes.json() : { data: [] };
+    const mediaJson = media.res.ok ? media.json : { data: [] };
 
     const posts: InstagramPost[] = (mediaJson?.data ?? [])
       .map((item: any) => ({
