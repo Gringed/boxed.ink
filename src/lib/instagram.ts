@@ -136,20 +136,52 @@ export const fetchInstagramProfileResult = async (
   accessToken: string
 ): Promise<InstagramFetchResult> => {
   try {
-    const profileParams = new URLSearchParams({
-      // `user_id` is what the Instagram-Login flow returns; `id` comes from
-      // the older Graph shape. Asking for both keeps either working.
-      fields:
-        "id,user_id,username,account_type,followers_count,media_count,profile_picture_url",
-      access_token: accessToken,
-    });
-    const profileRes = await fetch(`${GRAPH_BASE}/me?${profileParams}`);
-    const profile = await profileRes.json().catch(() => null);
+    // Field sets and hosts have shifted between the old Basic Display API
+    // and Instagram Login, and an unsupported field or path answers with the
+    // same opaque "Unsupported request" either way. Try the documented
+    // combinations in order and keep the first that answers, logging each
+    // rejection so a future break says which variant died.
+    const attempts = [
+      {
+        base: GRAPH_BASE,
+        fields:
+          "user_id,username,account_type,followers_count,media_count,profile_picture_url",
+      },
+      { base: GRAPH_BASE, fields: "user_id,username" },
+      {
+        base: GRAPH_ROOT,
+        fields:
+          "id,username,account_type,followers_count,media_count,profile_picture_url",
+      },
+      { base: GRAPH_ROOT, fields: "id,username" },
+    ];
 
-    if (!profileRes.ok || profile?.error) {
-      const message =
-        profile?.error?.message || `Instagram returned ${profileRes.status}`;
-      return { ok: false, reason: "error", message };
+    let profile: any = null;
+    let workingBase = GRAPH_BASE;
+    let lastMessage = "No response";
+    for (const attempt of attempts) {
+      const profileParams = new URLSearchParams({
+        fields: attempt.fields,
+        access_token: accessToken,
+      });
+      const res = await fetch(`${attempt.base}/me?${profileParams}`);
+      const json = await res.json().catch(() => null);
+      if (res.ok && json && !json.error) {
+        profile = json;
+        workingBase = attempt.base;
+        break;
+      }
+      lastMessage =
+        json?.error?.message || `HTTP ${res.status}`;
+      console.error(
+        `[instagram] /me failed (${attempt.base.replace(GRAPH_ROOT, "")}` +
+          ` fields=${attempt.fields.split(",")[0]}…):`,
+        JSON.stringify(json?.error ?? json)?.slice(0, 300)
+      );
+    }
+
+    if (!profile) {
+      return { ok: false, reason: "error", message: lastMessage };
     }
 
     const userId = profile?.user_id ?? profile?.id;
@@ -169,7 +201,9 @@ export const fetchInstagramProfileResult = async (
       limit: String(MAX_INSTAGRAM_POSTS),
       access_token: accessToken,
     });
-    const mediaRes = await fetch(`${GRAPH_BASE}/me/media?${mediaParams}`);
+    // Same base that answered for the profile — mixing versioned and
+    // unversioned hosts with one token is what broke the profile call.
+    const mediaRes = await fetch(`${workingBase}/me/media?${mediaParams}`);
     const mediaJson = mediaRes.ok ? await mediaRes.json() : { data: [] };
 
     const posts: InstagramPost[] = (mediaJson?.data ?? [])
