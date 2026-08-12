@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { currentUser } from "@/auth/current-user";
-import { exchangeInstagramCode, fetchInstagramProfile } from "@/lib/instagram";
+import {
+  exchangeInstagramCode,
+  fetchInstagramProfileResult,
+} from "@/lib/instagram";
 import {
   appUrl,
   instagramRedirectUri,
@@ -28,11 +31,16 @@ export async function GET(request: NextRequest) {
   const tokens = await exchangeInstagramCode(code, instagramRedirectUri());
   if (!tokens) return back("error");
 
-  const profile = await fetchInstagramProfile(tokens.accessToken);
-  // A personal account authenticates fine but can't expose media or a
-  // follower count, so the profile call is what actually catches it. Told
-  // apart from a generic failure so the UI can explain the fix.
-  if (!profile) return back("personal_account");
+  const result = await fetchInstagramProfileResult(tokens.accessToken);
+  if (!result.ok) {
+    // Only Instagram saying "PERSONAL" earns the account-type message —
+    // anything else is a real failure and gets logged with its own reason,
+    // rather than sending the user off to change a setting for nothing.
+    if (result.reason === "personal_account") return back("personal_account");
+    console.error("[instagram] profile fetch failed:", result.message);
+    return back("error");
+  }
+  const profile = result.profile;
 
   await saveConnection({
     userId: user.id,

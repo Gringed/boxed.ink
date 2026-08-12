@@ -60,6 +60,22 @@ const isUnusableImageUrl = (url: unknown): boolean => {
   }
 };
 
+// Instagram (and others) answer server-side requests with a redirect to
+// their login page rather than the real content. Spotting it lets us keep
+// the url the user actually pasted.
+const isAuthWallUrl = (url: unknown): boolean => {
+  if (typeof url !== "string" || !url) return false;
+  try {
+    // Path only: a `?next=` query param alone would also match ordinary
+    // paginated urls and wrongly throw away good metadata.
+    return /\/(accounts\/login|login|signin|sign_in)(\/|$)/i.test(
+      new URL(url).pathname
+    );
+  } catch {
+    return false;
+  }
+};
+
 const sanitizeScrapedImages = <T extends Record<string, any>>(meta: T): T => {
   const clean = { ...meta };
   for (const key of ["image", "og:image", "twitter:image"]) {
@@ -152,7 +168,24 @@ export const getPreview = userAction(
   // urlMetadata follows redirects (e.g. twitch.com -> twitch.tv) and stores
   // the resolved URL on `createLink.url` — detect the channel from that
   // instead of the raw typed input, or a redirecting domain never matches.
-  const resolvedUrl = createLink?.url || input.title!;
+  //
+  // Except when the redirect is a login wall: Instagram bounces server-side
+  // requests to /accounts/login?next=..., and following that would both
+  // store the login page as the user's link and hide the real profile from
+  // the platform detection below. In that case the typed url is the truth.
+  const hitAuthWall = isAuthWallUrl(createLink?.url);
+  const resolvedUrl =
+    !hitAuthWall && createLink?.url ? createLink.url : input.title!;
+
+  if (hitAuthWall) {
+    let hostname = resolvedUrl;
+    try {
+      hostname = new URL(resolvedUrl).hostname.replace(/^www\./, "");
+    } catch {}
+    // The scraped title/description belong to the login page, so they go
+    // too — nothing usable was actually read from the real page.
+    createLink = { title: hostname, url: resolvedUrl };
+  }
 
   try {
     const youtube = await fetchYouTubeChannelData(resolvedUrl);
@@ -169,6 +202,12 @@ export const getPreview = userAction(
         if (detected.platform === "github") {
           const count = await fetchGithubFollowerCount(detected.handle);
           if (count !== null) socialProfile.followerCount = count;
+        }
+        // Behind a login wall there was no real title to scrape, and the
+        // bare hostname says little — the handle is what the user expects
+        // to see on the block.
+        if (hitAuthWall) {
+          createLink = { ...createLink, title: `@${detected.handle}` };
         }
       }
     }

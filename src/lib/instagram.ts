@@ -67,8 +67,14 @@ export const exchangeInstagramCode = async (
   });
 
   const res = await fetch(TOKEN_URL, { method: "POST", body });
-  if (!res.ok) return null;
-  const json = await res.json();
+  const json = await res.json().catch(() => null);
+  if (!res.ok || json?.error_message || json?.error) {
+    console.error(
+      "[instagram] code exchange failed:",
+      json?.error_message || json?.error?.message || res.status
+    );
+    return null;
+  }
   const shortLived = json?.access_token;
   const userId = String(json?.user_id ?? json?.data?.[0]?.user_id ?? "");
   if (!shortLived || !userId) return null;
@@ -114,19 +120,43 @@ export const refreshInstagramToken = async (
   };
 };
 
-export const fetchInstagramProfile = async (
+export type InstagramFetchResult =
+  | { ok: true; profile: InstagramProfileData }
+  // "personal_account" is only reported when Instagram actually says so —
+  // every other failure keeps its own message, so a bad field or an expired
+  // token isn't mislabelled as an account-type problem.
+  | { ok: false; reason: "personal_account" | "error"; message?: string };
+
+export const fetchInstagramProfileResult = async (
   accessToken: string
-): Promise<InstagramProfileData | null> => {
+): Promise<InstagramFetchResult> => {
   try {
     const profileParams = new URLSearchParams({
+      // `user_id` is what the Instagram-Login flow returns; `id` comes from
+      // the older Graph shape. Asking for both keeps either working.
       fields:
-        "id,username,account_type,followers_count,media_count,profile_picture_url",
+        "id,user_id,username,account_type,followers_count,media_count,profile_picture_url",
       access_token: accessToken,
     });
     const profileRes = await fetch(`${GRAPH_BASE}/me?${profileParams}`);
-    if (!profileRes.ok) return null;
-    const profile = await profileRes.json();
-    if (!profile?.id) return null;
+    const profile = await profileRes.json().catch(() => null);
+
+    if (!profileRes.ok || profile?.error) {
+      const message =
+        profile?.error?.message || `Instagram returned ${profileRes.status}`;
+      return { ok: false, reason: "error", message };
+    }
+
+    const userId = profile?.user_id ?? profile?.id;
+    if (!userId) {
+      return { ok: false, reason: "error", message: "No user id returned" };
+    }
+    if (
+      typeof profile.account_type === "string" &&
+      profile.account_type.toUpperCase() === "PERSONAL"
+    ) {
+      return { ok: false, reason: "personal_account" };
+    }
 
     const mediaParams = new URLSearchParams({
       fields:
@@ -152,15 +182,31 @@ export const fetchInstagramProfile = async (
       .slice(0, MAX_INSTAGRAM_POSTS);
 
     return {
-      userId: String(profile.id),
-      username: profile.username ?? "",
-      avatar: profile.profile_picture_url,
-      followersCount: Number(profile.followers_count ?? 0),
-      mediaCount: Number(profile.media_count ?? 0),
-      profileUrl: `https://www.instagram.com/${profile.username ?? ""}`,
-      posts,
+      ok: true,
+      profile: {
+        userId: String(userId),
+        username: profile.username ?? "",
+        avatar: profile.profile_picture_url,
+        followersCount: Number(profile.followers_count ?? 0),
+        mediaCount: Number(profile.media_count ?? 0),
+        profileUrl: `https://www.instagram.com/${profile.username ?? ""}`,
+        posts,
+      },
     };
-  } catch {
-    return null;
+  } catch (err) {
+    return {
+      ok: false,
+      reason: "error",
+      message: err instanceof Error ? err.message : "Unknown error",
+    };
   }
+};
+
+// Thin wrapper for callers that only care whether it worked (the refresh
+// cron), keeping the richer result for the OAuth callback.
+export const fetchInstagramProfile = async (
+  accessToken: string
+): Promise<InstagramProfileData | null> => {
+  const result = await fetchInstagramProfileResult(accessToken);
+  return result.ok ? result.profile : null;
 };
