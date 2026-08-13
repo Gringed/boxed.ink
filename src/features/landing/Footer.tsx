@@ -13,6 +13,7 @@ import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { signInAction } from "../auth/auth.action";
 import { PageLoader } from "@/components/PageLoader";
+import { AdSwapWidget } from "./AdSwapWidget";
 
 type FooterProps = {
   user?: any;
@@ -89,6 +90,7 @@ const Footer = ({ user }: FooterProps) => {
           </div>
         </section>
       </Section>
+      <AdSwapWidget />
       <div className="w-full overflow-hidden">
         <div className="w-full bg-noir py-4 -rotate-1 scale-110">
           <div className="flex w-max animate-marquee whitespace-nowrap">

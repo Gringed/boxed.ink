@@ -62,15 +62,24 @@ const WatchButton = ({
 // size-9 matches the logo on regular link blocks and the other channel
 // cards, so a Twitch block lines up with its neighbours at every size.
 const ChannelAvatar = ({ twitch }: { twitch: TwitchChannelData }) => (
-  <Avatar className="size-9 border shrink-0">
-    <AvatarFallback>{twitch.title?.[0]}</AvatarFallback>
-    <AvatarImage
-      src={twitch.avatar}
-      draggable={false}
-      className="object-cover select-none"
-      alt={`${twitch.title} avatar`}
-    />
-  </Avatar>
+  <span className="relative flex size-9 shrink-0">
+    {twitch.isLive && (
+      <span className="absolute inset-0 rounded-full border-2 border-[#9146FF] animate-ping-soft" />
+    )}
+    <Avatar
+      className={`relative size-9 shrink-0 ${
+        twitch.isLive ? "border-2 border-[#9146FF]" : "border"
+      }`}
+    >
+      <AvatarFallback>{twitch.title?.[0]}</AvatarFallback>
+      <AvatarImage
+        src={twitch.avatar}
+        draggable={false}
+        className="object-cover select-none"
+        alt={`${twitch.title} avatar`}
+      />
+    </Avatar>
+  </span>
 );
 
 const LiveStatus = ({
@@ -83,11 +92,16 @@ const LiveStatus = ({
   const t = useTranslations("editor");
   return twitch.isLive ? (
     <span
-      className={`flex items-center gap-1 font-bold text-[#eb0400] whitespace-nowrap ${
+      className={`flex items-center gap-1 font-bold text-[#9146FF] whitespace-nowrap ${
         small ? "text-xs" : "text-sm"
       }`}
     >
-      <span className="size-1.5 rounded-full bg-[#eb0400]" />
+      {/* Solid dot with a ping ring behind it — the ring expands and fades
+          while the dot stays put, so the status reads as a heartbeat. */}
+      <span className="relative flex size-1.5 shrink-0">
+        <span className="absolute inset-0 rounded-full bg-[#9146FF] opacity-75 animate-ping" />
+        <span className="relative size-1.5 rounded-full bg-[#9146FF]" />
+      </span>
       {t("live")}
     </span>
   ) : (

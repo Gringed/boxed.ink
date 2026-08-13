@@ -1451,7 +1451,7 @@ const Sections = ({
                   <>
                     <div
                       className={
-                        "block-lift flex  w-full rounded-3xl h-full items-start overflow-hidden border border-gray-300/50 shadow hover:shadow-md"
+                        "block-lift flex  w-full rounded-3xl h-full items-start overflow-hidden border border-gray-200 shadow-sm hover:shadow"
                       }
                       style={{
                         background: l?.background ? `${l.background}` : "white",
@@ -1527,7 +1527,7 @@ const Sections = ({
                   <>
                     <div
                       className={
-                        "block-lift flex  w-full rounded-[22px] h-full items-start p-0.5 border border-transparent hover:border-gray-300/50 hover:shadow hover:bg-white transition-all"
+                        "block-lift flex  w-full rounded-[22px] h-full items-start p-0.5 border border-transparent hover:border-gray-200 hover:shadow-sm hover:bg-white transition-all"
                       }
                     >
                       {(() => {
@@ -1601,7 +1601,7 @@ const Sections = ({
                 ) : l?.type === "LINK" &&
                   (l?.link?.instagram || l?.link?.tiktok) ? (
                   <>
-                    <div className="block-lift dragMe relative w-full h-full rounded-3xl bg-white cursor-grab border border-gray-300/50 shadow hover:shadow-md">
+                    <div className="block-lift dragMe relative w-full h-full rounded-3xl bg-white cursor-grab border border-gray-200 shadow-sm hover:shadow">
                       {(() => {
                         const bp = currentBreakpoint as keyof typeof cols;
                         const currentItem = (effectiveLayouts[bp] || []).find(
@@ -1660,7 +1660,7 @@ const Sections = ({
                   </>
                 ) : l?.type === "LINK" && l?.link?.youtube ? (
                   <>
-                    <div className="block-lift dragMe relative w-full h-full rounded-3xl bg-white cursor-grab border border-gray-300/50 shadow hover:shadow-md">
+                    <div className="block-lift dragMe relative w-full h-full rounded-3xl bg-white cursor-grab border border-gray-200 shadow-sm hover:shadow">
                       {(() => {
                         const bp = currentBreakpoint as keyof typeof cols;
                         const currentItem = (effectiveLayouts[bp] || []).find(
@@ -1697,7 +1697,7 @@ const Sections = ({
                   </>
                 ) : l?.type === "LINK" && l?.link?.twitch ? (
                   <>
-                    <div className="block-lift dragMe relative w-full h-full rounded-3xl bg-white cursor-grab border border-gray-300/50 shadow hover:shadow-md">
+                    <div className="block-lift dragMe relative w-full h-full rounded-3xl bg-white cursor-grab border border-gray-200 shadow-sm hover:shadow">
                       {(() => {
                         const bp = currentBreakpoint as keyof typeof cols;
                         const currentItem = (effectiveLayouts[bp] || []).find(
@@ -1735,7 +1735,7 @@ const Sections = ({
                 ) : l?.type === "LINK" ? (
                   <>
                     <div
-                      className="block-lift dragMe relative w-full h-full rounded-3xl cursor-grab overflow-hidden flex flex-col gap-1.5 p-3 border border-gray-300/50 shadow hover:shadow-md"
+                      className="block-lift dragMe relative w-full h-full rounded-3xl cursor-grab overflow-hidden flex flex-col gap-1.5 p-3 border border-gray-200 shadow-sm hover:shadow"
                       style={{
                         background: l?.background ? `${l.background}` : "white",
                       }}
@@ -2223,7 +2223,7 @@ const Sections = ({
                       className={`block-lift
                       ${!isCrop && "dragMe"}
                         absolute  rounded-3xl  top-0 left-0 h-full w-full
-                        bg-white border border-gray-300/50 shadow hover:shadow-md
+                        bg-white border border-gray-200 shadow-sm hover:shadow
 
                     `}
                     >

@@ -90,12 +90,18 @@ const config = {
           from: { transform: "translateX(0)" },
           to: { transform: "translateX(-50%)" },
         },
+        // Same idea as Tailwind's ping, but expanding to 1.3x instead of 2x —
+        // at avatar size a full ping reads as a huge halo.
+        "ping-soft": {
+          "75%, 100%": { transform: "scale(1.3)", opacity: "0" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         fade: "fadeIn 1.5s ease-in-out",
         marquee: "marquee 22s linear infinite",
+        "ping-soft": "ping-soft 1.6s cubic-bezier(0, 0, 0.2, 1) infinite",
       },
     },
   },

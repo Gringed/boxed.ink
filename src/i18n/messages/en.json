@@ -14,7 +14,7 @@
     "invalid": "Please enter a valid url"
   },
   "hero": {
-    "titleLine1": "Your portfolio.",
+    "titleLine1": "Build your own page",
     "titleLine2Prefix": "In few",
     "flipWords": ["Moves.", "Blocks."],
     "subtitle": "Ditch the stack of Linktree, Gumroad and Mailchimp tabs.",
@@ -30,7 +30,7 @@
     "handlePlaceholder": "yourname",
     "cta": "Claim and start building",
     "tip": "💡 Make it short and memorable - you'll be sharing it a lot.",
-    "continueCta": "Continue my build"
+    "continueCta": "Go to the editor"
   },
   "editorPreview": {
     "titlePrefix": "Drag it. Drop it.",
@@ -129,6 +129,7 @@
     "privacy": "Privacy Policy",
     "contact": "Contact",
     "madeBy": "Made by Alexandre",
+    "adSwapLabel": "Other indie projects",
     "copyright": "{year} ♥ boxed.ink",
     "marquee": {
       "bentoGrid": "Bento grid",
@@ -190,14 +191,34 @@
     "addTitlePlaceholder": "Add a title",
     "copyShareLink": "Copy share link",
     "addBlocks": "Add blocks",
+    "addBlocksHint": "Pick a block, then drag it wherever you want.",
     "blockTitle": "Title",
     "blockText": "Text",
     "blockImage": "Image",
     "blockLink": "Link",
+    "blockTitleDesc": "A big heading to split up your page",
+    "blockTextDesc": "A free paragraph, write whatever you want",
+    "blockImageDesc": "Upload a photo or a visual",
+    "blockLinkDesc": "A link, a social account, a video",
     "addLinkTitle": "Add link",
     "addLinkPlaceholder": "Paste your link here",
     "addingLink": "Adding link...",
+    "addLinkSubtitle": "Paste any URL, the block builds itself.",
+    "linkAny": "Any link",
+    "linkEmail": "Email",
+    "linkPhone": "Phone",
+    "andMore": "and more…",
     "background": "Background",
+    "backgroundTitle": "Page background",
+    "backgroundHint": "The colour or image behind your blocks.",
+    "backgroundColor": "Solid colour",
+    "backgroundColorHint": "Pick any colour",
+    "backgroundImage": "Image",
+    "backgroundImageHint": "Click or drop · {maxMB} MB max",
+    "backgroundImageActive": "Image in use",
+    "backgroundRemoveImage": "Remove image",
+    "backgroundDropHere": "Drop your image here",
+    "backgroundColorLocked": "Remove the image to use a colour",
     "previewMobile": "Preview on mobile",
     "previewDesktop": "Preview on desktop",
     "language": "Change language",
@@ -236,6 +257,20 @@
   },
   "changelog": {
     "entries": [
+      {
+        "id": "editor-polish",
+        "date": "August 13, 2026",
+        "title": "A clearer editor",
+        "intro": "The add menu has been rebuilt, plus a few finishing touches all over:",
+        "items": [
+          "**The add-block menu** is much bigger and shows what each block looks like before you even click, with its name and what it does. No more tiny icons you had to hover to understand.",
+          "**The page background gets its own section**, clearly separated from the blocks: the colour tile shows the current colour and its code, and the image tile shows a preview of your current background.",
+          "You can now **drag and drop your background image** straight onto its tile, just like on link blocks.",
+          "**The add-link window** lists every platform we recognise with its logo - Twitch, YouTube, Instagram, TikTok, X, Facebook, Snapchat, Discord, WhatsApp, GitHub, Patreon, Ko-fi, Buy Me a Coffee - so you know at a glance what you can paste. Email addresses and phone numbers work too.",
+          "**The Twitch block flags a live stream** with a pulse around the channel avatar and the status, in Twitch colours.",
+          "Block shadows and borders have been softened and made consistent, in the editor and on your published page."
+        ]
+      },
       {
         "id": "social-connect",
         "date": "August 12, 2026",

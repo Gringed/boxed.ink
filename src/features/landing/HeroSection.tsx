@@ -37,7 +37,7 @@ export const HeroSection = ({ user }: HeroSectionProps) => {
   const [isPending, startTransition] = useTransition();
   return (
     <>
-      <Section className="mt-16 lg:mt-28 py-10 lg:py-20 h-full relative">
+      <Section className="mt-16 lg:mt-20 py-10 lg:py-20 h-full relative">
         <div className="flex w-full justify-center overflow-hidden h-full items-center">
           {/* floating mockups of real app blocks */}
           <motion.div

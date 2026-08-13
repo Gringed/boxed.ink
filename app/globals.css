@@ -181,3 +181,23 @@
     @apply bg-background text-foreground scroll-smooth;
   }
 }
+
+/* ad-swap widget: it injects its own <style> into the head, so these ride on
+   a higher specificity (.adswap-slot .adswap-pill) to pull the pill onto our
+   own border colour, radius and typeface. */
+.adswap-slot .adswap-pill {
+  font-family: inherit;
+  border-color: #e5e7eb;
+  border-radius: 9999px;
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  transition: background 150ms ease, border-color 150ms ease,
+    box-shadow 150ms ease;
+}
+.adswap-slot .adswap-pill:hover {
+  background: #fff;
+  border-color: hsl(var(--primary));
+  box-shadow: 0 4px 12px -4px rgb(0 0 0 / 0.12);
+}
+.adswap-slot .adswap-pill .adswap-pill-name {
+  font-size: 13px;
+}

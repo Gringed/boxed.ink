@@ -136,12 +136,22 @@ export const uploadImageSidefolio = userAction(
     const file = input.file.get("file") as File;
     const fileName = file.name;
 
+    // A background can now be replaced directly (drag & drop) without going
+    // through a delete first, so drop the previous blob or it stays orphaned.
+    const previous = await prisma.sidefolio.findUnique({
+      where: { id: input.id },
+      select: { background: true },
+    });
+
     const blob = await put(fileName, file, {
       access: "public",
     });
 
     let response;
     if (blob.url) {
+      if (previous?.background && previous.background !== blob.url) {
+        await del(previous.background).catch(() => {});
+      }
       response = await prisma.sidefolio.update({
         where: {
           id: input.id,

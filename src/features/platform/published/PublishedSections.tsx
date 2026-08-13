@@ -320,7 +320,7 @@ const PublishedSections = ({
               className={
                 l?.type === "TITLE"
                   ? "border border-transparent group/item relative flex justify-start cursor-default"
-                  : "border border-gray-300/50 shadow react-grid-item-publish hover:shadow-md group/item rounded-3xl bg-white relative  flex justify-start cursor-default"
+                  : "border border-gray-200 shadow-sm react-grid-item-publish hover:shadow group/item rounded-3xl bg-white relative  flex justify-start cursor-default"
               }
             >
               {l?.type === "TEXT" ? (

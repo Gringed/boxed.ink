@@ -14,7 +14,7 @@
     "invalid": "Merci d'entrer une url valide"
   },
   "hero": {
-    "titleLine1": "Ton portfolio.",
+    "titleLine1": "Créer ta page perso",
     "titleLine2Prefix": "En quelques",
     "flipWords": ["clics.", "blocs."],
     "subtitle": "Laisse tomber la pile d'onglets Linktree, Gumroad et Mailchimp.",
@@ -30,7 +30,7 @@
     "handlePlaceholder": "tonpseudo",
     "cta": "Réserver et commencer",
     "tip": "💡 Fais-le court et mémorable - tu vas le partager souvent.",
-    "continueCta": "Continuer ma construction"
+    "continueCta": "Aller sur l'éditeur"
   },
   "editorPreview": {
     "titlePrefix": "Glisse. Dépose.",
@@ -129,6 +129,7 @@
     "privacy": "Politique de confidentialité",
     "contact": "Contact",
     "madeBy": "Fait par Alexandre",
+    "adSwapLabel": "D'autres projets indés",
     "copyright": "{year} ♥ boxed.ink",
     "marquee": {
       "bentoGrid": "Grille bento",
@@ -190,14 +191,34 @@
     "addTitlePlaceholder": "Ajoute un titre",
     "copyShareLink": "Copier le lien de partage",
     "addBlocks": "Ajouter des blocs",
+    "addBlocksHint": "Choisis un bloc, puis déplace-le où tu veux.",
     "blockTitle": "Titre",
     "blockText": "Texte",
     "blockImage": "Image",
     "blockLink": "Lien",
+    "blockTitleDesc": "Un grand titre pour découper ta page",
+    "blockTextDesc": "Un paragraphe libre, écris ce que tu veux",
+    "blockImageDesc": "Ajoute une photo ou un visuel",
+    "blockLinkDesc": "Un lien, un réseau social, une vidéo",
     "addLinkTitle": "Ajouter un lien",
     "addLinkPlaceholder": "Colle ton lien ici",
     "addingLink": "Ajout du lien...",
+    "addLinkSubtitle": "Colle n'importe quelle URL, le bloc se construit tout seul.",
+    "linkAny": "N'importe quel lien",
+    "linkEmail": "E-mail",
+    "linkPhone": "Téléphone",
+    "andMore": "et plus encore…",
     "background": "Fond",
+    "backgroundTitle": "Fond de la page",
+    "backgroundHint": "La couleur ou l'image derrière tes blocs.",
+    "backgroundColor": "Couleur unie",
+    "backgroundColorHint": "Choisis la couleur que tu veux",
+    "backgroundImage": "Image",
+    "backgroundImageHint": "Clique ou dépose · {maxMB} Mo max",
+    "backgroundImageActive": "Image active",
+    "backgroundRemoveImage": "Retirer l'image",
+    "backgroundDropHere": "Dépose ton image ici",
+    "backgroundColorLocked": "Retire l'image pour choisir une couleur",
     "previewMobile": "Aperçu mobile",
     "previewDesktop": "Aperçu ordinateur",
     "language": "Changer de langue",
@@ -236,6 +257,20 @@
   },
   "changelog": {
     "entries": [
+      {
+        "id": "editor-polish",
+        "date": "13 août 2026",
+        "title": "Un éditeur plus lisible",
+        "intro": "Le menu d'ajout a été repensé, et quelques finitions un peu partout :",
+        "items": [
+          "**Le menu d'ajout de blocs** est bien plus grand et montre à quoi ressemble chaque bloc avant même de cliquer, avec son nom et ce qu'il fait. Fini les petites icônes qu'il fallait survoler pour comprendre.",
+          "**Le fond de page a sa propre section**, nettement séparée des blocs : la pastille de couleur affiche la couleur courante et son code, et l'emplacement image montre l'aperçu du fond actuel.",
+          "Tu peux maintenant **glisser-déposer ton image de fond** directement sur son emplacement, comme pour les blocs liens.",
+          "**La fenêtre d'ajout de lien** liste toutes les plateformes reconnues avec leur logo - Twitch, YouTube, Instagram, TikTok, X, Facebook, Snapchat, Discord, WhatsApp, GitHub, Patreon, Ko-fi, Buy Me a Coffee - pour savoir d'un coup d'œil ce que tu peux coller. E-mail et numéro de téléphone fonctionnent aussi.",
+          "**Le bloc Twitch signale un live** avec une pulsation autour de l'avatar de la chaîne et du statut, aux couleurs de Twitch.",
+          "Les ombres et les bordures des blocs ont été adoucies et uniformisées, dans l'éditeur comme sur ta page publiée."
+        ]
+      },
       {
         "id": "social-connect",
         "date": "12 août 2026",
