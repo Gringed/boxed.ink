@@ -1,47 +1,32 @@
 "use client";
-import React, { useEffect, useRef } from "react";
+import React from "react";
 import { useTranslations } from "next-intl";
 
-const SCRIPT_SRC = "https://ad-swap.web.app/widget.js";
-const SITE_ID = "SZFMrEzDGPpTvTKqsmSy";
-const TARGET_ID = "adswap-slot";
+// Third-party ad-swap unit, embedded as a cross-origin iframe rather than the
+// script-tag version: the ad code then runs in ad-swap.web.app's own document
+// and can't reach our DOM, cookies or server actions, whatever they ship next.
+// allow-same-origin keeps the frame on ITS origin (not ours) so the Firebase
+// SDK can use storage; allow-popups lets the ad open in a new tab.
+const FRAME_SRC =
+  "https://ad-swap.web.app/frame.html?site=SZFMrEzDGPpTvTKqsmSy&shape=pill&theme=light";
 
-// Third-party ad-swap pill. Landing pages only — never the dashboard or a
-// published page, so it can't run alongside an editing session or on someone
-// else's page.
 export const AdSwapWidget = () => {
   const t = useTranslations("footer");
-  const slotRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    // Injected on mount rather than through next/script: the widget body runs
-    // once per script element, so after a client-side navigation a reused tag
-    // would leave the slot empty. data-target keeps the ad in our own div
-    // instead of wherever the script tag happens to land.
-    const script = document.createElement("script");
-    script.src = SCRIPT_SRC;
-    script.async = true;
-    script.dataset.siteId = SITE_ID;
-    script.dataset.shape = "pill";
-    script.dataset.target = TARGET_ID;
-    script.dataset.theme = "light";
-    document.body.appendChild(script);
-    return () => {
-      script.remove();
-      if (slotRef.current) slotRef.current.innerHTML = "";
-    };
-  }, []);
 
   return (
     <div className="flex w-full flex-col items-center gap-3 px-6 pb-10">
       <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-noir/35">
         {t("adSwapLabel")}
       </span>
-      {/* min-h keeps the footer from jumping while the widget loads. */}
-      <div
-        id={TARGET_ID}
-        ref={slotRef}
-        className="adswap-slot flex min-h-[42px] items-center justify-center"
+      <iframe
+        src={FRAME_SRC}
+        title="Ad"
+        loading="lazy"
+        sandbox="allow-scripts allow-same-origin allow-popups"
+        // Height fits the pill exactly (26px logo + padding + border) so the
+        // frame never scrolls; the footer reserves the space up front.
+        className="w-full max-w-[300px] border-0"
+        style={{ height: 44 }}
       />
     </div>
   );
