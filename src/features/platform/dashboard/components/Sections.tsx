@@ -23,6 +23,7 @@ import {
   SocialConnectButton,
   SocialConnectDialog,
   SocialDisconnectButton,
+  isSocialConnectEnabled,
   type SocialPlatformKey,
 } from "@/features/platform/shared/SocialConnectPrompt";
 import { TikTokVideosPlaceholder } from "@/features/platform/shared/TikTokVideosPlaceholder";
@@ -562,6 +563,7 @@ const Sections = ({
     const platform = l?.link?.socialProfile?.platform;
     if (platform !== "instagram" && platform !== "tiktok") return null;
     if (l?.link?.instagram || l?.link?.tiktok) return null;
+    if (!isSocialConnectEnabled(platform)) return null;
     return platform;
   };
   // Revokes the stored connection and strips the cached profile from every
