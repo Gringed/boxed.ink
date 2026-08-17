@@ -16,7 +16,6 @@ import { SOCIAL_BRAND } from "@/lib/socialProfile";
 import { InstagramProfileCard } from "@/features/platform/shared/InstagramProfileCard";
 import { TikTokProfileCard } from "@/features/platform/shared/TikTokProfileCard";
 import { TikTokVideosPlaceholder } from "@/features/platform/shared/TikTokVideosPlaceholder";
-import { isSocialConnectEnabled } from "@/features/platform/shared/SocialConnectPrompt";
 import BlurFade from "@/components/magicui/blur-fade";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
@@ -734,12 +733,9 @@ const PublishedSections = ({
                       // the video-stack stand-in rather than the generic
                       // "no image" icon — same visual as the editor, minus
                       // the connect action, which means nothing to a visitor.
-                      // Gated on the same flag as the editor so both sides
-                      // show the same thing while TikTok connection is off.
                       const isUnconnectedTikTok =
                         l?.link?.socialProfile?.platform === "tiktok" &&
-                        !l?.link?.tiktok &&
-                        isSocialConnectEnabled("tiktok");
+                        !l?.link?.tiktok;
 
                       const imageArea = (
                         <>

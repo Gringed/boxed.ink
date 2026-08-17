@@ -17,9 +17,6 @@ const BRAND: Record<SocialPlatformKey, string> = {
   tiktok: "#FE2C55",
 };
 
-export const isSocialConnectEnabled = (platform: SocialPlatformKey) =>
-  platform !== "tiktok" || process.env.NEXT_PUBLIC_TIKTOK_CONNECT === "on";
-
 // Offered right after a profile link is added, and again from the block's
 // action bar. Connecting is entirely optional: declining just leaves a
 // regular link block, which is why "maybe later" is a plain dismiss rather

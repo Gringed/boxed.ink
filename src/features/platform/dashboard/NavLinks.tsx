@@ -16,7 +16,6 @@ import {
 import { cn } from "@/lib/utils";
 import {
   SocialConnectDialog,
-  isSocialConnectEnabled,
   type SocialPlatformKey,
 } from "@/features/platform/shared/SocialConnectPrompt";
 import {
@@ -378,10 +377,7 @@ const NavLinks = ({
       // dialogs overlapping fight over focus and the scroll lock, which
       // showed up as the first one flashing back open.
       const platform = (res.data as any)?.socialProfile?.platform;
-      if (
-        (platform === "instagram" || platform === "tiktok") &&
-        isSocialConnectEnabled(platform)
-      ) {
+      if (platform === "instagram" || platform === "tiktok") {
         setTimeout(() => setConnectDialogPlatform(platform), 250);
       }
     }
