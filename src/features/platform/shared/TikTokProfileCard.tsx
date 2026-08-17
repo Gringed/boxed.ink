@@ -3,6 +3,7 @@ import { useTranslations } from "next-intl";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatCount } from "@/lib/youtube";
 import type { TikTokProfileData, TikTokVideo } from "@/lib/tiktok";
+import { TikTokVideosPlaceholder } from "./TikTokVideosPlaceholder";
 
 type LayoutMode = "compact" | "row" | "split" | "full";
 
@@ -101,7 +102,15 @@ const VideoStack = ({
   interactive: boolean;
 }) => {
   const shown = (videos || []).slice(0, 3);
-  if (shown.length === 0) return null;
+  // A connected account with nothing to show — no posts yet, or a video list
+  // the API wouldn't return — keeps the empty-state stack rather than leaving
+  // a hole where the videos belong.
+  if (shown.length === 0)
+    return (
+      <div className={`relative ${className}`}>
+        <TikTokVideosPlaceholder />
+      </div>
+    );
 
   return (
     <div className={`relative ${className}`}>
