@@ -72,7 +72,11 @@ const MAX_BLOCK_IMAGE_BYTES = MAX_BLOCK_IMAGE_MB * 1024 * 1024;
 const MAX_BACKGROUND_IMAGE_MB = 2;
 const MAX_BACKGROUND_IMAGE_BYTES = MAX_BACKGROUND_IMAGE_MB * 1024 * 1024;
 
-const isEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+// The character classes exclude ":" and "/" so a url can't be mistaken for an
+// address: "https://www.tiktok.com/@alexandre.g258" otherwise matched, with
+// everything before the "@" read as the local part.
+const isEmail = (value: string) =>
+  /^[^\s@:/]+@[^\s@:/]+\.[^\s@:/]+$/.test(value);
 const isMailtoOrEmail = (value: string) =>
   /^mailto:/i.test(value) || isEmail(value);
 // Loose match for a typed phone number: digits with optional +, spaces,
